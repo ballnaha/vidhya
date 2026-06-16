@@ -22,12 +22,18 @@
     } elseif (request()->routeIs('ai-director')) {
         $seo['title'] = 'AI Director - Sunil Thomas - Vidhya Studio';
         $seo['description'] = 'Meet Sunil Thomas, Commercial Director & AI Filmmaker at Vidhya Studio. Combining traditional cinematic direction with advanced AI workflows.';
+    } elseif (request()->routeIs('faq')) {
+        $seo['title'] = 'Frequently Asked Questions - Vidhya Studio';
+        $seo['description'] = 'Find answers to common questions about Vidhya Studio, cinematic AI video workflows, services, creative process, and production timelines.';
+    } elseif (request()->routeIs('portfolio')) {
+        $seo['title'] = 'Cinematic AI Portfolio - Vidhya Studio';
+        $seo['description'] = 'Browse our creative portfolio of director-led AI video works, advertising campaigns, cinematic trailers, and commercial productions.';
     } elseif (request()->routeIs('contact')) {
         $seo['title'] = 'Contact Vidhya Studio - Start a Project';
         $seo['description'] = 'Start a conversation with Vidhya Studio about AI creative strategy, premium visual content, advertising campaigns, and scalable production workflows.';
     }
 
-    $isFrontendPage = request()->routeIs('home', 'about', 'services', 'ai-director', 'contact');
+    $isFrontendPage = request()->routeIs('home', 'about', 'services', 'ai-director', 'portfolio', 'faq', 'contact');
     $canonical = url()->current();
     $ogImage = asset('images/vidhya-studio-logo.png');
     $organizationSchema = json_encode([

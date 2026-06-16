@@ -109,7 +109,6 @@ class extends Component
                                             <span class="ml-0.5 h-0 w-0 border-y-[7px] border-l-[10px] border-y-transparent border-l-white"></span>
                                         </span>
                                     </div>
-                                    <span class="absolute right-2 top-2 grid size-5 place-items-center border border-white/35 bg-black/30 text-[11px] font-bold leading-none text-white/85" aria-hidden="true">↗</span>
                                 </button>
                             @endforeach
                         </div>

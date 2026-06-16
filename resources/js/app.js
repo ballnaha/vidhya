@@ -1003,6 +1003,8 @@ function initAdminDirectors() {
         var search = shell.querySelector('[data-admin-directors-search]');
         var deleteModal = shell.querySelector('[data-admin-directors-delete-modal]');
         var deleteConfirm = shell.querySelector('[data-admin-directors-delete-confirm]');
+        var deleteWorkModal = shell.querySelector('[data-admin-directors-delete-work-modal]');
+        var deletingWorkRow = null;
         var csrf = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
         var directors = [];
         var deletingId = null;
@@ -1054,13 +1056,18 @@ function initAdminDirectors() {
                 });
             }
 
-            var removeBtn = row.querySelector('[data-admin-directors-remove-work]');
-            if (removeBtn) {
-                removeBtn.addEventListener('click', function () {
-                    row.remove();
-                    renumberWorks();
+            row.querySelectorAll('[data-admin-directors-remove-work]').forEach(function (btn) {
+                btn.addEventListener('click', function () {
+                    if (deleteWorkModal) {
+                        deletingWorkRow = row;
+                        deleteWorkModal.classList.remove('hidden');
+                        deleteWorkModal.classList.add('grid');
+                    } else {
+                        row.remove();
+                        renumberWorks();
+                    }
                 });
-            }
+            });
 
             worksContainer.appendChild(row);
             renumberWorks();
@@ -1460,6 +1467,26 @@ function initAdminDirectors() {
             }
         });
 
+        shell.querySelector('[data-admin-directors-delete-work-cancel]')?.addEventListener('click', function () {
+            deletingWorkRow = null;
+            if (deleteWorkModal) {
+                deleteWorkModal.classList.add('hidden');
+                deleteWorkModal.classList.remove('grid');
+            }
+        });
+
+        shell.querySelector('[data-admin-directors-delete-work-confirm]')?.addEventListener('click', function () {
+            if (deletingWorkRow) {
+                deletingWorkRow.remove();
+                renumberWorks();
+                deletingWorkRow = null;
+            }
+            if (deleteWorkModal) {
+                deleteWorkModal.classList.add('hidden');
+                deleteWorkModal.classList.remove('grid');
+            }
+        });
+
         form.elements.bio_image_file?.addEventListener('change', function () {
             var file = this.files[0];
             if (file) {
@@ -1618,6 +1645,407 @@ function initAdminDirectors() {
     });
 }
 
+function initAdminFaqs() {
+    document.querySelectorAll('[data-admin-faqs]:not([data-admin-faqs-ready])').forEach(function (shell) {
+        var initialData = shell.querySelector('[data-admin-faqs-initial]');
+        var table = shell.querySelector('[data-admin-faqs-table]');
+        var formShell = shell.querySelector('[data-admin-faqs-form-shell]');
+        var form = shell.querySelector('[data-admin-faqs-form]');
+        var search = shell.querySelector('[data-admin-faqs-search]');
+        var deleteModal = shell.querySelector('[data-admin-faqs-delete-modal]');
+        var deleteConfirm = shell.querySelector('[data-admin-faqs-delete-confirm]');
+        var csrf = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
+        var faqs = [];
+        var deletingId = null;
+        var searchTimer;
+
+        if (!table || !form) {
+            return;
+        }
+
+        shell.setAttribute('data-admin-faqs-ready', '');
+
+        try {
+            faqs = JSON.parse(initialData?.textContent || '[]');
+        } catch (error) {
+            faqs = [];
+        }
+
+        var categorySelect = form.querySelector('[data-admin-faqs-category-select]');
+        var categoryInput = form.querySelector('[data-admin-faqs-field="category"]');
+        var defaultCategories = [
+            'Workflow & Timeline',
+            'Quality & Scalability',
+            'Data Security & Brand Identity'
+        ];
+
+        function populateCategoryDropdown(selectedCategory) {
+            if (!categorySelect) return;
+
+            var uniqueCategories = new Set(defaultCategories);
+            faqs.forEach(function (faq) {
+                if (faq.category && faq.category.trim()) {
+                    uniqueCategories.add(faq.category.trim());
+                }
+            });
+
+            var currentVal = selectedCategory || categoryInput.value || 'Workflow & Timeline';
+
+            categorySelect.replaceChildren();
+
+            uniqueCategories.forEach(function (cat) {
+                var option = document.createElement('option');
+                option.value = cat;
+                option.textContent = cat;
+                categorySelect.appendChild(option);
+            });
+
+            var customOption = document.createElement('option');
+            customOption.value = '__NEW__';
+            customOption.textContent = '+ Add Custom Category...';
+            categorySelect.appendChild(customOption);
+
+            if (uniqueCategories.has(currentVal)) {
+                categorySelect.value = currentVal;
+                categoryInput.value = currentVal;
+                categoryInput.classList.add('hidden');
+            } else {
+                categorySelect.value = '__NEW__';
+                categoryInput.value = currentVal;
+                categoryInput.classList.remove('hidden');
+            }
+        }
+
+        categorySelect?.addEventListener('change', function () {
+            if (categorySelect.value === '__NEW__') {
+                categoryInput.value = '';
+                categoryInput.classList.remove('hidden');
+                categoryInput.focus();
+            } else {
+                categoryInput.value = categorySelect.value;
+                categoryInput.classList.add('hidden');
+                var errorElement = shell.querySelector('[data-admin-faqs-error="category"]');
+                if (errorElement) {
+                    errorElement.textContent = '';
+                    errorElement.classList.add('hidden');
+                }
+                categoryInput.classList.remove('border-red-500', 'focus:border-red-500');
+                categoryInput.classList.add('border-white/10');
+            }
+        });
+
+        function faqUrl(template, faqId) {
+            return template.replace('__FAQ__', faqId);
+        }
+
+        function request(url, options) {
+            var headers = {
+                Accept: 'application/json',
+                'X-CSRF-TOKEN': csrf,
+            };
+            if (options && options.body && !(options.body instanceof FormData)) {
+                headers['Content-Type'] = 'application/json';
+            }
+            return fetch(url, Object.assign({
+                headers: headers
+            }, options || {})).then(function (response) {
+                return response.json().catch(function () {
+                    return {};
+                }).then(function (payload) {
+                    if (!response.ok) {
+                        throw payload;
+                    }
+                    return payload;
+                });
+            });
+        }
+
+        function toast(variant, heading, text) {
+            showToast(variant, heading, text);
+        }
+
+        function setBusy(busy) {
+            var save = shell.querySelector('[data-admin-faqs-save]');
+            var spinner = shell.querySelector('[data-admin-faqs-spinner]');
+            var label = shell.querySelector('[data-admin-faqs-save-label]');
+
+            if (save) {
+                save.disabled = busy;
+            }
+
+            spinner?.classList.toggle('hidden', !busy);
+
+            if (label) {
+                label.textContent = busy ? 'Saving...' : 'Save FAQ';
+            }
+        }
+
+        function clearErrors() {
+            shell.querySelectorAll('[data-admin-faqs-error]').forEach(function (error) {
+                error.textContent = '';
+                error.classList.add('hidden');
+            });
+
+            shell.querySelectorAll('[data-admin-faqs-field]').forEach(function (field) {
+                field.classList.remove('border-red-500', 'focus:border-red-500');
+                field.classList.add('border-white/10');
+            });
+        }
+
+        function showErrors(errors) {
+            Object.entries(errors || {}).forEach(function ([name, messages]) {
+                var error = shell.querySelector('[data-admin-faqs-error="' + name + '"]');
+                var field = shell.querySelector('[data-admin-faqs-field="' + name + '"]');
+
+                if (error) {
+                    error.textContent = Array.isArray(messages) ? messages[0] : messages;
+                    error.classList.remove('hidden');
+                }
+
+                if (field) {
+                    field.classList.remove('border-white/10');
+                    field.classList.add('border-red-500', 'focus:border-red-500');
+                }
+            });
+        }
+
+        function validateFaqPayload(payload) {
+            var errors = {};
+
+            if (!payload.category.trim()) {
+                errors.category = ['Please select a category.'];
+            }
+            if (!payload.question.trim()) {
+                errors.question = ['Please enter a question.'];
+            }
+            if (!payload.answer.trim()) {
+                errors.answer = ['Please enter an answer.'];
+            }
+            if (payload.sort_order === '' || isNaN(payload.sort_order)) {
+                errors.sort_order = ['Please enter a valid sort order number.'];
+            }
+
+            return errors;
+        }
+
+        function resetForm() {
+            form.reset();
+            clearErrors();
+            form.querySelector('[data-admin-faqs-id]').value = '';
+            shell.querySelector('[data-admin-faqs-form-title]').textContent = 'Create FAQ';
+            categoryInput?.classList.add('hidden');
+            form.elements.keywords.value = '';
+            formShell.classList.add('hidden');
+        }
+
+        function openForm(faq) {
+            clearErrors();
+            formShell.classList.remove('hidden');
+            form.querySelector('[data-admin-faqs-id]').value = faq?.id || '';
+            var categoryVal = faq?.category || 'Workflow & Timeline';
+            populateCategoryDropdown(categoryVal);
+            form.elements.question.value = faq?.question || '';
+            form.elements.answer.value = faq?.answer || '';
+            form.elements.keywords.value = faq?.keywords || '';
+            form.elements.sort_order.value = faq ? faq.sort_order : '10';
+            shell.querySelector('[data-admin-faqs-form-title]').textContent = faq ? 'Edit FAQ' : 'Create FAQ';
+            form.elements.question.focus();
+        }
+
+        function filteredFaqs() {
+            var value = (search?.value || '').trim().toLowerCase();
+
+            if (!value) {
+                return faqs;
+            }
+
+            return faqs.filter(function (faq) {
+                return (
+                    faq.category.toLowerCase().includes(value) ||
+                    faq.question.toLowerCase().includes(value) ||
+                    faq.answer.toLowerCase().includes(value) ||
+                    (faq.keywords && faq.keywords.toLowerCase().includes(value))
+                );
+            });
+        }
+
+        function render() {
+            var rows = filteredFaqs();
+
+            table.replaceChildren();
+
+            if (!rows.length) {
+                var emptyRow = document.createElement('tr');
+                var emptyCell = document.createElement('td');
+
+                emptyCell.colSpan = 5;
+                emptyCell.className = 'px-5 py-12 text-center text-sm text-white/35';
+                emptyCell.textContent = 'No FAQs found.';
+                emptyRow.appendChild(emptyCell);
+                table.appendChild(emptyRow);
+                return;
+            }
+
+            rows.forEach(function (faq) {
+                var row = document.createElement('tr');
+                var categoryCell = document.createElement('td');
+                var questionCell = document.createElement('td');
+                var answerCell = document.createElement('td');
+                var orderCell = document.createElement('td');
+                var actions = document.createElement('td');
+                var actionsWrap = document.createElement('div');
+                var edit = document.createElement('button');
+                var remove = document.createElement('button');
+
+                row.className = 'transition hover:bg-white/[0.035]';
+                categoryCell.className = 'px-5 py-4 font-semibold text-white/70';
+                categoryCell.textContent = faq.category;
+
+                questionCell.className = 'px-5 py-4 font-medium text-white max-w-xs';
+                questionCell.replaceChildren();
+                var qText = document.createElement('div');
+                qText.className = 'font-medium text-white truncate';
+                qText.textContent = faq.question;
+                questionCell.appendChild(qText);
+
+                if (faq.keywords) {
+                    var kwText = document.createElement('div');
+                    kwText.className = 'text-[11px] text-white/35 mt-1 font-normal tracking-wide truncate';
+                    kwText.textContent = 'SEO: ' + faq.keywords;
+                    questionCell.appendChild(kwText);
+                }
+
+                answerCell.className = 'px-5 py-4 text-white/48 max-w-sm truncate';
+                answerCell.textContent = faq.answer;
+
+                orderCell.className = 'px-5 py-4 text-white/60 font-mono';
+                orderCell.textContent = faq.sort_order;
+
+                actions.className = 'px-5 py-4';
+                actionsWrap.className = 'flex justify-end gap-2';
+
+                edit.type = 'button';
+                edit.className = 'rounded border border-white/10 px-3 py-2 text-xs font-medium text-white/58 transition hover:border-white/25 hover:text-white';
+                edit.textContent = 'Edit';
+                edit.addEventListener('click', function () {
+                    openForm(faq);
+                });
+
+                remove.type = 'button';
+                remove.className = 'rounded border border-[#e60012]/25 px-3 py-2 text-xs font-medium text-white/58 transition hover:border-[#e60012]/55 hover:bg-[#e60012]/12 hover:text-white';
+                remove.textContent = 'Delete';
+                remove.addEventListener('click', function () {
+                    deletingId = faq.id;
+                    deleteModal?.classList.remove('hidden');
+                    deleteModal?.classList.add('grid');
+                });
+
+                actionsWrap.append(edit, remove);
+                actions.appendChild(actionsWrap);
+                row.append(categoryCell, questionCell, answerCell, orderCell, actions);
+                table.appendChild(row);
+            });
+        }
+
+        function loadFaqs() {
+            var url = new URL(shell.dataset.indexUrl, window.location.origin);
+
+            if (search?.value.trim()) {
+                url.searchParams.set('search', search.value.trim());
+            }
+
+            return request(url.toString()).then(function (payload) {
+                faqs = payload.faqs || [];
+                render();
+            }).catch(function (error) {
+                toast('danger', 'Unable to load FAQs', error.message || 'Please refresh the page and try again.');
+            });
+        }
+
+        shell.querySelector('[data-admin-faqs-create]')?.addEventListener('click', function () {
+            openForm(null);
+        });
+
+        shell.querySelector('[data-admin-faqs-cancel]')?.addEventListener('click', resetForm);
+
+        search?.addEventListener('input', function () {
+            render();
+            clearTimeout(searchTimer);
+            searchTimer = window.setTimeout(loadFaqs, 300);
+        });
+
+        form.addEventListener('submit', function (event) {
+            event.preventDefault();
+            clearErrors();
+
+            var id = form.querySelector('[data-admin-faqs-id]').value;
+            var payload = {
+                category: form.elements.category.value,
+                question: form.elements.question.value.trim(),
+                answer: form.elements.answer.value.trim(),
+                keywords: form.elements.keywords.value.trim(),
+                sort_order: parseInt(form.elements.sort_order.value, 10),
+            };
+
+            var validationErrors = validateFaqPayload(payload);
+            var url = id ? faqUrl(shell.dataset.updateUrlTemplate, id) : shell.dataset.storeUrl;
+            var method = id ? 'PATCH' : 'POST';
+
+            if (Object.keys(validationErrors).length) {
+                showErrors(validationErrors);
+                toast('danger', 'Please check the form', 'Some FAQ details need attention.');
+                return;
+            }
+
+            setBusy(true);
+
+            request(url, {
+                method: method,
+                body: JSON.stringify(payload),
+            }).then(function (response) {
+                resetForm();
+                toast('success', 'Success', response.message || 'FAQ saved.');
+                return loadFaqs();
+            }).catch(function (error) {
+                showErrors(error.errors || {});
+                toast('danger', 'Unable to save', error.message || 'Please check the form.');
+            }).finally(function () {
+                setBusy(false);
+            });
+        });
+
+        shell.querySelector('[data-admin-faqs-delete-cancel]')?.addEventListener('click', function () {
+            deletingId = null;
+            deleteModal?.classList.add('hidden');
+            deleteModal?.classList.remove('grid');
+        });
+
+        deleteConfirm?.addEventListener('click', function () {
+            if (!deletingId) {
+                return;
+            }
+
+            deleteConfirm.disabled = true;
+
+            request(faqUrl(shell.dataset.deleteUrlTemplate, deletingId), {
+                method: 'DELETE',
+            }).then(function (response) {
+                toast('success', 'Success', response.message || 'FAQ deleted.');
+                deletingId = null;
+                deleteModal?.classList.add('hidden');
+                deleteModal?.classList.remove('grid');
+                return loadFaqs();
+            }).catch(function (error) {
+                toast('danger', 'Unable to delete', error.message || 'Please try again.');
+            }).finally(function () {
+                deleteConfirm.disabled = false;
+            });
+        });
+
+        render();
+    });
+}
+
 function initAdminChrome() {
     if (adminShellReady) {
         return;
@@ -1712,8 +2140,17 @@ document.addEventListener('DOMContentLoaded', initContactForm);
 document.addEventListener('DOMContentLoaded', initDirectorTabs);
 document.addEventListener('DOMContentLoaded', initAdminUsers);
 document.addEventListener('DOMContentLoaded', initAdminDirectors);
+document.addEventListener('DOMContentLoaded', initAdminFaqs);
 document.addEventListener('DOMContentLoaded', initAdminChrome);
 window.addEventListener('scroll', syncScrollTopButton, { passive: true });
+
+document.addEventListener('livewire:init', function () {
+    Livewire.hook('request', function (request) {
+        request.succeed(function () {
+            requestAnimationFrame(initHomeAnimations);
+        });
+    });
+});
 
 document.addEventListener('livewire:navigating', function () {
     document.documentElement.classList.add('is-navigating');
@@ -1727,5 +2164,6 @@ document.addEventListener('livewire:navigated', initContactForm);
 document.addEventListener('livewire:navigated', initDirectorTabs);
 document.addEventListener('livewire:navigated', initAdminUsers);
 document.addEventListener('livewire:navigated', initAdminDirectors);
+document.addEventListener('livewire:navigated', initAdminFaqs);
 document.addEventListener('livewire:navigated', initAdminChrome);
 document.addEventListener('livewire:navigated', finishNavigation);

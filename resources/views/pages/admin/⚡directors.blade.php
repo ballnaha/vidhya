@@ -363,6 +363,23 @@
                 </div>
             </div>
         </div>
+
+        <div class="vidhya-admin-modal-backdrop fixed inset-0 z-[9000] hidden place-items-center bg-black/65 px-4" data-admin-directors-delete-work-modal data-admin-modal>
+            <div class="vidhya-admin-modal w-full max-w-lg space-y-6 rounded-lg p-6" role="dialog" aria-modal="true" aria-labelledby="delete-work-title">
+                <div>
+                    <h2 id="delete-work-title" class="text-lg font-black uppercase tracking-[0.04em] text-white">{{ __('Delete video work?') }}</h2>
+                    <p class="mt-3 text-sm leading-7 text-white/45">{{ __('Are you sure you want to remove this video work from the list? This will remove the work when saved.') }}</p>
+                </div>
+
+                <div class="flex justify-end gap-3">
+                    <button type="button" class="rounded border border-white/10 px-5 py-3 text-xs font-semibold uppercase tracking-[0.1em] text-white/58 transition hover:border-white/25 hover:text-white" data-admin-directors-delete-work-cancel data-admin-modal-cancel>{{ __('Cancel') }}</button>
+
+                    <button type="button" class="inline-flex items-center justify-center gap-3 rounded px-5 py-3 text-xs font-semibold uppercase tracking-[0.1em] text-white transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-70" style="background: linear-gradient(90deg, #823665, #b4143c, #e60012);" data-admin-directors-delete-work-confirm>
+                        {{ __('Delete') }}
+                    </button>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
 </x-layouts::app>

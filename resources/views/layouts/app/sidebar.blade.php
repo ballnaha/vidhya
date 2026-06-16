@@ -31,6 +31,10 @@
                         <span aria-hidden="true">☼</span>
                         {{ __('Directors') }}
                     </a>
+                    <a class="vidhya-sidebar-item {{ request()->routeIs('admin.faqs') ? 'is-current' : '' }}" href="{{ route('admin.faqs') }}" wire:navigate.hover data-admin-sidebar-link>
+                        <span aria-hidden="true">?</span>
+                        {{ __('FAQ') }}
+                    </a>
                 </div>
 
                 <div class="mt-5 grid" data-admin-sidebar-group>

@@ -3,12 +3,15 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AdminUserController;
 use App\Http\Controllers\AdminDirectorController;
+use App\Http\Controllers\AdminFaqController;
 
 Route::livewire('/', 'pages::home')->name('home');
 Route::livewire('/about', 'pages::about')->name('about');
 Route::livewire('/services', 'pages::services')->name('services');
 Route::livewire('/ai-director', 'pages::ai-director')->name('ai-director');
+Route::livewire('/portfolio', 'pages::portfolio')->name('portfolio');
 Route::livewire('/contact', 'pages::contact')->name('contact');
+Route::livewire('/faq', 'pages::faq')->name('faq');
 
 Route::middleware(['auth', 'verified', 'admin'])->group(function () {
     Route::view('dashboard', 'dashboard')->name('dashboard');
@@ -25,6 +28,12 @@ Route::middleware(['auth', 'verified', 'admin'])->group(function () {
     Route::patch('admin/directors/{director}', [AdminDirectorController::class, 'update'])->name('admin.directors.update');
     Route::delete('admin/directors/{director}', [AdminDirectorController::class, 'destroy'])->name('admin.directors.destroy');
     Route::view('admin/directors', 'pages.admin.⚡directors')->name('admin.directors');
+
+    Route::get('admin/faqs/data', [AdminFaqController::class, 'index'])->name('admin.faqs.index');
+    Route::post('admin/faqs', [AdminFaqController::class, 'store'])->name('admin.faqs.store');
+    Route::patch('admin/faqs/{faq}', [AdminFaqController::class, 'update'])->name('admin.faqs.update');
+    Route::delete('admin/faqs/{faq}', [AdminFaqController::class, 'destroy'])->name('admin.faqs.destroy');
+    Route::view('admin/faqs', 'pages.admin.⚡faqs')->name('admin.faqs');
 });
 
 require __DIR__.'/settings.php';
