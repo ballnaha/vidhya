@@ -12,10 +12,10 @@
 
                 <nav class="hidden items-center gap-8 text-xs font-medium uppercase tracking-[0.08em] text-white/42 md:flex">
                     <a href="{{ route('home') }}" class="{{ request()->routeIs('home') ? 'border-b border-[#366bc3] text-white' : 'hover:text-white' }} pb-1 transition" wire:navigate.hover>Home</a>
-                    <a href="{{ route('ai-director') }}" class="{{ request()->routeIs('ai-director') ? 'border-b border-[#366bc3] text-white' : 'hover:text-white' }} pb-1 transition" wire:navigate.hover>AI Director</a>
-                    <a href="{{ route('portfolio') }}" class="{{ request()->routeIs('portfolio') ? 'border-b border-[#366bc3] text-white' : 'hover:text-white' }} pb-1 transition" wire:navigate.hover>Portfolio</a>
-                    <a href="{{ route('about') }}" class="{{ request()->routeIs('about') ? 'border-b border-[#366bc3] text-white' : 'hover:text-white' }} pb-1 transition" wire:navigate.hover>About</a>
                     <a href="{{ route('services') }}" class="{{ request()->routeIs('services') ? 'border-b border-[#366bc3] text-white' : 'hover:text-white' }} pb-1 transition" wire:navigate.hover>Services</a>
+                    <a href="{{ route('portfolio') }}" class="{{ request()->routeIs('portfolio') ? 'border-b border-[#366bc3] text-white' : 'hover:text-white' }} pb-1 transition" wire:navigate.hover>Portfolio</a>
+                    <a href="{{ route('ai-director') }}" class="{{ request()->routeIs('ai-director') ? 'border-b border-[#366bc3] text-white' : 'hover:text-white' }} pb-1 transition" wire:navigate.hover>AI Director</a>
+                    <a href="{{ route('about') }}" class="{{ request()->routeIs('about') ? 'border-b border-[#366bc3] text-white' : 'hover:text-white' }} pb-1 transition" wire:navigate.hover>About</a>
                     <a href="{{ route('faq') }}" class="{{ request()->routeIs('faq') ? 'border-b border-[#366bc3] text-white' : 'hover:text-white' }} pb-1 transition" wire:navigate.hover>FAQ</a>
                     <a href="{{ route('contact') }}" class="rounded px-6 py-3 text-[11px] font-semibold text-white transition hover:brightness-110" style="background: linear-gradient(90deg, #366bc3, #823665, #e60012);" wire:navigate.hover>Start a Project</a>
                 </nav>
@@ -35,10 +35,10 @@
             <div id="marketing-mobile-menu" class="vidhya-mobile-menu-panel fixed right-0 top-[72px] h-[calc(100dvh-72px)] w-full max-w-80 border-l border-white/10 bg-[#0a0a0c]/98 px-5 py-6 shadow-2xl shadow-black/45 md:hidden" data-mobile-menu-panel>
                 <nav class="flex flex-col gap-1 text-sm font-medium uppercase tracking-[0.08em] text-white/50">
                     <a href="{{ route('home') }}" class="{{ request()->routeIs('home') ? 'bg-white/6 text-white' : 'hover:bg-white/[0.04] hover:text-white' }} rounded px-4 py-3 transition" data-mobile-menu-close wire:navigate.hover>Home</a>
-                    <a href="{{ route('ai-director') }}" class="{{ request()->routeIs('ai-director') ? 'bg-white/6 text-white' : 'hover:bg-white/[0.04] hover:text-white' }} rounded px-4 py-3 transition" data-mobile-menu-close wire:navigate.hover>AI Director</a>
-                    <a href="{{ route('portfolio') }}" class="{{ request()->routeIs('portfolio') ? 'bg-white/6 text-white' : 'hover:bg-white/[0.04] hover:text-white' }} rounded px-4 py-3 transition" data-mobile-menu-close wire:navigate.hover>Portfolio</a>
-                    <a href="{{ route('about') }}" class="{{ request()->routeIs('about') ? 'bg-white/6 text-white' : 'hover:bg-white/[0.04] hover:text-white' }} rounded px-4 py-3 transition" data-mobile-menu-close wire:navigate.hover>About</a>
                     <a href="{{ route('services') }}" class="{{ request()->routeIs('services') ? 'bg-white/6 text-white' : 'hover:bg-white/[0.04] hover:text-white' }} rounded px-4 py-3 transition" data-mobile-menu-close wire:navigate.hover>Services</a>
+                    <a href="{{ route('portfolio') }}" class="{{ request()->routeIs('portfolio') ? 'bg-white/6 text-white' : 'hover:bg-white/[0.04] hover:text-white' }} rounded px-4 py-3 transition" data-mobile-menu-close wire:navigate.hover>Portfolio</a>
+                    <a href="{{ route('ai-director') }}" class="{{ request()->routeIs('ai-director') ? 'bg-white/6 text-white' : 'hover:bg-white/[0.04] hover:text-white' }} rounded px-4 py-3 transition" data-mobile-menu-close wire:navigate.hover>AI Director</a>
+                    <a href="{{ route('about') }}" class="{{ request()->routeIs('about') ? 'bg-white/6 text-white' : 'hover:bg-white/[0.04] hover:text-white' }} rounded px-4 py-3 transition" data-mobile-menu-close wire:navigate.hover>About</a>
                     <a href="{{ route('faq') }}" class="{{ request()->routeIs('faq') ? 'bg-white/6 text-white' : 'hover:bg-white/[0.04] hover:text-white' }} rounded px-4 py-3 transition" data-mobile-menu-close wire:navigate.hover>FAQ</a>
                     <a href="{{ route('contact') }}" class="mt-3 rounded px-5 py-3 text-center text-[12px] font-semibold text-white transition hover:brightness-110" style="background: linear-gradient(90deg, #366bc3, #823665, #e60012);" data-mobile-menu-close wire:navigate.hover>Start a Project</a>
                 </nav>
