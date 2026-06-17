@@ -369,4 +369,36 @@ it('deletes old bio image files when updated or deleted', function () {
     expect(file_exists($newPath))->toBeFalse();
 });
 
+it('creates a general studio profile with only core details and works', function () {
+    $payload = [
+        'first_name' => 'Vidhya',
+        'last_name' => 'Studio',
+        'slug' => 'general',
+        'works_raw' => json_encode([
+            [
+                'image' => '/images/work1.png',
+                'title' => 'General Studio Work A',
+                'span' => 'md:col-span-2',
+                'video_url' => 'https://youtube.com/watch?v=123',
+                'show_in_portfolio' => true,
+            ]
+        ]),
+    ];
+
+    $response = $this->actingAs($this->adminUser)->postJson(route('admin.directors.store'), $payload);
+
+    $response->assertStatus(201);
+    $this->assertDatabaseHas('directors', [
+        'first_name' => 'Vidhya',
+        'last_name' => 'Studio',
+        'slug' => 'general',
+        'eyebrow' => 'Vidhya Studio',
+        'role' => 'Studio',
+        'works_eyebrow' => 'Works',
+        'works_title_white' => 'Studio',
+        'works_title_muted' => 'Works',
+    ]);
+});
+
+
 

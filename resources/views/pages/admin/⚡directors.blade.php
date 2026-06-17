@@ -74,7 +74,7 @@
                 <!-- Core Details -->
                 <div class="space-y-4">
                     <h3 class="text-xs font-bold uppercase tracking-wider text-[#366bc3]">{{ __('Core Profile Details') }}</h3>
-                    <div class="grid gap-4 md:grid-cols-3">
+                    <div class="grid gap-4 md:grid-cols-2">
                         <div>
                             <label class="block mb-2 text-xs font-semibold text-white/45 uppercase tracking-wider">{{ __('First Name') }}</label>
                             <input name="first_name" placeholder="Sunil" class="w-full rounded border border-white/10 bg-white/[0.04] px-4 py-3 text-sm text-white outline-none transition placeholder:text-white/28 focus:border-[#366bc3]" data-admin-directors-field="first_name">
@@ -85,15 +85,25 @@
                             <input name="last_name" placeholder="Thomas" class="w-full rounded border border-white/10 bg-white/[0.04] px-4 py-3 text-sm text-white outline-none transition placeholder:text-white/28 focus:border-[#366bc3]" data-admin-directors-field="last_name">
                             <p class="mt-2 hidden text-xs text-red-400" data-admin-directors-error="last_name"></p>
                         </div>
-                        <div>
-                            <label class="block mb-2 text-xs font-semibold text-white/45 uppercase tracking-wider">{{ __('Slug (Unique Tab ID)') }}</label>
-                            <input name="slug" placeholder="sunil-thomas" class="w-full rounded border border-white/10 bg-white/[0.04] px-4 py-3 text-sm text-white outline-none transition placeholder:text-white/28 focus:border-[#366bc3]" data-admin-directors-field="slug">
-                            <p class="mt-1.5 text-[11px] text-white/35 leading-normal">{{ __('Only lowercase English letters, numbers, dashes, and underscores are allowed (Thai characters are not supported).') }}</p>
-                            <p class="mt-2 hidden text-xs text-red-400" data-admin-directors-error="slug"></p>
-                        </div>
                     </div>
 
-                    <div class="grid gap-4 md:grid-cols-2">
+                    <div class="space-y-2">
+                        <div class="flex items-center justify-between">
+                            <label class="block text-xs font-semibold text-white/45 uppercase tracking-wider">{{ __('Slug (Unique Tab ID)') }}</label>
+                            <button type="button" class="inline-flex items-center gap-1 rounded-full bg-[#366bc3]/10 border border-[#366bc3]/20 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-[#366bc3] hover:bg-[#366bc3]/20 hover:text-white transition" data-admin-directors-fill-general>
+                                {{ __('General Studio Profile') }}
+                            </button>
+                        </div>
+                        <input name="slug" placeholder="sunil-thomas" class="w-full rounded border border-white/10 bg-white/[0.04] px-4 py-3 text-sm text-white outline-none transition placeholder:text-white/28 focus:border-[#366bc3]" data-admin-directors-field="slug">
+                        <p class="mt-1.5 text-[11px] text-white/35 leading-normal">
+                            {{ __('Only lowercase English letters, numbers, dashes, and underscores are allowed (Thai characters are not supported).') }}
+                            <br><span class="text-[#366bc3] font-bold">{{ __('Note:') }}</span> {{ __('Use slug "general" (First Name: Vidhya, Last Name: Studio) for uploading general/studio works not belonging to any specific AI Director. This profile will be automatically hidden from the AI Director Roster page, and its works will show in the portfolio under "Vidhya Studio".') }}
+                        </p>
+                        <p class="mt-2 hidden text-xs text-red-400" data-admin-directors-error="slug"></p>
+                    </div>
+
+
+                    <div class="grid gap-4 md:grid-cols-2" data-admin-directors-not-general>
                         <div>
                             <label class="block mb-2 text-xs font-semibold text-white/45 uppercase tracking-wider">{{ __('Eyebrow Subtitle') }}</label>
                             <input name="eyebrow" placeholder="AI Director · Vidhya Studio" class="w-full rounded border border-white/10 bg-white/[0.04] px-4 py-3 text-sm text-white outline-none transition placeholder:text-white/28 focus:border-[#366bc3]" data-admin-directors-field="eyebrow">
@@ -108,7 +118,7 @@
                 </div>
 
                 <!-- Statistics Blocks -->
-                <div class="space-y-4 pt-4 border-t border-white/8">
+                <div class="space-y-4 pt-4 border-t border-white/8" data-admin-directors-not-general>
                     <h3 class="text-xs font-bold uppercase tracking-wider text-[#366bc3]">{{ __('Statistics (3 blocks)') }}</h3>
                     
                     <!-- Stat 1 -->
@@ -170,7 +180,7 @@
                 </div>
 
                 <!-- Biography Details (Section 2) -->
-                <div class="space-y-4 pt-4 border-t border-white/8">
+                <div class="space-y-4 pt-4 border-t border-white/8" data-admin-directors-not-general>
                     <h3 class="text-xs font-bold uppercase tracking-wider text-[#366bc3]">{{ __('Biography (Section 2)') }}</h3>
                     <div class="grid gap-4 md:grid-cols-2">
                         <div>
@@ -261,55 +271,75 @@
                 </div>
 
                 <template data-admin-directors-work-row-template>
-                    <div class="group relative grid gap-4 rounded border border-white/5 bg-white/[0.015] p-4 transition hover:border-white/10 sm:grid-cols-12 items-start" data-admin-directors-work-row>
-                        <div class="sm:col-span-1 flex items-center justify-between sm:justify-start gap-2 h-10 sm:h-11">
-                            <div class="cursor-grab text-white/20 hover:text-white/60 transition hidden sm:block mr-1" title="Drag to reorder" data-admin-directors-work-drag-handle>
+                    <div class="group relative flex gap-4 rounded border border-white/5 bg-white/[0.015] p-5 transition hover:border-white/10 items-start" data-admin-directors-work-row>
+                        <!-- Left Handle & Index -->
+                        <div class="flex items-center gap-2 h-10 sm:h-11 shrink-0">
+                            <div class="cursor-grab text-white/20 hover:text-white/60 transition hidden sm:block" title="Drag to reorder" data-admin-directors-work-drag-handle>
                                 <svg class="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
                                     <path stroke-linecap="round" stroke-linejoin="round" d="M8 9h8M8 15h8" />
                                 </svg>
                             </div>
                             <span class="text-xs font-bold text-white/25 group-hover:text-[#366bc3] transition" data-admin-directors-work-number>#1</span>
-                            <button type="button" class="sm:hidden text-xs font-semibold uppercase tracking-wider text-red-500 hover:text-red-400 transition" data-admin-directors-remove-work>
-                                {{ __('Remove') }}
-                            </button>
                         </div>
 
-                        <div class="sm:col-span-3">
-                            <input type="text" placeholder="Title (e.g. Nike - Rise)" class="w-full rounded border border-white/10 bg-white/[0.04] px-3.5 py-2.5 text-sm text-white outline-none transition placeholder:text-white/28 focus:border-[#366bc3]" data-admin-directors-work-field="title">
-                        </div>
-
-                        <div class="sm:col-span-3">
-                            <input type="text" placeholder="YouTube Link (optional)" class="w-full rounded border border-white/10 bg-white/[0.04] px-3.5 py-2.5 text-sm text-white outline-none transition placeholder:text-white/28 focus:border-[#366bc3]" data-admin-directors-work-field="video_url">
-                        </div>
-
-                        <div class="sm:col-span-3 space-y-2">
-                            <input type="file" accept="image/*" class="w-full rounded border border-white/10 bg-white/[0.04] px-2 py-1.5 text-xs text-white file:mr-2 file:py-1 file:px-2 file:rounded file:border-0 file:text-[10px] file:font-semibold file:bg-white/10 file:text-white hover:file:bg-white/20" data-admin-directors-work-file-input>
-                            
-                            <div class="flex items-center gap-2.5 hidden" data-admin-directors-work-preview-wrapper>
-                                <img src="" class="h-8 w-12 object-cover border border-white/10 rounded" data-admin-directors-work-preview>
-                                <div class="flex flex-col min-w-0 leading-tight">
-                                    <span class="text-[9px] text-white/35 truncate max-w-[80px] font-mono" data-admin-directors-work-path-label></span>
-                                    <button type="button" class="text-red-500 hover:text-red-400 transition mt-1" data-admin-directors-work-remove-image-file title="{{ __('Delete Image') }}">
-                                        <svg class="size-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                            <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                        </svg>
-                                    </button>
+                        <!-- Main Form Content -->
+                        <div class="flex-1 space-y-4">
+                            <!-- Row 1: Main Fields -->
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                <div>
+                                    <label class="block mb-1.5 text-[10px] font-semibold text-white/35 uppercase tracking-wider">{{ __('Title') }}</label>
+                                    <input type="text" placeholder="Title (e.g. Nike - Rise)" class="w-full rounded border border-white/10 bg-white/[0.04] px-3.5 py-2.5 text-sm text-white outline-none transition placeholder:text-white/28 focus:border-[#366bc3]" data-admin-directors-work-field="title">
+                                </div>
+                                <div>
+                                    <label class="block mb-1.5 text-[10px] font-semibold text-white/35 uppercase tracking-wider">{{ __('YouTube / Vimeo Link (optional)') }}</label>
+                                    <input type="text" placeholder="https://youtube.com/..." class="w-full rounded border border-white/10 bg-white/[0.04] px-3.5 py-2.5 text-sm text-white outline-none transition placeholder:text-white/28 focus:border-[#366bc3]" data-admin-directors-work-field="video_url">
+                                </div>
+                                <div>
+                                    <label class="block mb-1.5 text-[10px] font-semibold text-white/35 uppercase tracking-wider">{{ __('Custom Thumbnail / Photo') }}</label>
+                                    <input type="file" accept="image/*" class="w-full rounded border border-white/10 bg-white/[0.04] px-2 py-1.5 text-xs text-white file:mr-2 file:py-1 file:px-2 file:rounded file:border-0 file:text-[10px] file:font-semibold file:bg-white/10 file:text-white hover:file:bg-white/20" data-admin-directors-work-file-input>
+                                    
+                                    <div class="flex items-center gap-2.5 mt-2.5 hidden" data-admin-directors-work-preview-wrapper>
+                                        <img src="" class="h-8 w-12 object-cover border border-white/10 rounded" data-admin-directors-work-preview>
+                                        <div class="flex flex-col min-w-0 leading-tight">
+                                            <span class="text-[9px] text-white/35 truncate max-w-[120px] font-mono" data-admin-directors-work-path-label></span>
+                                            <button type="button" class="text-red-500 hover:text-red-400 transition mt-1 w-fit" data-admin-directors-work-remove-image-file title="{{ __('Delete Image') }}">
+                                                <svg class="size-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                                </svg>
+                                            </button>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
+
+                            <!-- Row 2: Settings & Metadata -->
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-xl">
+                                <div>
+                                    <label class="block mb-1.5 text-[10px] font-semibold text-white/35 uppercase tracking-wider">{{ __('Portfolio Visibility') }}</label>
+                                    <select class="w-full rounded border border-white/10 bg-[#0d0d13] px-3 py-2.5 text-sm text-white outline-none transition focus:border-[#366bc3]" data-admin-directors-work-field="show_in_portfolio">
+                                        <option value="1">{{ __('Show in Portfolio') }}</option>
+                                        <option value="0">{{ __('Hide from Portfolio (Profile only)') }}</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block mb-1.5 text-[10px] font-semibold text-white/35 uppercase tracking-wider">{{ __('Display Size (Director Page Grid)') }}</label>
+                                    <select class="w-full rounded border border-white/10 bg-[#0d0d13] px-3 py-2.5 text-sm text-white outline-none transition focus:border-[#366bc3]" data-admin-directors-work-field="span">
+                                        <option value="md:col-span-2">{{ __('1/3 Width') }}</option>
+                                        <option value="md:col-span-3">{{ __('1/2 Width') }}</option>
+                                        <option value="md:col-span-4">{{ __('2/3 Width') }}</option>
+                                        <option value="md:col-span-6">{{ __('Full Width') }}</option>
+                                        <option value="md:col-span-2 md:col-start-2">{{ __('1/3 Centered') }}</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <!-- Image path is stored as hidden field -->
+                            <input type="hidden" data-admin-directors-work-field="image">
                         </div>
 
-                        <!-- Image path is stored as hidden field -->
-                        <input type="hidden" data-admin-directors-work-field="image">
-
-                        <div class="sm:col-span-2 flex items-center gap-3">
-                            <select class="w-full rounded border border-white/10 bg-[#0d0d13] px-3 py-2.5 text-sm text-white outline-none transition focus:border-[#366bc3]" data-admin-directors-work-field="span">
-                                <option value="md:col-span-2">{{ __('1/3 Width') }}</option>
-                                <option value="md:col-span-3">{{ __('1/2 Width') }}</option>
-                                <option value="md:col-span-4">{{ __('2/3 Width') }}</option>
-                                <option value="md:col-span-6">{{ __('Full Width') }}</option>
-                                <option value="md:col-span-2 md:col-start-2">{{ __('1/3 Centered') }}</option>
-                            </select>
-                            <button type="button" class="hidden sm:grid size-10 shrink-0 place-items-center rounded border border-white/10 bg-white/[0.02] text-white/45 hover:border-red-500/30 hover:bg-red-500/10 hover:text-red-400 transition" data-admin-directors-remove-work title="{{ __('Remove work') }}">
+                        <!-- Right Actions -->
+                        <div class="shrink-0 h-10 sm:h-11 flex items-center">
+                            <button type="button" class="grid size-10 place-items-center rounded border border-white/10 bg-white/[0.02] text-white/45 hover:border-red-500/30 hover:bg-red-500/10 hover:text-red-400 transition" data-admin-directors-remove-work title="{{ __('Remove work') }}">
                                 <svg class="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                                     <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                                 </svg>
@@ -363,7 +393,11 @@
                     <button type="button" class="rounded border border-white/10 px-5 py-3 text-xs font-semibold uppercase tracking-[0.1em] text-white/58 transition hover:border-white/25 hover:text-white" data-admin-directors-delete-cancel data-admin-modal-cancel>{{ __('Cancel') }}</button>
 
                     <button type="button" class="inline-flex items-center justify-center gap-3 rounded px-5 py-3 text-xs font-semibold uppercase tracking-[0.1em] text-white transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-70" style="background: linear-gradient(90deg, #823665, #b4143c, #e60012);" data-admin-directors-delete-confirm>
-                        {{ __('Delete') }}
+                        <svg class="hidden size-4 animate-spin" viewBox="0 0 24 24" fill="none" aria-hidden="true" data-admin-directors-delete-spinner>
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-90" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
+                        </svg>
+                        <span data-admin-directors-delete-label>{{ __('Delete') }}</span>
                     </button>
                 </div>
             </div>

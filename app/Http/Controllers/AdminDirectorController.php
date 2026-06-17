@@ -18,30 +18,31 @@ class AdminDirectorController extends Controller
 
     public function store(Request $request): JsonResponse
     {
+        $isGeneral = $request->input('slug') === 'general';
         $rules = [
             'first_name' => ['required', 'string', 'max:255'],
             'last_name' => ['required', 'string', 'max:255'],
             'slug' => ['required', 'string', 'max:255', 'alpha_dash', Rule::unique('directors', 'slug')],
-            'eyebrow' => ['required', 'string', 'max:255'],
-            'role' => ['required', 'string', 'max:255'],
-            'bio_title_white' => ['required', 'string', 'max:255'],
-            'bio_title_gradient' => ['required', 'string', 'max:255'],
+            'eyebrow' => [$isGeneral ? 'nullable' : 'required', 'string', 'max:255'],
+            'role' => [$isGeneral ? 'nullable' : 'required', 'string', 'max:255'],
+            'bio_title_white' => [$isGeneral ? 'nullable' : 'required', 'string', 'max:255'],
+            'bio_title_gradient' => [$isGeneral ? 'nullable' : 'required', 'string', 'max:255'],
             'bio_image' => ['nullable', 'string', 'max:255'],
             'bio_image_file' => ['nullable', 'image', 'mimes:jpeg,png,jpg,webp', 'max:5120'],
-            'bio_alt' => ['required', 'string', 'max:255'],
-            'works_eyebrow' => ['required', 'string', 'max:255'],
-            'works_title_white' => ['required', 'string', 'max:255'],
-            'works_title_muted' => ['required', 'string', 'max:255'],
-            'bio_raw' => ['required', 'string'],
-            'stat_1_value' => ['required', 'string', 'max:50'],
+            'bio_alt' => [$isGeneral ? 'nullable' : 'required', 'string', 'max:255'],
+            'works_eyebrow' => [$isGeneral ? 'nullable' : 'required', 'string', 'max:255'],
+            'works_title_white' => [$isGeneral ? 'nullable' : 'required', 'string', 'max:255'],
+            'works_title_muted' => [$isGeneral ? 'nullable' : 'required', 'string', 'max:255'],
+            'bio_raw' => [$isGeneral ? 'nullable' : 'required', 'string'],
+            'stat_1_value' => [$isGeneral ? 'nullable' : 'required', 'string', 'max:50'],
             'stat_1_suffix' => ['nullable', 'string', 'max:20'],
-            'stat_1_label' => ['required', 'string', 'max:255'],
-            'stat_2_value' => ['required', 'string', 'max:50'],
+            'stat_1_label' => [$isGeneral ? 'nullable' : 'required', 'string', 'max:255'],
+            'stat_2_value' => [$isGeneral ? 'nullable' : 'required', 'string', 'max:50'],
             'stat_2_suffix' => ['nullable', 'string', 'max:20'],
-            'stat_2_label' => ['required', 'string', 'max:255'],
-            'stat_3_value' => ['required', 'string', 'max:50'],
+            'stat_2_label' => [$isGeneral ? 'nullable' : 'required', 'string', 'max:255'],
+            'stat_3_value' => [$isGeneral ? 'nullable' : 'required', 'string', 'max:50'],
             'stat_3_suffix' => ['nullable', 'string', 'max:20'],
-            'stat_3_label' => ['required', 'string', 'max:255'],
+            'stat_3_label' => [$isGeneral ? 'nullable' : 'required', 'string', 'max:255'],
             'works_raw' => ['required', 'string', function ($attribute, $value, $fail) use ($request) {
                 $decoded = json_decode($value, true);
                 if (!is_array($decoded)) {
@@ -110,30 +111,31 @@ class AdminDirectorController extends Controller
 
     public function update(Request $request, Director $director): JsonResponse
     {
+        $isGeneral = $request->input('slug') === 'general';
         $rules = [
             'first_name' => ['required', 'string', 'max:255'],
             'last_name' => ['required', 'string', 'max:255'],
             'slug' => ['required', 'string', 'max:255', 'alpha_dash', Rule::unique('directors', 'slug')->ignore($director->id)],
-            'eyebrow' => ['required', 'string', 'max:255'],
-            'role' => ['required', 'string', 'max:255'],
-            'bio_title_white' => ['required', 'string', 'max:255'],
-            'bio_title_gradient' => ['required', 'string', 'max:255'],
+            'eyebrow' => [$isGeneral ? 'nullable' : 'required', 'string', 'max:255'],
+            'role' => [$isGeneral ? 'nullable' : 'required', 'string', 'max:255'],
+            'bio_title_white' => [$isGeneral ? 'nullable' : 'required', 'string', 'max:255'],
+            'bio_title_gradient' => [$isGeneral ? 'nullable' : 'required', 'string', 'max:255'],
             'bio_image' => ['nullable', 'string', 'max:255'],
             'bio_image_file' => ['nullable', 'image', 'mimes:jpeg,png,jpg,webp', 'max:5120'],
-            'bio_alt' => ['required', 'string', 'max:255'],
-            'works_eyebrow' => ['required', 'string', 'max:255'],
-            'works_title_white' => ['required', 'string', 'max:255'],
-            'works_title_muted' => ['required', 'string', 'max:255'],
-            'bio_raw' => ['required', 'string'],
-            'stat_1_value' => ['required', 'string', 'max:50'],
+            'bio_alt' => [$isGeneral ? 'nullable' : 'required', 'string', 'max:255'],
+            'works_eyebrow' => [$isGeneral ? 'nullable' : 'required', 'string', 'max:255'],
+            'works_title_white' => [$isGeneral ? 'nullable' : 'required', 'string', 'max:255'],
+            'works_title_muted' => [$isGeneral ? 'nullable' : 'required', 'string', 'max:255'],
+            'bio_raw' => [$isGeneral ? 'nullable' : 'required', 'string'],
+            'stat_1_value' => [$isGeneral ? 'nullable' : 'required', 'string', 'max:50'],
             'stat_1_suffix' => ['nullable', 'string', 'max:20'],
-            'stat_1_label' => ['required', 'string', 'max:255'],
-            'stat_2_value' => ['required', 'string', 'max:50'],
+            'stat_1_label' => [$isGeneral ? 'nullable' : 'required', 'string', 'max:255'],
+            'stat_2_value' => [$isGeneral ? 'nullable' : 'required', 'string', 'max:50'],
             'stat_2_suffix' => ['nullable', 'string', 'max:20'],
-            'stat_2_label' => ['required', 'string', 'max:255'],
-            'stat_3_value' => ['required', 'string', 'max:50'],
+            'stat_2_label' => [$isGeneral ? 'nullable' : 'required', 'string', 'max:255'],
+            'stat_3_value' => [$isGeneral ? 'nullable' : 'required', 'string', 'max:50'],
             'stat_3_suffix' => ['nullable', 'string', 'max:20'],
-            'stat_3_label' => ['required', 'string', 'max:255'],
+            'stat_3_label' => [$isGeneral ? 'nullable' : 'required', 'string', 'max:255'],
             'works_raw' => ['required', 'string', function ($attribute, $value, $fail) use ($request) {
                 $decoded = json_decode($value, true);
                 if (!is_array($decoded)) {
@@ -257,28 +259,31 @@ class AdminDirectorController extends Controller
 
     private function mapInputs(Request $request, array $validated): array
     {
+        $isGeneral = $validated['slug'] === 'general';
+
         // Parse bio paragraph lines
+        $bioRaw = $validated['bio_raw'] ?? '';
         $bioParagraphs = array_values(array_filter(
-            array_map('trim', explode("\n", str_replace("\r", "", $validated['bio_raw']))),
+            array_map('trim', explode("\n", str_replace("\r", "", $bioRaw))),
             fn ($line) => $line !== ''
         ));
 
         // Map stats
         $stats = [
             [
-                'value' => $validated['stat_1_value'],
+                'value' => $validated['stat_1_value'] ?? '0',
                 'suffix' => $validated['stat_1_suffix'] ?? '',
-                'label' => $validated['stat_1_label'],
+                'label' => $validated['stat_1_label'] ?? 'Stat',
             ],
             [
-                'value' => $validated['stat_2_value'],
+                'value' => $validated['stat_2_value'] ?? '0',
                 'suffix' => $validated['stat_2_suffix'] ?? '',
-                'label' => $validated['stat_2_label'],
+                'label' => $validated['stat_2_label'] ?? 'Stat',
             ],
             [
-                'value' => $validated['stat_3_value'],
+                'value' => $validated['stat_3_value'] ?? '0',
                 'suffix' => $validated['stat_3_suffix'] ?? '',
-                'label' => $validated['stat_3_label'],
+                'label' => $validated['stat_3_label'] ?? 'Stat',
             ],
         ];
 
@@ -313,16 +318,16 @@ class AdminDirectorController extends Controller
             'first_name' => $validated['first_name'],
             'last_name' => $validated['last_name'],
             'slug' => $validated['slug'],
-            'eyebrow' => $validated['eyebrow'],
-            'role' => $validated['role'],
-            'bio_title_white' => $validated['bio_title_white'],
-            'bio_title_gradient' => $validated['bio_title_gradient'],
+            'eyebrow' => $isGeneral ? ($validated['eyebrow'] ?? 'Vidhya Studio') : $validated['eyebrow'],
+            'role' => $isGeneral ? ($validated['role'] ?? 'Studio') : $validated['role'],
+            'bio_title_white' => $isGeneral ? ($validated['bio_title_white'] ?? 'Vidhya') : $validated['bio_title_white'],
+            'bio_title_gradient' => $isGeneral ? ($validated['bio_title_gradient'] ?? 'Studio') : $validated['bio_title_gradient'],
             'bio_image' => $validated['bio_image'] ?? '',
-            'bio_alt' => $validated['bio_alt'],
-            'works_eyebrow' => $validated['works_eyebrow'],
-            'works_title_white' => $validated['works_title_white'],
-            'works_title_muted' => $validated['works_title_muted'],
-            'bio' => $bioParagraphs,
+            'bio_alt' => $isGeneral ? ($validated['bio_alt'] ?? 'Vidhya Studio') : $validated['bio_alt'],
+            'works_eyebrow' => $isGeneral ? ($validated['works_eyebrow'] ?? 'Works') : $validated['works_eyebrow'],
+            'works_title_white' => $isGeneral ? ($validated['works_title_white'] ?? 'Studio') : $validated['works_title_white'],
+            'works_title_muted' => $isGeneral ? ($validated['works_title_muted'] ?? 'Works') : $validated['works_title_muted'],
+            'bio' => $isGeneral ? ($bioParagraphs ?: ['Vidhya Studio profile']) : $bioParagraphs,
             'stats' => $stats,
             'works' => $works,
         ];

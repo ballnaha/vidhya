@@ -38,7 +38,17 @@ class extends Component
         foreach ($directors as $director) {
             if ($director->works && is_array($director->works)) {
                 foreach ($director->works as $work) {
-                    $work['director_name'] = $director->first_name . ' ' . $director->last_name;
+                    // Check if the work should be shown on the portfolio page
+                    $showInPortfolio = isset($work['show_in_portfolio']) ? (bool) $work['show_in_portfolio'] : true;
+                    if (!$showInPortfolio) {
+                        continue;
+                    }
+
+                    if ($director->slug === 'general') {
+                        $work['director_name'] = 'Vidhya Studio';
+                    } else {
+                        $work['director_name'] = $director->first_name . ' ' . $director->last_name;
+                    }
                     $work['director_slug'] = $director->slug;
                     $allWorks->push((object) $work);
                 }

@@ -1124,11 +1124,16 @@ function initAdminDirectors() {
 
             var removeImageBtn = row.querySelector('[data-admin-directors-work-remove-image-file]');
 
+            var showInPortfolioField = row.querySelector('[data-admin-directors-work-field="show_in_portfolio"]');
+
             if (data) {
                 if (titleField) titleField.value = data.title || '';
                 if (videoUrlField) videoUrlField.value = data.video_url || '';
                 if (imageField) imageField.value = data.image || '';
                 if (spanField) spanField.value = data.span || 'md:col-span-2';
+                if (showInPortfolioField) {
+                    showInPortfolioField.value = (data.show_in_portfolio !== undefined && data.show_in_portfolio !== null) ? (data.show_in_portfolio ? '1' : '0') : '1';
+                }
 
                 if (data.image) {
                     if (previewImg) previewImg.src = data.image;
@@ -1221,6 +1226,7 @@ function initAdminDirectors() {
                 var videoUrl = row.querySelector('[data-admin-directors-work-field="video_url"]')?.value.trim() || '';
                 var image = row.querySelector('[data-admin-directors-work-field="image"]')?.value.trim() || '';
                 var span = row.querySelector('[data-admin-directors-work-field="span"]')?.value || 'md:col-span-2';
+                var showInPortfolio = row.querySelector('[data-admin-directors-work-field="show_in_portfolio"]')?.value === '1';
                 
                 var fileInput = row.querySelector('[data-admin-directors-work-file-input]');
 
@@ -1232,7 +1238,8 @@ function initAdminDirectors() {
                         title: title,
                         video_url: videoUrl,
                         image: image,
-                        span: span
+                        span: span,
+                        show_in_portfolio: showInPortfolio
                     });
                     activeIndex++;
                 } else {
@@ -1343,19 +1350,28 @@ function initAdminDirectors() {
             } else if (!/^[a-z0-9-_]+$/.test(payload.slug.trim())) {
                 errors.slug = ['The slug must only contain lowercase letters, numbers, dashes, and underscores (Thai characters are not supported).'];
             }
-            if (!payload.eyebrow.trim()) errors.eyebrow = ['Please enter eyebrow subtitle.'];
-            if (!payload.role.trim()) errors.role = ['Please enter role tagline.'];
-            if (!payload.bio_title_white.trim()) errors.bio_title_white = ['Please enter bio title white text.'];
-            if (!payload.bio_title_gradient.trim()) errors.bio_title_gradient = ['Please enter bio title gradient text.'];
-            if (!payload.bio_alt.trim()) errors.bio_alt = ['Please enter bio image alt text.'];
-            if (!payload.bio_raw.trim()) errors.bio_raw = ['Please enter biography paragraphs.'];
-            
-            if (!payload.stat_1_value.trim()) errors.stat_1_value = ['Required.'];
-            if (!payload.stat_1_label.trim()) errors.stat_1_label = ['Required.'];
-            if (!payload.stat_2_value.trim()) errors.stat_2_value = ['Required.'];
-            if (!payload.stat_2_label.trim()) errors.stat_2_label = ['Required.'];
-            if (!payload.stat_3_value.trim()) errors.stat_3_value = ['Required.'];
-            if (!payload.stat_3_label.trim()) errors.stat_3_label = ['Required.'];
+
+            var isGeneral = payload.slug.trim() === 'general';
+
+            if (!isGeneral) {
+                if (!payload.eyebrow.trim()) errors.eyebrow = ['Please enter eyebrow subtitle.'];
+                if (!payload.role.trim()) errors.role = ['Please enter role tagline.'];
+                if (!payload.bio_title_white.trim()) errors.bio_title_white = ['Please enter bio title white text.'];
+                if (!payload.bio_title_gradient.trim()) errors.bio_title_gradient = ['Please enter bio title gradient text.'];
+                if (!payload.bio_alt.trim()) errors.bio_alt = ['Please enter bio image alt text.'];
+                if (!payload.bio_raw.trim()) errors.bio_raw = ['Please enter biography paragraphs.'];
+                
+                if (!payload.stat_1_value.trim()) errors.stat_1_value = ['Required.'];
+                if (!payload.stat_1_label.trim()) errors.stat_1_label = ['Required.'];
+                if (!payload.stat_2_value.trim()) errors.stat_2_value = ['Required.'];
+                if (!payload.stat_2_label.trim()) errors.stat_2_label = ['Required.'];
+                if (!payload.stat_3_value.trim()) errors.stat_3_value = ['Required.'];
+                if (!payload.stat_3_label.trim()) errors.stat_3_label = ['Required.'];
+
+                if (!payload.works_eyebrow.trim()) errors.works_eyebrow = ['Please enter works section eyebrow.'];
+                if (!payload.works_title_white.trim()) errors.works_title_white = ['Please enter works section title (white).'];
+                if (!payload.works_title_muted.trim()) errors.works_title_muted = ['Please enter works section title (muted).'];
+            }
 
             if (!payload.works_raw.trim()) {
                 errors.works_raw = ['Please enter works configuration.'];
@@ -1364,6 +1380,16 @@ function initAdminDirectors() {
                     var parsed = JSON.parse(payload.works_raw);
                     if (!Array.isArray(parsed)) {
                         errors.works_raw = ['The works must be a JSON array.'];
+                    } else {
+                        var missingTitle = false;
+                        parsed.forEach(function (work) {
+                            if (!work.title || !work.title.trim()) {
+                                missingTitle = true;
+                            }
+                        });
+                        if (missingTitle) {
+                            errors.works_raw = ['Each work must have a title.'];
+                        }
                     }
                 } catch (e) {
                     errors.works_raw = ['Invalid JSON format: ' + e.message];
@@ -1371,6 +1397,16 @@ function initAdminDirectors() {
             }
 
             return errors;
+        }
+
+        function syncGeneralSlugFields() {
+            if (!form) return;
+            var slug = (form.elements.slug?.value || '').trim().toLowerCase();
+            var isGeneral = slug === 'general';
+            
+            shell.querySelectorAll('[data-admin-directors-not-general]').forEach(function (el) {
+                el.classList.toggle('hidden', isGeneral);
+            });
         }
 
         function resetForm() {
@@ -1383,6 +1419,7 @@ function initAdminDirectors() {
                 worksContainer.replaceChildren();
             }
             formShell.classList.add('hidden');
+            syncGeneralSlugFields();
         }
 
         function openForm(director, isDuplicate) {
@@ -1460,6 +1497,7 @@ function initAdminDirectors() {
                 ? 'Create Director (Duplicate)'
                 : (director ? 'Edit Director' : 'Create Director');
             form.elements.first_name.focus();
+            syncGeneralSlugFields();
         }
 
         function filteredDirectors() {
@@ -1796,13 +1834,24 @@ function initAdminDirectors() {
             var last = form.elements.last_name.value || '';
             var combined = (first + ' ' + last).trim();
             form.elements.slug.value = slugify(combined);
+            syncGeneralSlugFields();
         }
 
         form.elements.first_name?.addEventListener('input', updateAutoSlug);
         form.elements.last_name?.addEventListener('input', updateAutoSlug);
         form.elements.slug?.addEventListener('input', function () {
             isSlugManuallyEdited = true;
+            syncGeneralSlugFields();
         });
+
+        shell.querySelector('[data-admin-directors-fill-general]')?.addEventListener('click', function () {
+            form.elements.first_name.value = 'Vidhya';
+            form.elements.last_name.value = 'Studio';
+            form.elements.slug.value = 'general';
+            isSlugManuallyEdited = true;
+            syncGeneralSlugFields();
+        });
+
 
         shell.querySelector('[data-admin-directors-delete-cancel]')?.addEventListener('click', function () {
             deletingId = null;
@@ -1815,20 +1864,28 @@ function initAdminDirectors() {
                 return;
             }
 
+            var deleteSpinner = deleteModal?.querySelector('[data-admin-directors-delete-spinner]');
+            var deleteLabel = deleteModal?.querySelector('[data-admin-directors-delete-label]');
+
             deleteConfirm.disabled = true;
+            if (deleteSpinner) deleteSpinner.classList.remove('hidden');
+            if (deleteLabel) deleteLabel.textContent = 'Deleting...';
 
             request(directorUrl(shell.dataset.deleteUrlTemplate, deletingId), {
                 method: 'DELETE',
             }).then(function (response) {
-                toast('success', 'Success', response.message || 'Director deleted.');
-                deletingId = null;
-                deleteModal?.classList.add('hidden');
-                deleteModal?.classList.remove('grid');
-                return loadDirectors();
+                return loadDirectors().catch(function () {}).then(function () {
+                    toast('success', 'Success', response.message || 'Director deleted.');
+                    deletingId = null;
+                    deleteModal?.classList.add('hidden');
+                    deleteModal?.classList.remove('grid');
+                });
             }).catch(function (error) {
                 toast('danger', 'Unable to delete', error.message || 'Please try again.');
             }).finally(function () {
                 deleteConfirm.disabled = false;
+                if (deleteSpinner) deleteSpinner.classList.add('hidden');
+                if (deleteLabel) deleteLabel.textContent = 'Delete';
             });
         });
 

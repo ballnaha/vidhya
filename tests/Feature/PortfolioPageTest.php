@@ -88,3 +88,74 @@ test('portfolio page aggregates and filters works', function () {
         ->assertSee('Cinematic Worlds (by Sunil Thomas)')
         ->assertSee('World Building (by Maya Chen)');
 });
+
+test('portfolio page hides works marked as hide_from_portfolio', function () {
+    Director::create([
+        'slug' => 'sunil-thomas',
+        'eyebrow' => 'Director 1',
+        'first_name' => 'Sunil',
+        'last_name' => 'Thomas',
+        'role' => 'Director 1 role',
+        'stats' => [],
+        'bio_title_white' => 'Title',
+        'bio_title_gradient' => 'Gradient',
+        'bio_image' => '/images/bio.jpg',
+        'bio_alt' => 'Bio image alt',
+        'bio' => [],
+        'works_eyebrow' => 'Expertise',
+        'works_title_white' => 'White',
+        'works_title_muted' => 'Muted',
+        'works' => [
+            [
+                'image' => '/images/work1.png', 
+                'title' => 'Visible Work', 
+                'span' => 'md:col-span-2',
+                'video_url' => 'https://example.com/video1.mp4',
+                'show_in_portfolio' => true,
+            ],
+            [
+                'image' => '/images/work2.png', 
+                'title' => 'Hidden Work', 
+                'span' => 'md:col-span-2',
+                'video_url' => 'https://example.com/video2.mp4',
+                'show_in_portfolio' => false,
+            ]
+        ],
+    ]);
+
+    Livewire::test('pages::portfolio')
+        ->assertSee('Visible Work (by Sunil Thomas)')
+        ->assertDontSee('Hidden Work');
+});
+
+test('portfolio page attributes general works to Vidhya Studio', function () {
+    Director::create([
+        'slug' => 'general',
+        'eyebrow' => 'Studio',
+        'first_name' => 'Vidhya',
+        'last_name' => 'Studio',
+        'role' => 'General',
+        'stats' => [],
+        'bio_title_white' => 'Title',
+        'bio_title_gradient' => 'Gradient',
+        'bio_image' => '/images/bio.jpg',
+        'bio_alt' => 'Bio image alt',
+        'bio' => [],
+        'works_eyebrow' => 'Expertise',
+        'works_title_white' => 'White',
+        'works_title_muted' => 'Muted',
+        'works' => [
+            [
+                'image' => '/images/work1.png', 
+                'title' => 'General Work Title', 
+                'span' => 'md:col-span-2',
+                'video_url' => 'https://example.com/video1.mp4',
+                'show_in_portfolio' => true,
+            ]
+        ],
+    ]);
+
+    Livewire::test('pages::portfolio')
+        ->assertSee('General Work Title (by Vidhya Studio)');
+});
+
