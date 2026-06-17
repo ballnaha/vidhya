@@ -857,3 +857,75 @@ select:focus[data-flux-control] {
 /* \[:where(&)\]:size-4 {
     @apply size-4;
 } */
+
+/* Admin Page Font Size Adjustments */
+.vidhya-admin-body {
+    font-size: 1.05rem; /* Scale base font size */
+
+    /* Standard inputs, labels, and textareas */
+    & label,
+    & input:not([type="submit"]):not([type="button"]),
+    & textarea,
+    & select,
+    & option,
+    & td,
+    & th {
+        font-size: 0.95rem;
+    }
+
+    /* Redefine Tailwind's font-size utility classes in the admin body context */
+    & .text-xs {
+        font-size: 0.8125rem !important; /* ~13px (was 12px) */
+    }
+    & .text-sm {
+        font-size: 0.9375rem !important; /* ~15px (was 14px) */
+    }
+    & .text-base {
+        font-size: 1.0625rem !important; /* ~17px (was 16px) */
+    }
+
+    /* Target custom pixel utilities used for subheaders, labels, and table metadata */
+    & .text-\[9px\] {
+        font-size: 11px !important;
+    }
+    & .text-\[10px\] {
+        font-size: 12px !important;
+    }
+    & .text-\[11px\] {
+        font-size: 13px !important;
+    }
+
+    /* Prevent primary/secondary Call-to-Action (CTA) buttons, actions, and key anchors from scaling */
+    & button,
+    & [role="button"],
+    & [data-admin-directors-create],
+    & [data-admin-faqs-create],
+    & [data-admin-users-create],
+    & [data-admin-directors-save],
+    & [data-admin-faqs-save],
+    & [data-admin-users-save],
+    & [data-admin-faqs-delete-confirm],
+    & [data-admin-directors-delete-confirm],
+    & [data-admin-users-delete-confirm],
+    & a[style*="background: linear-gradient"],
+    & a[href*="admin/directors"],
+    & a[href*="admin/faqs"],
+    & a[href*="admin/users"] {
+        &.text-xs {
+            font-size: 0.75rem !important;
+        }
+        &.text-sm {
+            font-size: 0.875rem !important;
+        }
+        &.text-\[9px\] {
+            font-size: 9px !important;
+        }
+        &.text-\[10px\] {
+            font-size: 10px !important;
+        }
+        &.text-\[11px\] {
+            font-size: 11px !important;
+        }
+    }
+}
+

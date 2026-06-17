@@ -44,7 +44,7 @@ function syncScrollTopButton() {
 }
 
 function initScrollTopButton() {
-    if (scrollTopButton) {
+    if (scrollTopButton && document.body.contains(scrollTopButton)) {
         syncScrollTopButton();
         return;
     }
@@ -438,6 +438,7 @@ function initDirectorTabs() {
         var videoModal = document.querySelector('[data-director-video-modal]');
         var videoPlayer = videoModal?.querySelector('[data-director-video-player]');
         var videoIframe = videoModal?.querySelector('[data-director-video-iframe]');
+        var videoImage = videoModal?.querySelector('[data-director-video-image]');
         var videoTitle = videoModal?.querySelector('[data-director-video-title]');
 
         if (!tabs.length || !panels.length) {
@@ -468,49 +469,69 @@ function initDirectorTabs() {
             activeModal.querySelector('[data-director-work-close]')?.focus();
         }
 
-        function playVideo(url, title) {
+        function playVideo(url, title, isImage) {
             if (!videoModal) return;
 
             if (videoTitle) {
                 videoTitle.textContent = title || '';
             }
 
-            var isYoutube = url.indexOf('youtube.com') > -1 || url.indexOf('youtu.be') > -1;
-            var isVimeo = url.indexOf('vimeo.com') > -1;
-
-            if (isYoutube || isVimeo) {
-                var embedUrl = url;
-                if (isYoutube) {
-                    var regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
-                    var match = url.match(regExp);
-                    if (match && match[2].length === 11) {
-                        embedUrl = 'https://www.youtube.com/embed/' + match[2] + '?autoplay=1';
-                    }
-                } else if (isVimeo) {
-                    var regExp = /vimeo\.com\/(?:channels\/(?:\w+\/)?|groups\/(?:[^\/]*)\/videos\/|album\/(?:\d+)\/video\/|video\/|)(\d+)(?:$|\/|\?)/;
-                    var match = url.match(regExp);
-                    if (match) {
-                        embedUrl = 'https://player.vimeo.com/video/' + match[1] + '?autoplay=1';
-                    }
-                }
-
+            if (isImage) {
                 if (videoPlayer) {
                     videoPlayer.src = '';
                     videoPlayer.classList.add('hidden');
                 }
                 if (videoIframe) {
-                    videoIframe.src = embedUrl;
-                    videoIframe.classList.remove('hidden');
-                }
-            } else {
-                if (videoIframe) {
                     videoIframe.src = '';
                     videoIframe.classList.add('hidden');
                 }
-                if (videoPlayer) {
-                    videoPlayer.src = url;
-                    videoPlayer.classList.remove('hidden');
-                    videoPlayer.play().catch(function () {});
+                if (videoImage) {
+                    videoImage.src = url;
+                    videoImage.classList.remove('hidden');
+                }
+            } else {
+                if (videoImage) {
+                    videoImage.src = '';
+                    videoImage.classList.add('hidden');
+                }
+
+                var isYoutube = url.indexOf('youtube.com') > -1 || url.indexOf('youtu.be') > -1;
+                var isVimeo = url.indexOf('vimeo.com') > -1;
+
+                if (isYoutube || isVimeo) {
+                    var embedUrl = url;
+                    if (isYoutube) {
+                        var regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
+                        var match = url.match(regExp);
+                        if (match && match[2].length === 11) {
+                            embedUrl = 'https://www.youtube.com/embed/' + match[2] + '?autoplay=1';
+                        }
+                    } else if (isVimeo) {
+                        var regExp = /vimeo\.com\/(?:channels\/(?:\w+\/)?|groups\/(?:[^\/]*)\/videos\/|album\/(?:\d+)\/video\/|video\/|)(\d+)(?:$|\/|\?)/;
+                        var match = url.match(regExp);
+                        if (match) {
+                            embedUrl = 'https://player.vimeo.com/video/' + match[1] + '?autoplay=1';
+                        }
+                    }
+
+                    if (videoPlayer) {
+                        videoPlayer.src = '';
+                        videoPlayer.classList.add('hidden');
+                    }
+                    if (videoIframe) {
+                        videoIframe.src = embedUrl;
+                        videoIframe.classList.remove('hidden');
+                    }
+                } else {
+                    if (videoIframe) {
+                        videoIframe.src = '';
+                        videoIframe.classList.add('hidden');
+                    }
+                    if (videoPlayer) {
+                        videoPlayer.src = url;
+                        videoPlayer.classList.remove('hidden');
+                        videoPlayer.play().catch(function () {});
+                    }
                 }
             }
 
@@ -530,6 +551,9 @@ function initDirectorTabs() {
             if (videoIframe) {
                 videoIframe.src = '';
             }
+            if (videoImage) {
+                videoImage.src = '';
+            }
 
             if (!activeModal) {
                 document.body.classList.remove('overflow-hidden');
@@ -545,6 +569,10 @@ function initDirectorTabs() {
 
                 tab.toggleAttribute('data-active', active);
                 tab.setAttribute('aria-selected', active ? 'true' : 'false');
+
+                if (active) {
+                    document.title = tab.textContent.trim() + " - AI Director - Vidhya Studio";
+                }
             });
 
             panels.forEach(function (panel) {
@@ -576,11 +604,19 @@ function initDirectorTabs() {
             var closer = event.target.closest('[data-director-work-close]');
             var modal = event.target.closest('[data-director-work-modal]');
             var videoTrigger = event.target.closest('[data-video-url]');
+            var imageTrigger = event.target.closest('[data-image-url]');
 
             if (videoTrigger) {
                 var url = videoTrigger.getAttribute('data-video-url');
                 var title = videoTrigger.getAttribute('data-video-title');
-                playVideo(url, title);
+                playVideo(url, title, false);
+                return;
+            }
+
+            if (imageTrigger) {
+                var url = imageTrigger.getAttribute('data-image-url');
+                var title = imageTrigger.getAttribute('data-video-title');
+                playVideo(url, title, true);
                 return;
             }
 
@@ -1009,6 +1045,7 @@ function initAdminDirectors() {
         var directors = [];
         var deletingId = null;
         var searchTimer;
+        var isSlugManuallyEdited = false;
 
         if (!table || !form) {
             return;
@@ -1020,6 +1057,45 @@ function initAdminDirectors() {
         var addWorkButton = shell.querySelector('[data-admin-directors-add-work]');
         var worksTemplate = shell.querySelector('[data-admin-directors-work-row-template]');
         var worksRawInput = shell.querySelector('[data-admin-directors-works-raw-input]');
+
+        function initDragAndDrop() {
+            if (!worksContainer) return;
+
+            var dragEl = null;
+
+            worksContainer.addEventListener('dragstart', function (e) {
+                var row = e.target.closest('[data-admin-directors-work-row]');
+                if (!row) return;
+
+                dragEl = row;
+                row.classList.add('opacity-40', 'border-[#366bc3]/40');
+                e.dataTransfer.effectAllowed = 'move';
+            });
+
+            worksContainer.addEventListener('dragover', function (e) {
+                e.preventDefault();
+                if (!dragEl) return;
+
+                var row = e.target.closest('[data-admin-directors-work-row]');
+                if (!row || row === dragEl) return;
+
+                var rect = row.getBoundingClientRect();
+                var next = (e.clientY - rect.top) / (rect.bottom - rect.top) > 0.5;
+
+                worksContainer.insertBefore(dragEl, next ? row.nextSibling : row);
+            });
+
+            worksContainer.addEventListener('dragend', function (e) {
+                if (dragEl) {
+                    dragEl.classList.remove('opacity-40', 'border-[#366bc3]/40');
+                    dragEl.removeAttribute('draggable');
+                    dragEl = null;
+                }
+                renumberWorks();
+            });
+        }
+
+        initDragAndDrop();
 
         function renumberWorks() {
             if (!worksContainer) return;
@@ -1036,23 +1112,86 @@ function initAdminDirectors() {
             var clone = worksTemplate.content.cloneNode(true);
             var row = clone.querySelector('[data-admin-directors-work-row]');
 
-            if (data) {
-                var titleField = row.querySelector('[data-admin-directors-work-field="title"]');
-                var videoUrlField = row.querySelector('[data-admin-directors-work-field="video_url"]');
-                var imageField = row.querySelector('[data-admin-directors-work-field="image"]');
-                var spanField = row.querySelector('[data-admin-directors-work-field="span"]');
+            var titleField = row.querySelector('[data-admin-directors-work-field="title"]');
+            var videoUrlField = row.querySelector('[data-admin-directors-work-field="video_url"]');
+            var imageField = row.querySelector('[data-admin-directors-work-field="image"]');
+            var spanField = row.querySelector('[data-admin-directors-work-field="span"]');
+            
+            var fileInput = row.querySelector('[data-admin-directors-work-file-input]');
+            var previewWrapper = row.querySelector('[data-admin-directors-work-preview-wrapper]');
+            var previewImg = row.querySelector('[data-admin-directors-work-preview]');
+            var pathLabel = row.querySelector('[data-admin-directors-work-path-label]');
 
+            var removeImageBtn = row.querySelector('[data-admin-directors-work-remove-image-file]');
+
+            if (data) {
                 if (titleField) titleField.value = data.title || '';
                 if (videoUrlField) videoUrlField.value = data.video_url || '';
                 if (imageField) imageField.value = data.image || '';
                 if (spanField) spanField.value = data.span || 'md:col-span-2';
+
+                if (data.image) {
+                    if (previewImg) previewImg.src = data.image;
+                    if (pathLabel) {
+                        pathLabel.textContent = data.image.substring(data.image.lastIndexOf('/') + 1);
+                        pathLabel.title = data.image;
+                    }
+                    if (previewWrapper) previewWrapper.classList.remove('hidden');
+
+                    var isYoutubeThumbnail = data.image.indexOf('youtube.com') > -1 || data.image.indexOf('ytimg.com') > -1;
+                    if (removeImageBtn) {
+                        removeImageBtn.classList.toggle('hidden', isYoutubeThumbnail);
+                    }
+                }
             }
 
-            var videoUrlField = row.querySelector('[data-admin-directors-work-field="video_url"]');
-            var imageField = row.querySelector('[data-admin-directors-work-field="image"]');
-            if (videoUrlField && imageField) {
+            if (videoUrlField) {
                 videoUrlField.addEventListener('input', function () {
-                    imageField.value = '';
+                    // Custom cover uploads can coexist with a video URL.
+                });
+            }
+
+            if (fileInput) {
+                fileInput.addEventListener('change', function () {
+                    var file = this.files[0];
+                    if (file) {
+                        if (previewImg) previewImg.src = URL.createObjectURL(file);
+                        if (pathLabel) {
+                            pathLabel.textContent = file.name + ' (new)';
+                            pathLabel.title = file.name;
+                        }
+                        if (previewWrapper) previewWrapper.classList.remove('hidden');
+                        if (imageField) imageField.value = '';
+
+                        if (removeImageBtn) {
+                            removeImageBtn.classList.remove('hidden');
+                        }
+                    }
+                });
+            }
+
+            if (removeImageBtn) {
+                removeImageBtn.addEventListener('click', function () {
+                    if (fileInput) fileInput.value = '';
+                    if (imageField) imageField.value = '';
+                    if (previewWrapper) previewWrapper.classList.add('hidden');
+                    if (previewImg) previewImg.src = '';
+                    if (pathLabel) {
+                        pathLabel.textContent = '';
+                        pathLabel.title = '';
+                    }
+                });
+            }
+
+            var dragHandle = row.querySelector('[data-admin-directors-work-drag-handle]');
+            if (dragHandle) {
+                dragHandle.addEventListener('mouseenter', function () {
+                    row.setAttribute('draggable', 'true');
+                });
+                dragHandle.addEventListener('mouseleave', function () {
+                    if (!dragEl) {
+                        row.removeAttribute('draggable');
+                    }
                 });
             }
 
@@ -1076,19 +1215,30 @@ function initAdminDirectors() {
         function serializeWorks() {
             if (!worksContainer || !worksRawInput) return;
             var works = [];
+            var activeIndex = 0;
             worksContainer.querySelectorAll('[data-admin-directors-work-row]').forEach(function (row) {
                 var title = row.querySelector('[data-admin-directors-work-field="title"]')?.value.trim() || '';
                 var videoUrl = row.querySelector('[data-admin-directors-work-field="video_url"]')?.value.trim() || '';
                 var image = row.querySelector('[data-admin-directors-work-field="image"]')?.value.trim() || '';
                 var span = row.querySelector('[data-admin-directors-work-field="span"]')?.value || 'md:col-span-2';
+                
+                var fileInput = row.querySelector('[data-admin-directors-work-file-input]');
 
-                if (title || videoUrl) {
+                if (title || videoUrl || image || (fileInput && fileInput.files.length)) {
+                    if (fileInput) {
+                        fileInput.setAttribute('name', 'work_image_file_' + activeIndex);
+                    }
                     works.push({
                         title: title,
                         video_url: videoUrl,
                         image: image,
                         span: span
                     });
+                    activeIndex++;
+                } else {
+                    if (fileInput) {
+                        fileInput.removeAttribute('name');
+                    }
                 }
             });
 
@@ -1191,7 +1341,7 @@ function initAdminDirectors() {
             if (!payload.slug.trim()) {
                 errors.slug = ['Please enter a slug.'];
             } else if (!/^[a-z0-9-_]+$/.test(payload.slug.trim())) {
-                errors.slug = ['The slug must only contain lowercase letters, numbers, dashes, and underscores.'];
+                errors.slug = ['The slug must only contain lowercase letters, numbers, dashes, and underscores (Thai characters are not supported).'];
             }
             if (!payload.eyebrow.trim()) errors.eyebrow = ['Please enter eyebrow subtitle.'];
             if (!payload.role.trim()) errors.role = ['Please enter role tagline.'];
@@ -1226,6 +1376,7 @@ function initAdminDirectors() {
         function resetForm() {
             form.reset();
             clearErrors();
+            isSlugManuallyEdited = false;
             form.querySelector('[data-admin-directors-id]').value = '';
             shell.querySelector('[data-admin-directors-form-title]').textContent = 'Create Director';
             if (worksContainer) {
@@ -1234,14 +1385,15 @@ function initAdminDirectors() {
             formShell.classList.add('hidden');
         }
 
-        function openForm(director) {
+        function openForm(director, isDuplicate) {
             clearErrors();
+            isSlugManuallyEdited = Boolean(director && !isDuplicate);
             formShell.classList.remove('hidden');
-            form.querySelector('[data-admin-directors-id]').value = director?.id || '';
+            form.querySelector('[data-admin-directors-id]').value = isDuplicate ? '' : (director?.id || '');
             
-            form.elements.first_name.value = director?.first_name || '';
+            form.elements.first_name.value = director ? (director.first_name + (isDuplicate ? ' (Copy)' : '')) : '';
             form.elements.last_name.value = director?.last_name || '';
-            form.elements.slug.value = director?.slug || '';
+            form.elements.slug.value = director ? (director.slug + (isDuplicate ? '-copy' : '')) : '';
             form.elements.eyebrow.value = director?.eyebrow || '';
             form.elements.role.value = director?.role || '';
             form.elements.bio_title_white.value = director?.bio_title_white || '';
@@ -1304,7 +1456,9 @@ function initAdminDirectors() {
             form.elements.stat_3_suffix.value = director?.stat_3_suffix || '';
             form.elements.stat_3_label.value = director?.stat_3_label || '';
 
-            shell.querySelector('[data-admin-directors-form-title]').textContent = director ? 'Edit Director' : 'Create Director';
+            shell.querySelector('[data-admin-directors-form-title]').textContent = isDuplicate
+                ? 'Create Director (Duplicate)'
+                : (director ? 'Edit Director' : 'Create Director');
             form.elements.first_name.focus();
         }
 
@@ -1383,6 +1537,14 @@ function initAdminDirectors() {
                     openForm(director);
                 });
                 
+                var duplicate = document.createElement('button');
+                duplicate.type = 'button';
+                duplicate.className = 'rounded border border-white/10 px-3 py-2 text-xs font-medium text-white/58 transition hover:border-white/25 hover:text-white';
+                duplicate.textContent = 'Duplicate';
+                duplicate.addEventListener('click', function () {
+                    openForm(director, true);
+                });
+                
                 remove.type = 'button';
                 remove.className = 'rounded border border-[#e60012]/25 px-3 py-2 text-xs font-medium text-white/58 transition hover:border-[#e60012]/55 hover:bg-[#e60012]/12 hover:text-white';
                 remove.textContent = 'Delete';
@@ -1394,7 +1556,7 @@ function initAdminDirectors() {
 
                 nameWrap.append(initials, name);
                 nameCell.appendChild(nameWrap);
-                actionsWrap.append(edit, remove);
+                actionsWrap.append(edit, duplicate, remove);
                 actions.appendChild(actionsWrap);
                 row.append(nameCell, slugCell, roleCell, created, actions);
                 table.appendChild(row);
@@ -1611,6 +1773,35 @@ function initAdminDirectors() {
                     slug: ['This slug is already in use.'],
                 });
             }).catch(function () {});
+        });
+
+        function slugify(text) {
+            return text
+                .toString()
+                .toLowerCase()
+                .normalize('NFD')
+                .replace(/[\u0300-\u036f]/g, '')
+                .replace(/[^a-z0-9\s-_]/g, '')
+                .trim()
+                .replace(/\s+/g, '-')
+                .replace(/-+/g, '-');
+        }
+
+        function updateAutoSlug() {
+            var slugVal = form.elements.slug.value.trim();
+            if (isSlugManuallyEdited && slugVal !== '') {
+                return;
+            }
+            var first = form.elements.first_name.value || '';
+            var last = form.elements.last_name.value || '';
+            var combined = (first + ' ' + last).trim();
+            form.elements.slug.value = slugify(combined);
+        }
+
+        form.elements.first_name?.addEventListener('input', updateAutoSlug);
+        form.elements.last_name?.addEventListener('input', updateAutoSlug);
+        form.elements.slug?.addEventListener('input', function () {
+            isSlugManuallyEdited = true;
         });
 
         shell.querySelector('[data-admin-directors-delete-cancel]')?.addEventListener('click', function () {

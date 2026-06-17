@@ -7,7 +7,7 @@
             document.documentElement.classList.add('dark');
         </script>
     </head>
-    <body class="min-h-screen bg-[#0a0a0c] text-white">
+    <body class="min-h-screen bg-[#0a0a0c] text-white vidhya-admin-body">
         <div class="vidhya-admin-mobile-backdrop fixed inset-0 z-40 bg-black/55 lg:hidden" data-admin-sidebar-close></div>
 
         <aside class="vidhya-admin-sidebar fixed inset-y-0 left-0 z-50 flex w-72 flex-col border-e border-white/8 bg-[#0a0a0c] p-4 max-lg:-translate-x-full lg:translate-x-0" data-admin-sidebar>

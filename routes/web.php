@@ -36,4 +36,34 @@ Route::middleware(['auth', 'verified', 'admin'])->group(function () {
     Route::view('admin/faqs', 'pages.admin.⚡faqs')->name('admin.faqs');
 });
 
+Route::get('sitemap.xml', function () {
+    $urls = [
+        ['loc' => route('home'), 'lastmod' => now()->startOfDay()->toAtomString(), 'changefreq' => 'weekly', 'priority' => '1.0'],
+        ['loc' => route('about'), 'lastmod' => now()->startOfDay()->toAtomString(), 'changefreq' => 'monthly', 'priority' => '0.8'],
+        ['loc' => route('services'), 'lastmod' => now()->startOfDay()->toAtomString(), 'changefreq' => 'monthly', 'priority' => '0.8'],
+        ['loc' => route('ai-director'), 'lastmod' => now()->startOfDay()->toAtomString(), 'changefreq' => 'weekly', 'priority' => '0.9'],
+        ['loc' => route('portfolio'), 'lastmod' => now()->startOfDay()->toAtomString(), 'changefreq' => 'weekly', 'priority' => '0.9'],
+        ['loc' => route('faq'), 'lastmod' => now()->startOfDay()->toAtomString(), 'changefreq' => 'monthly', 'priority' => '0.5'],
+        ['loc' => route('contact'), 'lastmod' => now()->startOfDay()->toAtomString(), 'changefreq' => 'monthly', 'priority' => '0.7'],
+    ];
+
+    $content = view('sitemap', compact('urls'))->render();
+
+    return response($content, 200)
+        ->header('Content-Type', 'text/xml');
+})->name('sitemap');
+
+Route::get('robots.txt', function () {
+    $sitemapUrl = route('sitemap');
+    $content = "User-agent: *\n";
+    $content .= "Disallow: /admin\n";
+    $content .= "Disallow: /dashboard\n";
+    $content .= "Disallow: /login\n";
+    $content .= "Disallow: /register\n\n";
+    $content .= "Sitemap: {$sitemapUrl}\n";
+
+    return response($content, 200)
+        ->header('Content-Type', 'text/plain');
+})->name('robots');
+
 require __DIR__.'/settings.php';

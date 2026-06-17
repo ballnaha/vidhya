@@ -18,7 +18,7 @@ class AdminDirectorController extends Controller
 
     public function store(Request $request): JsonResponse
     {
-        $validated = $request->validate([
+        $rules = [
             'first_name' => ['required', 'string', 'max:255'],
             'last_name' => ['required', 'string', 'max:255'],
             'slug' => ['required', 'string', 'max:255', 'alpha_dash', Rule::unique('directors', 'slug')],
@@ -42,13 +42,34 @@ class AdminDirectorController extends Controller
             'stat_3_value' => ['required', 'string', 'max:50'],
             'stat_3_suffix' => ['nullable', 'string', 'max:20'],
             'stat_3_label' => ['required', 'string', 'max:255'],
-            'works_raw' => ['required', 'string', function ($attribute, $value, $fail) {
+            'works_raw' => ['required', 'string', function ($attribute, $value, $fail) use ($request) {
                 $decoded = json_decode($value, true);
                 if (!is_array($decoded)) {
                     $fail(__('The works field must be a valid JSON array.'));
+                    return;
+                }
+                foreach ($decoded as $index => $work) {
+                    $hasFile = $request->hasFile('work_image_file_' . $index);
+                    if (empty($work['title'])) {
+                        $fail(__('Each work must have a title.'));
+                        return;
+                    }
+                    if (empty($work['video_url']) && empty($work['image']) && !$hasFile) {
+                        $fail(__('Each work must have a video URL or an uploaded image.'));
+                        return;
+                    }
                 }
             }],
-        ]);
+        ];
+
+        $worksDecoded = json_decode($request->input('works_raw'), true);
+        if (is_array($worksDecoded)) {
+            foreach ($worksDecoded as $index => $work) {
+                $rules['work_image_file_' . $index] = ['nullable', 'image', 'mimes:jpeg,png,jpg,webp', 'max:5120'];
+            }
+        }
+
+        $validated = $request->validate($rules);
 
         $data = $this->mapInputs($request, $validated);
 
@@ -89,7 +110,7 @@ class AdminDirectorController extends Controller
 
     public function update(Request $request, Director $director): JsonResponse
     {
-        $validated = $request->validate([
+        $rules = [
             'first_name' => ['required', 'string', 'max:255'],
             'last_name' => ['required', 'string', 'max:255'],
             'slug' => ['required', 'string', 'max:255', 'alpha_dash', Rule::unique('directors', 'slug')->ignore($director->id)],
@@ -113,13 +134,43 @@ class AdminDirectorController extends Controller
             'stat_3_value' => ['required', 'string', 'max:50'],
             'stat_3_suffix' => ['nullable', 'string', 'max:20'],
             'stat_3_label' => ['required', 'string', 'max:255'],
-            'works_raw' => ['required', 'string', function ($attribute, $value, $fail) {
+            'works_raw' => ['required', 'string', function ($attribute, $value, $fail) use ($request) {
                 $decoded = json_decode($value, true);
                 if (!is_array($decoded)) {
                     $fail(__('The works field must be a valid JSON array.'));
+                    return;
+                }
+                foreach ($decoded as $index => $work) {
+                    $hasFile = $request->hasFile('work_image_file_' . $index);
+                    if (empty($work['title'])) {
+                        $fail(__('Each work must have a title.'));
+                        return;
+                    }
+                    if (empty($work['video_url']) && empty($work['image']) && !$hasFile) {
+                        $fail(__('Each work must have a video URL or an uploaded image.'));
+                        return;
+                    }
                 }
             }],
-        ]);
+        ];
+
+        $worksDecoded = json_decode($request->input('works_raw'), true);
+        if (is_array($worksDecoded)) {
+            foreach ($worksDecoded as $index => $work) {
+                $rules['work_image_file_' . $index] = ['nullable', 'image', 'mimes:jpeg,png,jpg,webp', 'max:5120'];
+            }
+        }
+
+        $validated = $request->validate($rules);
+
+        $oldImages = [];
+        if ($director->works && is_array($director->works)) {
+            foreach ($director->works as $oldWork) {
+                if (!empty($oldWork['image']) && str_starts_with($oldWork['image'], '/images/directors/')) {
+                    $oldImages[] = $oldWork['image'];
+                }
+            }
+        }
 
         $data = $this->mapInputs($request, $validated);
 
@@ -129,9 +180,9 @@ class AdminDirectorController extends Controller
             $destPath = public_path('images/directors/' . $filename);
             
             if ($this->resizeAndCropImage($file, $destPath)) {
-                $oldImage = $director->bio_image;
-                if (!empty($oldImage) && str_starts_with($oldImage, '/images/directors/')) {
-                    $oldPath = public_path($oldImage);
+                $oldBioImage = $director->bio_image;
+                if (!empty($oldBioImage) && str_starts_with($oldBioImage, '/images/directors/')) {
+                    $oldPath = public_path($oldBioImage);
                     if (file_exists($oldPath)) {
                         @unlink($oldPath);
                     }
@@ -139,12 +190,31 @@ class AdminDirectorController extends Controller
                 $data['bio_image'] = '/images/directors/' . $filename;
             }
         } elseif (empty($data['bio_image'])) {
-            $oldImage = $director->bio_image;
-            if (!empty($oldImage) && str_starts_with($oldImage, '/images/directors/')) {
-                $oldPath = public_path($oldImage);
+            $oldBioImage = $director->bio_image;
+            if (!empty($oldBioImage) && str_starts_with($oldBioImage, '/images/directors/')) {
+                $oldPath = public_path($oldBioImage);
                 if (file_exists($oldPath)) {
                     @unlink($oldPath);
                 }
+            }
+        }
+
+        // After mapping inputs, find new custom work images
+        $newImages = [];
+        if (isset($data['works']) && is_array($data['works'])) {
+            foreach ($data['works'] as $newWork) {
+                if (!empty($newWork['image']) && str_starts_with($newWork['image'], '/images/directors/')) {
+                    $newImages[] = $newWork['image'];
+                }
+            }
+        }
+
+        // Delete custom work files that were in old works but are no longer in new works
+        $deletedImages = array_diff($oldImages, $newImages);
+        foreach ($deletedImages as $deletedImage) {
+            $filePath = public_path($deletedImage);
+            if (file_exists($filePath)) {
+                @unlink($filePath);
             }
         }
 
@@ -163,6 +233,18 @@ class AdminDirectorController extends Controller
             $oldPath = public_path($oldImage);
             if (file_exists($oldPath)) {
                 @unlink($oldPath);
+            }
+        }
+
+        // Delete work custom images
+        if ($director->works && is_array($director->works)) {
+            foreach ($director->works as $work) {
+                if (!empty($work['image']) && str_starts_with($work['image'], '/images/directors/')) {
+                    $filePath = public_path($work['image']);
+                    if (file_exists($filePath)) {
+                        @unlink($filePath);
+                    }
+                }
             }
         }
 
@@ -200,10 +282,29 @@ class AdminDirectorController extends Controller
             ],
         ];
 
-        // Parse works JSON and auto-extract thumbnails
+        // Parse works JSON, handle file uploads, and auto-extract thumbnails
         $works = json_decode($validated['works_raw'], true);
-        foreach ($works as &$work) {
-            if (empty($work['image']) && !empty($work['video_url'])) {
+        foreach ($works as $index => &$work) {
+            $fileKey = 'work_image_file_' . $index;
+            if ($request->hasFile($fileKey)) {
+                $file = $request->file($fileKey);
+                $filename = $validated['slug'] . '_work_' . $index . '_' . time() . '.jpg';
+                $destPath = public_path('images/directors/' . $filename);
+                
+                // Ensure directors image folder exists
+                $dir = public_path('images/directors');
+                if (!file_exists($dir)) {
+                    mkdir($dir, 0755, true);
+                }
+
+                if ($this->resizeAndCropImage($file, $destPath)) {
+                    $work['image'] = '/images/directors/' . $filename;
+                } else {
+                    $fallbackFilename = $validated['slug'] . '_work_' . $index . '_' . time() . '.' . $file->getClientOriginalExtension();
+                    $file->move($dir, $fallbackFilename);
+                    $work['image'] = '/images/directors/' . $fallbackFilename;
+                }
+            } elseif (empty($work['image']) && !empty($work['video_url'])) {
                 $work['image'] = $this->getYoutubeThumbnail($work['video_url']);
             }
         }
@@ -226,6 +327,7 @@ class AdminDirectorController extends Controller
             'works' => $works,
         ];
     }
+
 
     private function getYoutubeThumbnail(string $url): string
     {
@@ -270,23 +372,22 @@ class AdminDirectorController extends Controller
         $origWidth = imagesx($source);
         $origHeight = imagesy($source);
 
-        $targetWidth = 1920;
-        $targetHeight = 1080;
+        $maxWidth = 1920;
+        $maxHeight = 1080;
 
-        $origRatio = $origWidth / $origHeight;
-        $targetRatio = $targetWidth / $targetHeight;
+        $targetWidth = $origWidth;
+        $targetHeight = $origHeight;
 
-        $srcX = 0;
-        $srcY = 0;
-        $srcWidth = $origWidth;
-        $srcHeight = $origHeight;
+        $ratio = $origWidth / $origHeight;
 
-        if ($origRatio > $targetRatio) {
-            $srcWidth = (int) ($origHeight * $targetRatio);
-            $srcX = (int) (($origWidth - $srcWidth) / 2);
-        } else {
-            $srcHeight = (int) ($origWidth / $targetRatio);
-            $srcY = (int) (($origHeight - $srcHeight) / 2);
+        if ($origWidth > $maxWidth || $origHeight > $maxHeight) {
+            if ($origWidth / $maxWidth > $origHeight / $maxHeight) {
+                $targetWidth = $maxWidth;
+                $targetHeight = (int) ($maxWidth / $ratio);
+            } else {
+                $targetHeight = $maxHeight;
+                $targetWidth = (int) ($maxHeight * $ratio);
+            }
         }
 
         $destination = imagecreatetruecolor($targetWidth, $targetHeight);
@@ -295,9 +396,9 @@ class AdminDirectorController extends Controller
             $destination,
             $source,
             0, 0,
-            $srcX, $srcY,
+            0, 0,
             $targetWidth, $targetHeight,
-            $srcWidth, $srcHeight
+            $origWidth, $origHeight
         );
 
         $dir = dirname($destinationPath);

@@ -188,12 +188,6 @@ new #[Title('FAQ')]
             @endif
         </div>
 
-        <div class="mt-20 text-center" data-reveal>
-            <a href="{{ route('contact') }}"
-                class="inline-flex rounded px-14 py-4 text-sm font-bold uppercase tracking-[0.1em] transition hover:brightness-110"
-                style="background: linear-gradient(90deg, #366bc3, #823665, #e60012);" wire:navigate.hover>Start a
-                Project</a>
-        </div>
     </section>
 
     @if ($faqsGrouped->isNotEmpty())
