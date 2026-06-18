@@ -1107,6 +1107,27 @@ function initAdminDirectors() {
             });
         }
 
+        function clearWorkTitleErrors() {
+            if (!worksContainer) return;
+            worksContainer.querySelectorAll('[data-admin-directors-work-field="title"]').forEach(function (field) {
+                field.classList.remove('border-red-500', 'focus:border-red-500');
+                field.classList.add('border-white/10');
+            });
+        }
+
+        function showWorkTitleErrors() {
+            if (!worksContainer) return;
+            worksContainer.querySelectorAll('[data-admin-directors-work-row]').forEach(function (row) {
+                var titleField = row.querySelector('[data-admin-directors-work-field="title"]');
+                if (!titleField || titleField.value.trim()) {
+                    return;
+                }
+
+                titleField.classList.remove('border-white/10');
+                titleField.classList.add('border-red-500', 'focus:border-red-500');
+            });
+        }
+
         function addWorkRow(data) {
             if (!worksContainer || !worksTemplate) return;
             var clone = worksTemplate.content.cloneNode(true);
@@ -1148,6 +1169,17 @@ function initAdminDirectors() {
                         removeImageBtn.classList.toggle('hidden', isYoutubeThumbnail);
                     }
                 }
+            }
+
+            if (titleField) {
+                titleField.addEventListener('input', function () {
+                    if (!this.value.trim()) {
+                        return;
+                    }
+
+                    this.classList.remove('border-red-500', 'focus:border-red-500');
+                    this.classList.add('border-white/10');
+                });
             }
 
             if (videoUrlField) {
@@ -1321,6 +1353,8 @@ function initAdminDirectors() {
                 field.classList.remove('border-red-500', 'focus:border-red-500');
                 field.classList.add('border-white/10');
             });
+
+            clearWorkTitleErrors();
         }
 
         function showErrors(errors) {
@@ -1336,6 +1370,10 @@ function initAdminDirectors() {
                 if (field) {
                     field.classList.remove('border-white/10');
                     field.classList.add('border-red-500', 'focus:border-red-500');
+                }
+
+                if (name === 'works_raw') {
+                    showWorkTitleErrors();
                 }
             });
         }

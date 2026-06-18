@@ -18,7 +18,7 @@
         $seo['description'] = 'Learn how Vidhya Studio blends two decades of cinematic excellence from Benetone Films with structured AI workflows and human creative direction.';
     } elseif (request()->routeIs('services')) {
         $seo['title'] = 'AI Creative Services - Vidhya Studio';
-        $seo['description'] = 'Explore AI POCs, AI advertising, post production, AI models, marketing content, micro drama, workshops, and strategic consulting from Vidhya Studio.';
+        $seo['description'] = 'Explore AI POCs, AI advertising, AI post production, AI models, marketing content, micro drama, workshops, and strategic consulting from Vidhya Studio.';
     } elseif (request()->routeIs('ai-director')) {
         $seo['title'] = 'AI Director - Sunil Thomas - Vidhya Studio';
         $seo['description'] = 'Meet Sunil Thomas, Commercial Director & AI Filmmaker at Vidhya Studio. Combining traditional cinematic direction with advanced AI workflows.';

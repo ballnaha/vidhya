@@ -82,7 +82,7 @@ class extends Component
 
                         <div class="vidhya-contact-service-menu absolute left-0 z-50 mt-1 w-full max-h-[380px] overflow-y-auto rounded border border-white/10 bg-[#0c0c12] py-1 text-sm text-white shadow-2xl" data-contact-service-menu role="listbox">
                             <button type="button" class="block w-full px-4 py-2.5 text-left text-white/35 transition-colors hover:bg-white/8" data-contact-service-option value="" role="option" aria-selected="true" data-selected>Service Needed</button>
-                            @foreach (['AI POCs & Previs', 'AI Advertising', 'Post Production', 'AI Models & Influencers', 'AI Marketing Content', 'Micro Drama', 'Training & Workshop', 'Strategic Consulting', 'Not Sure Yet'] as $option)
+                            @foreach (['AI POCs & Previs', 'AI Advertising', 'AI Post Production', 'AI Models & Influencers', 'AI Marketing Content', 'Micro Drama', 'Training & Workshop', 'Strategic Consulting', 'Not Sure Yet'] as $option)
                                 <button type="button" class="block w-full px-4 py-2.5 text-left transition-colors hover:bg-white/8" data-contact-service-option value="{{ $option }}" role="option" aria-selected="false">{{ $option }}</button>
                             @endforeach
                         </div>

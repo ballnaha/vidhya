@@ -14,8 +14,8 @@
                     <a href="{{ route('home') }}" class="{{ request()->routeIs('home') ? 'border-b border-[#366bc3] text-white' : 'hover:text-white' }} pb-1 transition" wire:navigate.hover>Home</a>
                     <a href="{{ route('services') }}" class="{{ request()->routeIs('services') ? 'border-b border-[#366bc3] text-white' : 'hover:text-white' }} pb-1 transition" wire:navigate.hover>Services</a>
                     <a href="{{ route('portfolio') }}" class="{{ request()->routeIs('portfolio') ? 'border-b border-[#366bc3] text-white' : 'hover:text-white' }} pb-1 transition" wire:navigate.hover>Portfolio</a>
-                    <a href="{{ route('ai-director') }}" class="{{ request()->routeIs('ai-director') ? 'border-b border-[#366bc3] text-white' : 'hover:text-white' }} pb-1 transition" wire:navigate.hover>AI Director</a>
-                    <a href="{{ route('about') }}" class="{{ request()->routeIs('about') ? 'border-b border-[#366bc3] text-white' : 'hover:text-white' }} pb-1 transition" wire:navigate.hover>About</a>
+                    <a href="{{ route('ai-director') }}" class="{{ request()->routeIs('ai-director') ? 'border-b border-[#366bc3] text-white' : 'hover:text-white' }} pb-1 transition" wire:navigate.hover>Director</a>
+                    <a href="{{ route('about') }}" class="{{ request()->routeIs('about') ? 'border-b border-[#366bc3] text-white' : 'hover:text-white' }} pb-1 transition" wire:navigate.hover>About Us</a>
                     <a href="{{ route('faq') }}" class="{{ request()->routeIs('faq') ? 'border-b border-[#366bc3] text-white' : 'hover:text-white' }} pb-1 transition" wire:navigate.hover>FAQ</a>
                     <a href="{{ route('contact') }}" class="rounded px-6 py-3 text-[11px] font-semibold text-white transition hover:brightness-110" style="background: linear-gradient(90deg, #366bc3, #823665, #e60012);" wire:navigate.hover>Start a Project</a>
                 </nav>
@@ -37,8 +37,8 @@
                     <a href="{{ route('home') }}" class="{{ request()->routeIs('home') ? 'bg-white/6 text-white' : 'hover:bg-white/[0.04] hover:text-white' }} rounded px-4 py-3 transition" data-mobile-menu-close wire:navigate.hover>Home</a>
                     <a href="{{ route('services') }}" class="{{ request()->routeIs('services') ? 'bg-white/6 text-white' : 'hover:bg-white/[0.04] hover:text-white' }} rounded px-4 py-3 transition" data-mobile-menu-close wire:navigate.hover>Services</a>
                     <a href="{{ route('portfolio') }}" class="{{ request()->routeIs('portfolio') ? 'bg-white/6 text-white' : 'hover:bg-white/[0.04] hover:text-white' }} rounded px-4 py-3 transition" data-mobile-menu-close wire:navigate.hover>Portfolio</a>
-                    <a href="{{ route('ai-director') }}" class="{{ request()->routeIs('ai-director') ? 'bg-white/6 text-white' : 'hover:bg-white/[0.04] hover:text-white' }} rounded px-4 py-3 transition" data-mobile-menu-close wire:navigate.hover>AI Director</a>
-                    <a href="{{ route('about') }}" class="{{ request()->routeIs('about') ? 'bg-white/6 text-white' : 'hover:bg-white/[0.04] hover:text-white' }} rounded px-4 py-3 transition" data-mobile-menu-close wire:navigate.hover>About</a>
+                    <a href="{{ route('ai-director') }}" class="{{ request()->routeIs('ai-director') ? 'bg-white/6 text-white' : 'hover:bg-white/[0.04] hover:text-white' }} rounded px-4 py-3 transition" data-mobile-menu-close wire:navigate.hover>Director</a>
+                    <a href="{{ route('about') }}" class="{{ request()->routeIs('about') ? 'bg-white/6 text-white' : 'hover:bg-white/[0.04] hover:text-white' }} rounded px-4 py-3 transition" data-mobile-menu-close wire:navigate.hover>About Us</a>
                     <a href="{{ route('faq') }}" class="{{ request()->routeIs('faq') ? 'bg-white/6 text-white' : 'hover:bg-white/[0.04] hover:text-white' }} rounded px-4 py-3 transition" data-mobile-menu-close wire:navigate.hover>FAQ</a>
                     <a href="{{ route('contact') }}" class="mt-3 rounded px-5 py-3 text-center text-[12px] font-semibold text-white transition hover:brightness-110" style="background: linear-gradient(90deg, #366bc3, #823665, #e60012);" data-mobile-menu-close wire:navigate.hover>Start a Project</a>
                 </nav>
@@ -58,16 +58,16 @@
 
                 <div>
                     <h3 class="mb-5 text-[0.65rem] font-bold uppercase tracking-[0.2em] text-white/28">Services</h3>
-                    @foreach (['AI POCs & Previs', 'AI Advertising', 'Post Production', 'AI Models & Influencers', 'Micro Drama'] as $item)
+                    @foreach (['AI POCs & Previs', 'AI Advertising', 'AI Post Production', 'AI Models & Influencers', 'Micro Drama'] as $item)
                         <a href="{{ route('services') }}" class="mb-2 block text-sm text-white/45 transition hover:text-white" wire:navigate.hover>{{ $item }}</a>
                     @endforeach
                 </div>
 
                 <div>
                     <h3 class="mb-5 text-[0.65rem] font-bold uppercase tracking-[0.2em] text-white/28">Company</h3>
-                    <a href="{{ route('ai-director') }}" class="mb-2 block text-sm text-white/45 transition hover:text-white" wire:navigate.hover>AI Director</a>
+                    <a href="{{ route('ai-director') }}" class="mb-2 block text-sm text-white/45 transition hover:text-white" wire:navigate.hover>Director</a>
                     <a href="{{ route('portfolio') }}" class="mb-2 block text-sm text-white/45 transition hover:text-white" wire:navigate.hover>Portfolio</a>
-                    <a href="{{ route('about') }}" class="mb-2 block text-sm text-white/45 transition hover:text-white" wire:navigate.hover>About</a>
+                    <a href="{{ route('about') }}" class="mb-2 block text-sm text-white/45 transition hover:text-white" wire:navigate.hover>About Us</a>
                     <a href="{{ route('services') }}" class="mb-2 block text-sm text-white/45 transition hover:text-white" wire:navigate.hover>Services</a>
                     <a href="{{ route('faq') }}" class="mb-2 block text-sm text-white/45 transition hover:text-white" wire:navigate.hover>FAQ</a>
                     <a href="{{ route('contact') }}" class="mb-2 block text-sm text-white/45 transition hover:text-white" wire:navigate.hover>Contact</a>
