@@ -6,6 +6,7 @@ use App\Http\Controllers\AdminDirectorController;
 use App\Http\Controllers\AdminFaqController;
 use App\Http\Controllers\AdminServiceController;
 use App\Http\Controllers\AdminPortfolioController;
+use App\Http\Controllers\ContactController;
 
 Route::livewire('/', 'pages::home')->name('home');
 Route::livewire('/about', 'pages::about')->name('about');
@@ -13,6 +14,9 @@ Route::livewire('/services', 'pages::services')->name('services');
 Route::livewire('/ai-director', 'pages::ai-director')->name('ai-director');
 Route::livewire('/portfolio', 'pages::portfolio')->name('portfolio');
 Route::livewire('/contact', 'pages::contact')->name('contact');
+Route::post('/contact', [ContactController::class, 'store'])
+    ->middleware('throttle:5,1')
+    ->name('contact.store');
 Route::livewire('/faq', 'pages::faq')->name('faq');
 
 Route::middleware(['auth', 'verified', 'admin'])->group(function () {

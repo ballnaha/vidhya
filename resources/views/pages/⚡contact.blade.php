@@ -55,7 +55,13 @@ class extends Component
                 </div>
             </aside>
 
-            <div wire:ignore class="contact-form-enter" data-contact-shell>
+            <div
+                wire:ignore
+                class="contact-form-enter"
+                data-contact-shell
+                data-contact-submit-url="{{ route('contact.store') }}"
+                data-recaptcha-site-key="{{ config('services.recaptcha.site_key') }}"
+            >
                 <div class="hidden min-h-[290px] items-center justify-center border border-[#366bc3]/20 bg-[#0f0f18] px-8 py-16 text-center" data-contact-success>
                     <div>
                         <h2 class="mb-6 bg-linear-to-r from-[#366bc3] via-[#823665] to-[#e60012] bg-clip-text text-[clamp(2rem,4vw,2.75rem)] font-black uppercase leading-tight tracking-[-0.02em] text-transparent">Message Received.</h2>
@@ -93,6 +99,7 @@ class extends Component
                     <button type="submit" class="w-full rounded px-8 py-4 text-sm font-bold uppercase tracking-[0.1em] transition hover:brightness-110 disabled:cursor-wait disabled:opacity-70" style="background: linear-gradient(90deg, #366bc3, #823665, #e60012);" data-contact-submit>
                         <span data-contact-submit-label>Send Message</span>
                     </button>
+                    <p class="text-center text-[10px] leading-5 text-white/35">This site is protected by reCAPTCHA and the Google <a href="https://policies.google.com/privacy" class="underline hover:text-white" target="_blank" rel="noopener noreferrer">Privacy Policy</a> and <a href="https://policies.google.com/terms" class="underline hover:text-white" target="_blank" rel="noopener noreferrer">Terms of Service</a> apply.</p>
                     <p class="pt-1 text-center text-xs text-white/22">We respond within 24 hours. Your information is kept strictly confidential.</p>
                 </form>
             </div>

@@ -5,6 +5,7 @@ var toastRoot;
 var toastEventsReady = false;
 var toastLimit = 5;
 var contactServiceOutsideReady = false;
+var recaptchaScriptPromise;
 var adminShellReady = false;
 var Sortable;
 var sortableModulePromise;
@@ -339,6 +340,37 @@ function closeContactService(service) {
     }
 }
 
+function getContactRecaptchaToken(siteKey) {
+    if (!siteKey) {
+        return Promise.reject(new Error('reCAPTCHA is not configured.'));
+    }
+
+    if (!recaptchaScriptPromise) {
+        recaptchaScriptPromise = new Promise(function (resolve, reject) {
+            if (window.grecaptcha) {
+                resolve(window.grecaptcha);
+                return;
+            }
+
+            var script = document.createElement('script');
+            script.src = 'https://www.google.com/recaptcha/api.js?render=' + encodeURIComponent(siteKey);
+            script.async = true;
+            script.defer = true;
+            script.onload = function () { resolve(window.grecaptcha); };
+            script.onerror = function () { reject(new Error('Unable to load reCAPTCHA.')); };
+            document.head.appendChild(script);
+        });
+    }
+
+    return recaptchaScriptPromise.then(function (grecaptcha) {
+        return new Promise(function (resolve, reject) {
+            grecaptcha.ready(function () {
+                grecaptcha.execute(siteKey, { action: 'contact' }).then(resolve).catch(reject);
+            });
+        });
+    });
+}
+
 function initContactForm() {
     document.querySelectorAll('[data-contact-shell]').forEach(function (shell) {
         if (shell.hasAttribute('data-contact-ready')) {
@@ -410,12 +442,32 @@ function initContactForm() {
             }
 
             submit.disabled = true;
-            submitLabel.textContent = 'Sending...';
+            submitLabel.textContent = 'Verifying...';
 
-            window.setTimeout(function () {
+            getContactRecaptchaToken(shell.dataset.recaptchaSiteKey).then(function (token) {
+                var formData = new FormData(form);
+                formData.set('recaptcha_token', token);
+                submitLabel.textContent = 'Sending...';
+
+                return fetch(shell.dataset.contactSubmitUrl, {
+                    method: 'POST',
+                    headers: {
+                        Accept: 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content || '',
+                    },
+                    body: formData,
+                });
+            }).then(function (response) {
+                return response.json().catch(function () { return {}; }).then(function (payload) {
+                    if (!response.ok) {
+                        var firstError = Object.values(payload.errors || {})[0];
+                        throw new Error(Array.isArray(firstError) ? firstError[0] : (payload.message || 'Unable to send your message.'));
+                    }
+
+                    return payload;
+                });
+            }).then(function (payload) {
                 form.reset();
-                submit.disabled = false;
-                submitLabel.textContent = 'Send Message';
 
                 if (serviceLabel) {
                     serviceLabel.textContent = 'Service Needed';
@@ -441,8 +493,13 @@ function initContactForm() {
                     success.classList.add('flex');
                 }
 
-                showToast('success', 'Message received.', "Thank you for reaching out. We'll be in touch within 24 hours.");
-            }, 450);
+                showToast('success', 'Message received.', payload.message || "Thank you for reaching out. We'll be in touch within 24 hours.");
+            }).catch(function (error) {
+                showToast('danger', 'Unable to send message.', error.message || 'Please try again or contact us directly by email.');
+            }).finally(function () {
+                submit.disabled = false;
+                submitLabel.textContent = 'Send Message';
+            });
         });
     });
 
