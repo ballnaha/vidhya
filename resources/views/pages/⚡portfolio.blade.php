@@ -2,77 +2,44 @@
 
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
+use Livewire\Attributes\Url;
 use Livewire\Component;
-use App\Models\Director;
+use App\Models\Portfolio;
+use App\Models\Service;
 
 new #[Title('Portfolio')]
 #[Layout('layouts.marketing')]
 class extends Component
 {
-    public $selectedCategory = '';
-    public $selectedType = ''; // '', 'video', 'image'
+    #[Url(as: 'service', history: true)]
+    public $selectedServiceId = '';
 
-    public function selectCategory($category)
+    public function selectService($serviceId)
     {
-        $this->selectedCategory = $category;
-    }
-
-    public function selectType($type)
-    {
-        $this->selectedType = $type;
+        $this->selectedServiceId = $serviceId;
     }
 
     public function resetFilters()
     {
-        $this->selectedCategory = '';
-        $this->selectedType = '';
+        $this->selectedServiceId = '';
     }
 
     public function render()
     {
-        // Fetch all directors
-        $directors = Director::all();
+        $services = Service::query()->orderBy('sort_order')->get();
 
-        // Collate all works dynamically
-        $allWorks = collect();
-        foreach ($directors as $director) {
-            if ($director->works && is_array($director->works)) {
-                foreach ($director->works as $work) {
-                    // Check if the work should be shown on the portfolio page
-                    $showInPortfolio = isset($work['show_in_portfolio']) ? (bool) $work['show_in_portfolio'] : true;
-                    if (!$showInPortfolio) {
-                        continue;
-                    }
-
-                    if ($director->slug === 'general') {
-                        $work['director_name'] = 'Vidhya Studio';
-                    } else {
-                        $work['director_name'] = $director->first_name . ' ' . $director->last_name;
-                    }
-                    $work['director_slug'] = $director->slug;
-                    $allWorks->push((object) $work);
-                }
-            }
-        }
-
-        // Extract unique categories dynamically from works
-        $categories = $allWorks->pluck('title')->unique()->values()->all();
-
-        // Apply filters
-        $filteredWorks = $allWorks
-            ->when($this->selectedCategory !== '', function ($collection) {
-                return $collection->where('title', $this->selectedCategory);
+        $works = Portfolio::query()
+            ->with('service')
+            ->where('show_in_portfolio', true)
+            ->when($this->selectedServiceId !== '', function ($query) {
+                $query->where('service_id', $this->selectedServiceId);
             })
-            ->when($this->selectedType === 'video', function ($collection) {
-                return $collection->filter(fn($work) => !empty($work->video_url));
-            })
-            ->when($this->selectedType === 'image', function ($collection) {
-                return $collection->filter(fn($work) => empty($work->video_url));
-            });
+            ->orderBy('sort_order')
+            ->get();
 
         return view('pages.⚡portfolio', [
-            'categories' => $categories,
-            'works' => $filteredWorks,
+            'services' => $services,
+            'works' => $works,
         ]);
     }
 };
@@ -85,6 +52,7 @@ class extends Component
         modalImage: '', 
         modalTitle: '', 
         modalVideoUrl: '',
+        modalVideoAspectRatio: '16:9',
         getEmbedUrl(url) {
             if (!url) return '';
             var isYoutube = url.indexOf('youtube.com') > -1 || url.indexOf('youtu.be') > -1;
@@ -139,39 +107,30 @@ class extends Component
  
             <!-- Filters Bar -->
             <div class="border-b border-white/5 pb-10" data-reveal>
-                <!-- Type Filters (Videos / Images) -->
-                <div class="space-y-4">
-                    <p class="text-[10px] font-semibold uppercase tracking-[0.22em] text-[#e60012]">Filter by Media Type</p>
+                <!-- Service Filters -->
+                <div class="space-y-4 mb-8">
+                    <p class="text-[10px] font-semibold uppercase tracking-[0.22em] text-[#366bc3]">Filter by Service Category</p>
                     <div class="flex flex-wrap gap-3">
                         <button 
                             type="button" 
-                            wire:click="selectType('')" 
-                            class="rounded border px-7 py-3 text-xs font-bold uppercase tracking-[0.12em] transition-all duration-300 {{ $selectedType === '' ? 'border-[#366bc3] bg-[#366bc3]/10 text-white shadow-lg shadow-[#366bc3]/15' : 'border-white/10 text-white/42 hover:border-white/25 hover:text-white hover:bg-white/[0.02]' }}"
+                            wire:click="selectService('')" 
+                            class="rounded border px-7 py-3 text-xs font-bold uppercase tracking-[0.12em] transition-all duration-300 {{ $selectedServiceId === '' ? 'border-[#366bc3] bg-[#366bc3]/10 text-white shadow-lg shadow-[#366bc3]/15' : 'border-white/10 text-white/42 hover:border-white/25 hover:text-white hover:bg-white/[0.02]' }}"
                         >
-                            All Outputs
+                            All Services
                         </button>
-                        <button 
-                            type="button" 
-                            wire:click="selectType('video')" 
-                            class="inline-flex items-center gap-2 rounded border px-7 py-3 text-xs font-bold uppercase tracking-[0.12em] transition-all duration-300 {{ $selectedType === 'video' ? 'border-[#e60012] bg-[#e60012]/10 text-white shadow-lg shadow-[#e60012]/15' : 'border-white/10 text-white/42 hover:border-white/25 hover:text-white hover:bg-white/[0.02]' }}"
-                        >
-                            <svg class="size-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                            </svg>
-                            Cinematic Videos
-                        </button>
-                        <button 
-                            type="button" 
-                            wire:click="selectType('image')" 
-                            class="inline-flex items-center gap-2 rounded border px-7 py-3 text-xs font-bold uppercase tracking-[0.12em] transition-all duration-300 {{ $selectedType === 'image' ? 'border-[#823665] bg-[#823665]/10 text-white shadow-lg shadow-[#823665]/15' : 'border-white/10 text-white/42 hover:border-white/25 hover:text-white hover:bg-white/[0.02]' }}"
-                        >
-                            <svg class="size-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                            </svg>
-                            Visual Stills / Photos
-                        </button>
-                    </div>
+                        @foreach ($services as $service)
+                            @php
+                                $isActive = (string)$selectedServiceId === (string)$service->id;
+                            @endphp
+                            <button 
+                                type="button" 
+                                wire:click="selectService('{{ $service->id }}')" 
+                                class="rounded border px-7 py-3 text-xs font-bold uppercase tracking-[0.12em] transition-all duration-300 {{ $isActive ? 'text-white' : 'border-white/10 text-white/42 hover:border-white/25 hover:text-white hover:bg-white/[0.02]' }}"
+                                style="{{ $isActive ? 'border-color: ' . $service->accent . '; background-color: ' . $service->accent . '18; box-shadow: 0 10px 15px -3px ' . $service->accent . '20;' : '' }}"
+                            >
+                                {{ $service->title }}
+                            </button>
+                        @endforeach
                 </div>
             </div>
 
@@ -195,13 +154,19 @@ class extends Component
                     </button>
                 </div>
             @else
-                <div class="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+                <div class="grid gap-6 md:grid-cols-6">
                     @foreach ($works as $index => $work)
                         @php
                             $delay = ($index % 3) * 100;
+                            $spanClass = match ($work->span) {
+                                'md:col-span-3' => 'md:col-span-3',
+                                'md:col-span-4' => 'md:col-span-4',
+                                'md:col-span-6' => 'md:col-span-6',
+                                default => 'md:col-span-2',
+                            };
                         @endphp
                         <div 
-                            class="home-animated-card group relative aspect-video overflow-hidden bg-black border border-white/10 hover:border-[#366bc3]/30 hover:shadow-lg hover:shadow-[#366bc3]/5 transition-all duration-500"
+                            class="home-animated-card {{ $spanClass }} group relative aspect-video overflow-hidden bg-black border border-white/10 hover:border-[#366bc3]/30 hover:shadow-lg hover:shadow-[#366bc3]/5 transition-all duration-500"
                             style="--reveal-delay: {{ $delay }}ms;"
                             data-reveal
                         >
@@ -209,10 +174,11 @@ class extends Component
                                 type="button"
                                 class="w-full h-full text-left relative block"
                                 @click="
-                                    modalTitle = '{{ addslashes($work->title) }} (by {{ addslashes($work->director_name) }})';
+                                    modalTitle = '{{ addslashes($work->title) }}';
                                     @if(!empty($work->video_url))
                                         modalType = 'video';
                                         modalVideoUrl = '{{ $work->video_url }}';
+                                        modalVideoAspectRatio = '{{ $work->video_aspect_ratio ?? '16:9' }}';
                                     @else
                                         modalType = 'image';
                                         modalImage = '{{ $work->image }}';
@@ -242,9 +208,11 @@ class extends Component
                                     </span>
                                 @endif
  
-                                <!-- Text Overlay (Director and Title) -->
+                                <!-- Text Overlay (Title) -->
                                 <div class="absolute inset-x-0 bottom-0 p-5 space-y-1">
-                                    <p class="text-[9px] font-semibold uppercase tracking-[0.2em] text-[#e60012]">{{ $work->director_name }}</p>
+                                    @if($work->service)
+                                        <p class="text-[9px] font-black uppercase tracking-[0.15em] mb-1" style="color: {{ $work->service->accent }}">{{ $work->service->title }}</p>
+                                    @endif
                                     <h3 class="text-sm font-black uppercase tracking-[0.02em] text-white">{{ $work->title }}</h3>
                                 </div>
                             </button>
@@ -279,7 +247,14 @@ class extends Component
         
         <div class="relative w-full max-w-[1200px] flex flex-col items-center gap-4" @click.stop>
             <!-- Content Wrapper -->
-            <div class="relative overflow-hidden bg-black shadow-2xl border border-white/10 rounded-lg w-full max-h-[80vh] flex items-center justify-center" :class="modalType === 'video' ? 'aspect-video' : ''">
+            <div
+                class="relative overflow-hidden bg-black shadow-2xl border border-white/10 rounded-lg max-h-[80vh] flex items-center justify-center"
+                :class="modalType === 'video' ? '' : 'w-full'"
+                :style="modalType === 'video' ? {
+                    aspectRatio: modalVideoAspectRatio === '9:16' ? '9 / 16' : '16 / 9',
+                    width: modalVideoAspectRatio === '9:16' ? 'min(100%, 45vh)' : '100%'
+                } : {}"
+            >
                 
                 <!-- Image Lightbox -->
                 <div x-show="modalType === 'image'" class="h-full w-full flex items-center justify-center">

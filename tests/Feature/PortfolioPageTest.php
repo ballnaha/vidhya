@@ -1,6 +1,6 @@
 <?php
 
-use App\Models\Director;
+use App\Models\Portfolio;
 use Livewire\Livewire;
 
 uses(\Illuminate\Foundation\Testing\RefreshDatabase::class);
@@ -10,152 +10,114 @@ test('portfolio page is displayed', function () {
 });
 
 test('portfolio page aggregates and filters works', function () {
-    // 1. Create mock directors with works
-    Director::create([
-        'slug' => 'sunil-thomas',
-        'eyebrow' => 'Director 1',
-        'first_name' => 'Sunil',
-        'last_name' => 'Thomas',
-        'role' => 'Director 1 role',
-        'stats' => [],
-        'bio_title_white' => 'Title',
-        'bio_title_gradient' => 'Gradient',
-        'bio_image' => '/images/bio.jpg',
-        'bio_alt' => 'Bio image alt',
-        'bio' => [],
-        'works_eyebrow' => 'Expertise',
-        'works_title_white' => 'White',
-        'works_title_muted' => 'Muted',
-        'works' => [
-            [
-                'image' => '/images/work1.png', 
-                'title' => 'AI Advertising', 
-                'span' => 'md:col-span-2',
-                'video_url' => 'https://example.com/video1.mp4'
-            ],
-            [
-                'image' => '/images/work2.png', 
-                'title' => 'Cinematic Worlds', 
-                'span' => 'md:col-span-2',
-                'video_url' => 'https://example.com/video2.mp4'
-            ]
-        ],
+    $service1 = \App\Models\Service::create([
+        'num' => '01',
+        'title' => 'AI Advertising',
+        'description' => 'Desc 1',
+        'bullets' => [],
+        'accent' => '#fff',
+        'sort_order' => 10,
+    ]);
+    
+    $service2 = \App\Models\Service::create([
+        'num' => '02',
+        'title' => 'Cinematic Worlds',
+        'description' => 'Desc 2',
+        'bullets' => [],
+        'accent' => '#000',
+        'sort_order' => 20,
     ]);
 
-    Director::create([
-        'slug' => 'maya-chen',
-        'eyebrow' => 'Director 2',
-        'first_name' => 'Maya',
-        'last_name' => 'Chen',
-        'role' => 'Director 2 role',
-        'stats' => [],
-        'bio_title_white' => 'Title',
-        'bio_title_gradient' => 'Gradient',
-        'bio_image' => '/images/bio.jpg',
-        'bio_alt' => 'Bio image alt',
-        'bio' => [],
-        'works_eyebrow' => 'Expertise',
-        'works_title_white' => 'White',
-        'works_title_muted' => 'Muted',
-        'works' => [
-            [
-                'image' => '/images/work3.png', 
-                'title' => 'World Building', 
-                'span' => 'md:col-span-2',
-                'video_url' => 'https://example.com/video3.mp4'
-            ]
-        ],
+    // 1. Create mock portfolio items
+    Portfolio::create([
+        'title' => 'AI Advertising Work',
+        'service_id' => $service1->id,
+        'span' => 'md:col-span-2',
+        'video_url' => 'https://example.com/video1.mp4',
+        'image' => '/images/work1.png',
+        'show_in_portfolio' => true,
+        'sort_order' => 10,
     ]);
 
-    // 2. Test Livewire component renders all works initially
-    Livewire::test('pages::portfolio')
-        ->assertSee('AI Advertising (by Sunil Thomas)')
-        ->assertSee('Cinematic Worlds (by Sunil Thomas)')
-        ->assertSee('World Building (by Maya Chen)');
+    Portfolio::create([
+        'title' => 'Cinematic Worlds Work',
+        'service_id' => $service2->id,
+        'span' => 'md:col-span-2',
+        'video_url' => 'https://example.com/video2.mp4',
+        'image' => '/images/work2.png',
+        'show_in_portfolio' => true,
+        'sort_order' => 20,
+    ]);
 
-    // 3. Test filtering by category
+    // 2. Test Livewire component renders all works
     Livewire::test('pages::portfolio')
-        ->set('selectedCategory', 'World Building')
-        ->assertSee('World Building (by Maya Chen)')
-        ->assertDontSee('AI Advertising (by Sunil Thomas)')
-        ->assertDontSee('Cinematic Worlds (by Sunil Thomas)');
+        ->assertSee('AI Advertising Work')
+        ->assertSee('Cinematic Worlds Work');
+
+    // 3. Test filtering by service
+    Livewire::test('pages::portfolio')
+        ->set('selectedServiceId', $service1->id)
+        ->assertSee('AI Advertising Work')
+        ->assertDontSee('Cinematic Worlds Work');
 
     // 4. Test reset filters
     Livewire::test('pages::portfolio')
-        ->set('selectedCategory', 'World Building')
+        ->set('selectedServiceId', $service1->id)
         ->call('resetFilters')
-        ->assertSee('AI Advertising (by Sunil Thomas)')
-        ->assertSee('Cinematic Worlds (by Sunil Thomas)')
-        ->assertSee('World Building (by Maya Chen)');
+        ->assertSee('AI Advertising Work')
+        ->assertSee('Cinematic Worlds Work');
 });
 
 test('portfolio page hides works marked as hide_from_portfolio', function () {
-    Director::create([
-        'slug' => 'sunil-thomas',
-        'eyebrow' => 'Director 1',
-        'first_name' => 'Sunil',
-        'last_name' => 'Thomas',
-        'role' => 'Director 1 role',
-        'stats' => [],
-        'bio_title_white' => 'Title',
-        'bio_title_gradient' => 'Gradient',
-        'bio_image' => '/images/bio.jpg',
-        'bio_alt' => 'Bio image alt',
-        'bio' => [],
-        'works_eyebrow' => 'Expertise',
-        'works_title_white' => 'White',
-        'works_title_muted' => 'Muted',
-        'works' => [
-            [
-                'image' => '/images/work1.png', 
-                'title' => 'Visible Work', 
-                'span' => 'md:col-span-2',
-                'video_url' => 'https://example.com/video1.mp4',
-                'show_in_portfolio' => true,
-            ],
-            [
-                'image' => '/images/work2.png', 
-                'title' => 'Hidden Work', 
-                'span' => 'md:col-span-2',
-                'video_url' => 'https://example.com/video2.mp4',
-                'show_in_portfolio' => false,
-            ]
-        ],
+    Portfolio::create([
+        'title' => 'Visible Work',
+        'span' => 'md:col-span-2',
+        'video_url' => 'https://example.com/video1.mp4',
+        'image' => '/images/work1.png',
+        'show_in_portfolio' => true,
+        'sort_order' => 10,
+    ]);
+
+    Portfolio::create([
+        'title' => 'Hidden Work',
+        'span' => 'md:col-span-2',
+        'video_url' => 'https://example.com/video2.mp4',
+        'image' => '/images/work2.png',
+        'show_in_portfolio' => false,
+        'sort_order' => 20,
     ]);
 
     Livewire::test('pages::portfolio')
-        ->assertSee('Visible Work (by Sunil Thomas)')
+        ->assertSee('Visible Work')
         ->assertDontSee('Hidden Work');
 });
 
-test('portfolio page attributes general works to Vidhya Studio', function () {
-    Director::create([
-        'slug' => 'general',
-        'eyebrow' => 'Studio',
-        'first_name' => 'Vidhya',
-        'last_name' => 'Studio',
-        'role' => 'General',
-        'stats' => [],
-        'bio_title_white' => 'Title',
-        'bio_title_gradient' => 'Gradient',
-        'bio_image' => '/images/bio.jpg',
-        'bio_alt' => 'Bio image alt',
-        'bio' => [],
-        'works_eyebrow' => 'Expertise',
-        'works_title_white' => 'White',
-        'works_title_muted' => 'Muted',
-        'works' => [
-            [
-                'image' => '/images/work1.png', 
-                'title' => 'General Work Title', 
-                'span' => 'md:col-span-2',
-                'video_url' => 'https://example.com/video1.mp4',
-                'show_in_portfolio' => true,
-            ]
-        ],
+test('portfolio page applies each work display size to the grid', function () {
+    Portfolio::create([
+        'title' => 'Wide Portfolio Work',
+        'span' => 'md:col-span-4',
+        'image' => '/images/work-wide.png',
+        'show_in_portfolio' => true,
+        'sort_order' => 10,
     ]);
 
     Livewire::test('pages::portfolio')
-        ->assertSee('General Work Title (by Vidhya Studio)');
+        ->assertSee('Wide Portfolio Work')
+        ->assertSeeHtml('md:col-span-4');
 });
 
+test('portfolio page exposes the configured portrait video ratio', function () {
+    Portfolio::create([
+        'title' => 'Portrait Portfolio Work',
+        'span' => 'md:col-span-2',
+        'video_url' => 'https://example.com/portrait.mp4',
+        'video_aspect_ratio' => '9:16',
+        'image' => '/images/work-portrait.png',
+        'show_in_portfolio' => true,
+        'sort_order' => 10,
+    ]);
+
+    Livewire::test('pages::portfolio')
+        ->assertSee('Portrait Portfolio Work')
+        ->assertSeeHtml("modalVideoAspectRatio = '9:16'");
+});

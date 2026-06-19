@@ -13,7 +13,7 @@ class AdminUserController extends Controller
     {
         return response()->json([
             'users' => $this->users($request->string('search')->toString()),
-        ]);
+        ])->header('Cache-Control', 'no-store, no-cache, must-revalidate');
     }
 
     public function store(Request $request): JsonResponse

@@ -155,7 +155,7 @@ new #[Title('FAQ')]
                                         style="border-color: {{ $accent }};" @if($faq->keywords)
                                         data-keywords="{{ $faq->keywords }}" @endif>
                                         <button @click="active = (active === {{ $index }} ? null : {{ $index }})"
-                                            class="w-full flex items-center justify-between p-6 text-left focus:outline-none focus-visible:ring-1 focus-visible:ring-white/20"
+                                            class="w-full cursor-pointer flex items-center justify-between p-6 text-left focus:outline-none focus-visible:ring-1 focus-visible:ring-white/20"
                                             aria-expanded="active === {{ $index }} ? 'true' : 'false'">
                                             <span
                                                 class="text-sm sm:text-base font-black uppercase tracking-wider text-white {{ $hoverColorClass }} transition-colors duration-200">

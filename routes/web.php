@@ -4,6 +4,8 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AdminUserController;
 use App\Http\Controllers\AdminDirectorController;
 use App\Http\Controllers\AdminFaqController;
+use App\Http\Controllers\AdminServiceController;
+use App\Http\Controllers\AdminPortfolioController;
 
 Route::livewire('/', 'pages::home')->name('home');
 Route::livewire('/about', 'pages::about')->name('about');
@@ -31,9 +33,24 @@ Route::middleware(['auth', 'verified', 'admin'])->group(function () {
 
     Route::get('admin/faqs/data', [AdminFaqController::class, 'index'])->name('admin.faqs.index');
     Route::post('admin/faqs', [AdminFaqController::class, 'store'])->name('admin.faqs.store');
+    Route::patch('admin/faqs/reorder', [AdminFaqController::class, 'reorder'])->name('admin.faqs.reorder');
     Route::patch('admin/faqs/{faq}', [AdminFaqController::class, 'update'])->name('admin.faqs.update');
     Route::delete('admin/faqs/{faq}', [AdminFaqController::class, 'destroy'])->name('admin.faqs.destroy');
     Route::view('admin/faqs', 'pages.admin.⚡faqs')->name('admin.faqs');
+
+    Route::get('admin/services/data', [AdminServiceController::class, 'index'])->name('admin.services.index');
+    Route::post('admin/services', [AdminServiceController::class, 'store'])->name('admin.services.store');
+    Route::patch('admin/services/reorder', [AdminServiceController::class, 'reorder'])->name('admin.services.reorder');
+    Route::patch('admin/services/{service}', [AdminServiceController::class, 'update'])->name('admin.services.update');
+    Route::delete('admin/services/{service}', [AdminServiceController::class, 'destroy'])->name('admin.services.destroy');
+    Route::view('admin/services', 'pages.admin.⚡services')->name('admin.services');
+
+    Route::get('admin/portfolios/data', [AdminPortfolioController::class, 'index'])->name('admin.portfolios.index');
+    Route::post('admin/portfolios', [AdminPortfolioController::class, 'store'])->name('admin.portfolios.store');
+    Route::patch('admin/portfolios/reorder', [AdminPortfolioController::class, 'reorder'])->name('admin.portfolios.reorder');
+    Route::patch('admin/portfolios/{portfolio}', [AdminPortfolioController::class, 'update'])->name('admin.portfolios.update');
+    Route::delete('admin/portfolios/{portfolio}', [AdminPortfolioController::class, 'destroy'])->name('admin.portfolios.destroy');
+    Route::view('admin/portfolios', 'pages.admin.⚡portfolios')->name('admin.portfolios');
 });
 
 Route::get('sitemap.xml', function () {

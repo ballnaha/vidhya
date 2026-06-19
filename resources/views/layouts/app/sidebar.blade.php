@@ -27,14 +27,24 @@
                         <span aria-hidden="true">⌂</span>
                         {{ __('Dashboard') }}
                     </a>
+                    <a class="vidhya-sidebar-item {{ request()->routeIs('admin.services') ? 'is-current' : '' }}" href="{{ route('admin.services') }}" wire:navigate.hover data-admin-sidebar-link>
+                        <span aria-hidden="true">⚙</span>
+                        {{ __('Services') }}
+                    </a>
+                    <a class="vidhya-sidebar-item {{ request()->routeIs('admin.portfolios') ? 'is-current' : '' }}" href="{{ route('admin.portfolios') }}" wire:navigate.hover data-admin-sidebar-link>
+                        <span aria-hidden="true">■</span>
+                        {{ __('Portfolio') }}
+                    </a>
                     <a class="vidhya-sidebar-item {{ request()->routeIs('admin.directors') ? 'is-current' : '' }}" href="{{ route('admin.directors') }}" wire:navigate.hover data-admin-sidebar-link>
                         <span aria-hidden="true">☼</span>
                         {{ __('Directors') }}
                     </a>
+                    
                     <a class="vidhya-sidebar-item {{ request()->routeIs('admin.faqs') ? 'is-current' : '' }}" href="{{ route('admin.faqs') }}" wire:navigate.hover data-admin-sidebar-link>
                         <span aria-hidden="true">?</span>
                         {{ __('FAQ') }}
                     </a>
+                    
                 </div>
 
                 <div class="mt-5 grid" data-admin-sidebar-group>
@@ -47,14 +57,6 @@
             </nav>
 
             <div class="flex-1"></div>
-
-            <div class="relative z-10 mb-4 border-l-[3px] border-white/8 bg-white/[0.035] px-4 py-3">
-                <p class="text-[10px] font-semibold uppercase tracking-[0.18em] text-white/28">{{ __('Status') }}</p>
-                <div class="mt-2 flex items-center gap-2 text-xs font-medium text-emerald-300/85">
-                    <span class="h-1.5 w-1.5 rounded-full bg-emerald-400 shadow-[0_0_12px_rgba(52,211,153,0.85)]"></span>
-                    {{ __('Studio online') }}
-                </div>
-            </div>
 
             <nav class="relative z-10">
                 <a class="vidhya-sidebar-item" href="{{ route('home') }}" wire:navigate.hover data-admin-sidebar-link>

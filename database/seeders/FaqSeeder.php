@@ -38,14 +38,14 @@ class FaqSeeder extends Seeder
                 'question' => 'Can AI video truly deliver cinematic quality comparable to traditional films?',
                 'answer' => 'Yes. Backed by the legacy of Benetone Films, Vidhya Studio applies two decades of cinematic excellence to AI. We direct AI to handle depth, lighting, and composition with a "Cinematic Perspective," ensuring that the output is indistinguishable from high-end traditional film production.',
                 'keywords' => 'cinematic AI video quality, professional AI filmmaking, Vidhya Studio video standard',
-                'sort_order' => 10,
+                'sort_order' => 30,
             ],
             [
                 'category' => 'Quality & Scalability',
                 'question' => 'How can AI help scale a "Hero Film" into targeted marketing assets?',
                 'answer' => 'Through "Seamless Campaign Scaling," we can take a single core video asset and use AI to re-develop and scale it into hundreds of high-quality, targeted variations. This allows brands to maintain a consistent message while personalizing content for diverse audience segments at unprecedented speed.',
                 'keywords' => 'scale video campaigns with AI, personalized marketing videos, programmatic video creation',
-                'sort_order' => 20,
+                'sort_order' => 40,
             ],
 
             // Category: Data Security & Brand Identity
@@ -54,14 +54,14 @@ class FaqSeeder extends Seeder
                 'question' => 'What security protocols are in place to protect a brand\'s data and assets?',
                 'answer' => 'Vidhya Studio adheres to "Ethical Craft & Strict Security." We implement rigorous data security protocols to ensure that all brand assets and intellectual property remain confidential and protected throughout the AI model training and production phases.',
                 'keywords' => 'AI video production security, secure brand data AI, ethical AI filmmaking protocols',
-                'sort_order' => 10,
+                'sort_order' => 50,
             ],
             [
                 'category' => 'Data Security & Brand Identity',
                 'question' => 'How does Strategic Visual Development ensure brand consistency in AI outputs?',
                 'answer' => 'Our "Strategic Visual Development" involves building bespoke AI models tailored to your specific brand identity. This ensures that the core message, aesthetics, and visual DNA remain consistent across all AI-generated content, preventing any deviation from your brand\'s established guidelines.',
                 'keywords' => 'consistent brand AI video, custom trained AI models, strategic visual development guidelines',
-                'sort_order' => 20,
+                'sort_order' => 60,
             ],
         ];
 

@@ -82,10 +82,7 @@
 <link rel="icon" href="/favicon.ico?v=2" sizes="any">
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
 
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="preload" href="/fonts/vidhya/poppins-regular.ttf" as="font" type="font/ttf" crossorigin>
-<link rel="preload" href="/fonts/vidhya/poppins-bold.ttf" as="font" type="font/ttf" crossorigin>
 <link rel="preload" href="/fonts/vidhya/lemon-milk-bold.otf" as="font" type="font/otf" crossorigin>
 
 @vite(['resources/css/app.css', 'resources/js/app.js'])

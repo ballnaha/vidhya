@@ -12,14 +12,19 @@ class extends Component
 }; ?>
 
 <main class="relative overflow-hidden bg-[#0a0a0c] text-white">
-    <section class="relative min-h-screen overflow-hidden px-6 pb-12 pt-36 sm:px-10 lg:px-20" style="background: radial-gradient(ellipse at 20% 80%, rgba(54,107,195,0.2) 0%, #0a0a0c 58%);">
+    <section class="relative min-h-screen overflow-hidden bg-[#0a0a0c] px-6 pb-12 pt-36 sm:px-10 lg:px-20">
+        <img src="/images/home2.webp" alt="" class="pointer-events-none absolute inset-0 h-full w-full object-cover object-center" width="1024" height="1024" fetchpriority="high" aria-hidden="true">
+        <div class="pointer-events-none absolute inset-0 bg-[linear-gradient(90deg,rgba(5,7,12,0.82)_0%,rgba(5,7,12,0.68)_38%,rgba(5,7,12,0.30)_70%,rgba(5,7,12,0.16)_100%)]"></div>
+        <div class="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,rgba(5,7,12,0.28)_0%,rgba(5,7,12,0.06)_42%,rgba(0,0,0,0.62)_82%,#000_100%)]"></div>
+        <div class="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_20%_80%,rgba(54,107,195,0.22)_0%,transparent_58%)]"></div>
         <div class="pointer-events-none absolute right-[-5%] top-[5%] h-[600px] w-[600px] bg-[radial-gradient(ellipse,rgba(230,0,18,0.12)_0%,transparent_65%)]"></div>
-        <div class="pointer-events-none absolute right-[-10px] top-1/2 hidden -translate-y-1/2 select-none text-[clamp(200px,28vw,400px)] font-black leading-none tracking-[-0.05em] text-white/[0.022] lg:block">VS</div>
+        <div class="pointer-events-none absolute inset-x-0 bottom-0 h-64 bg-[linear-gradient(180deg,transparent_0%,rgba(8,8,9,0.45)_32%,rgba(8,8,9,0.88)_68%,#080809_100%)]"></div>
+        <div class="pointer-events-none absolute right-[-10px] top-1/2 hidden -translate-y-1/2 select-none text-[clamp(200px,28vw,400px)] font-black leading-none tracking-[-0.05em] text-white/[0.022] lg:block"></div>
         <div class="relative z-10 mx-auto max-w-[1800px]">
             <div class="max-w-[1100px]">
                 <div class="mb-7 flex items-center gap-4" data-hero-reveal style="--hero-delay: 100ms; --hero-duration: 700ms; --hero-y: 20px;">
                     <span class="h-[3px] w-10 bg-linear-to-r from-[#366bc3] via-[#823665] to-[#e60012]"></span>
-                    <p class="text-[11px] font-semibold uppercase tracking-[0.28em] text-white/40">{{ __('Your AI strategic content partner') }}</p>
+                    <p class="text-[11px] font-semibold uppercase tracking-[0.28em] text-white/60">{{ __('Your AI strategic content partner') }}</p>
                 </div>
 
                 <h1 class="text-[clamp(3rem,6.5vw,5.7rem)] font-black uppercase leading-[1.05] tracking-[-0.03em]" data-hero-reveal style="--hero-delay: 250ms; --hero-duration: 850ms; --hero-y: 30px;">
@@ -52,22 +57,28 @@ class extends Component
                     <article class="relative min-h-32 border-b border-r border-black/40 px-7 py-7 last:border-r-0 md:border-b-0">
                         <span class="absolute inset-x-0 top-0 h-0.5 bg-linear-to-r {{ $feature['bar'] }}"></span>
                         <h2 class="text-[13px] font-black uppercase tracking-[0.02em] text-white">{{ __($feature['title']) }}</h2>
-                        <p class="mt-2.5 max-w-xl text-[13px] font-medium leading-[1.75] text-white/40">{{ __($feature['body']) }}</p>
+                        <p class="mt-2.5 max-w-xl text-[13px] font-medium leading-[1.75] text-white/60">{{ __($feature['body']) }}</p>
                     </article>
                 @endforeach
             </div>
 
-            <div class="hero-scroll-cue mt-5 flex flex-col items-center gap-2 text-[10px] font-normal uppercase tracking-[0.22em] text-white/35" data-hero-reveal style="--hero-delay: 1300ms; --hero-duration: 1000ms; --hero-y: 12px;">
+            <div class="hero-scroll-cue mt-5 flex flex-col items-center gap-2 text-[10px] font-normal uppercase tracking-[0.22em] text-white/60" data-hero-reveal style="--hero-delay: 1300ms; --hero-duration: 1000ms; --hero-y: 12px;">
                 <span class="hero-scroll-cue__label">{{ __('Scroll') }}</span>
                 <span class="hero-scroll-cue__line"></span>
             </div>
         </div>
     </section>
 
-    <section class="border-t border-white/5 bg-[#080809] px-6 py-28 sm:px-10 lg:px-20">
-        <div class="mx-auto grid max-w-[1800px] gap-16 lg:grid-cols-2 lg:gap-24">
+    <section class="marketing-deferred-section relative overflow-hidden border-t border-white/5 bg-[#080809] px-6 py-28 sm:px-10 lg:px-20">
+        <img src="/images/previs1.webp" alt="" class="pointer-events-none absolute inset-0 h-full w-full object-cover object-center" loading="lazy" decoding="async" aria-hidden="true">
+        <div class="pointer-events-none absolute inset-0 bg-[linear-gradient(90deg,rgba(8,8,9,0.72)_0%,rgba(8,8,9,0.50)_48%,rgba(8,8,9,0.30)_100%)]"></div>
+        <div class="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_18%_38%,rgba(54,107,195,0.18)_0%,transparent_46%)]"></div>
+        <div class="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_88%_28%,rgba(230,0,18,0.10)_0%,transparent_38%)]"></div>
+        <div class="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,transparent_38%,rgba(8,8,9,0.45)_72%,#080809_100%)]"></div>
+
+        <div class="relative mx-auto grid max-w-[1800px] gap-16 lg:grid-cols-2 lg:gap-24">
             <div data-reveal="left">
-                <p class="mb-4 text-[11px] font-semibold uppercase tracking-[0.26em] text-white/35">Our DNA</p>
+                <p class="mb-4 text-[11px] font-semibold uppercase tracking-[0.26em] text-white/60">Our DNA</p>
                 <h2 class="mb-8 text-[clamp(2.5rem,5vw,4rem)] font-black uppercase leading-none tracking-[-0.02em]">
                     <span>Filmmaking</span><br><span class="bg-linear-to-r from-[#366bc3] via-[#823665] to-[#e60012] bg-clip-text text-transparent">In Our DNA.</span>
                 </h2>
@@ -92,16 +103,23 @@ class extends Component
         </div>
     </section>
 
-    <section class="border-t border-white/5 bg-[#0a0a0c] px-6 py-28 sm:px-10 lg:px-20">
+    <section class="marketing-deferred-section border-t border-white/5 bg-[#0a0a0c] px-6 pb-28 sm:px-10 lg:px-20">
         <div class="mx-auto max-w-[1800px]">
-            <p class="mb-4 text-[11px] font-semibold uppercase tracking-[0.26em] text-white/35">The Vidhya Advantage</p>
-            <div class="mb-[72px] grid gap-10 lg:grid-cols-2 lg:items-end" data-reveal>
-                <h2 class="text-[clamp(2.5rem,5vw,4rem)] font-black uppercase leading-none tracking-[-0.02em]">
-                    <span class="bg-linear-to-r from-[#366bc3] via-[#823665] to-[#e60012] bg-clip-text text-transparent">Our Philosophy.</span>
-                </h2>
-                <p class="max-w-2xl text-[15px] font-normal leading-[1.85] text-white/45">
-                    At Vidhya Studio, artificial intelligence is an invitation to scale your vision. We blend the precision of advanced technology with the soul of human storytelling — empowering brands to move with unmatched speed without ever compromising the depth of their message.
-                </p>
+            <div class="relative left-1/2 w-screen -translate-x-1/2 overflow-hidden py-28">
+                <img src="/images/home3.webp" alt="" class="pointer-events-none absolute inset-0 h-full w-full object-cover object-center" loading="lazy" decoding="async" aria-hidden="true">
+                <div class="pointer-events-none absolute inset-0 bg-[linear-gradient(90deg,rgba(5,5,7,0.92)_0%,rgba(5,5,7,0.72)_52%,rgba(5,5,7,0.52)_100%)]"></div>
+
+                <div class="relative mx-auto max-w-[1800px] px-6 sm:px-10 lg:px-20" data-reveal>
+                    <p class="mb-4 text-[11px] font-semibold uppercase tracking-[0.26em] text-white/60">The Vidhya Advantage</p>
+                    <div class="grid gap-10 lg:grid-cols-2 lg:items-end">
+                        <h2 class="text-[clamp(2.5rem,5vw,4rem)] font-black uppercase leading-none tracking-[-0.02em]">
+                            <span class="bg-linear-to-r from-[#366bc3] via-[#823665] to-[#e60012] bg-clip-text text-transparent">Our Philosophy.</span>
+                        </h2>
+                        <p class="max-w-2xl text-[15px] font-normal leading-[1.85] text-white/55">
+                            At Vidhya Studio, artificial intelligence is an invitation to scale your vision. We blend the precision of advanced technology with the soul of human storytelling — empowering brands to move with unmatched speed without ever compromising the depth of their message.
+                        </p>
+                    </div>
+                </div>
             </div>
 
             <div class="grid gap-[3px] md:grid-cols-2">
@@ -125,18 +143,25 @@ class extends Component
         </div>
     </section>
 
-    <section class="relative overflow-hidden border-t border-white/5 bg-[#080809] px-6 py-28 sm:px-10 lg:px-20">
+    <section class="marketing-deferred-section relative overflow-hidden border-t border-white/5 bg-[#080809] px-6 pb-28 sm:px-10 lg:px-20">
         <div class="pointer-events-none absolute bottom-[-80px] right-[-80px] h-[500px] w-[500px] bg-[radial-gradient(ellipse,rgba(230,0,18,0.1)_0%,transparent_65%)]"></div>
         <div class="relative z-10 mx-auto max-w-[1800px]">
-            <p class="mb-4 text-[11px] font-semibold uppercase tracking-[0.26em] text-white/35">How We Build With You</p>
-            <div class="mb-[72px] grid gap-12 lg:grid-cols-2 lg:items-end" data-reveal>
-                <h2 class="text-[clamp(2.5rem,5vw,3.75rem)] font-black uppercase leading-[1.05] tracking-[-0.02em]">
-                    <span class="text-white">Strategy, Scale</span><br>
-                    <span class="bg-linear-to-r from-[#366bc3] via-[#823665] to-[#e60012] bg-clip-text text-transparent">&amp; Cinematic Depth.</span>
-                </h2>
-                <p class="max-w-2xl text-[15px] font-normal leading-[1.85] text-white/45">
-                    Vidhya Studio operates at the highest level of global entertainment and advertising. We start by deeply understanding your core message — whether you are a direct brand, a CMO, or a creative partner.
-                </p>
+            <div class="relative left-1/2 w-screen -translate-x-1/2 overflow-hidden py-28">
+                <img src="/images/microdrama1.webp" alt="" class="pointer-events-none absolute inset-0 h-full w-full object-cover object-center" loading="lazy" decoding="async" aria-hidden="true">
+                <div class="pointer-events-none absolute inset-0 bg-[linear-gradient(90deg,rgba(5,5,7,0.78)_0%,rgba(5,5,7,0.55)_52%,rgba(5,5,7,0.35)_80%)]"></div>
+
+                <div class="relative mx-auto max-w-[1800px] px-6 sm:px-10 lg:px-20" data-reveal>
+                    <p class="mb-4 text-[11px] font-semibold uppercase tracking-[0.26em] text-white/60">How We Build With You</p>
+                    <div class="grid gap-12 lg:grid-cols-2 lg:items-end">
+                        <h2 class="text-[clamp(2.5rem,5vw,3.75rem)] font-black uppercase leading-[1.05] tracking-[-0.02em]">
+                            <span class="text-white">Strategy, Scale</span><br>
+                            <span class="bg-linear-to-r from-[#366bc3] via-[#823665] to-[#e60012] bg-clip-text text-transparent">&amp; Cinematic <br> Depth.</span>
+                        </h2>
+                        <p class="max-w-2xl text-[15px] font-normal leading-[1.85] text-white/55">
+                            Vidhya Studio operates at the highest level of global entertainment and advertising. We start by deeply understanding your core message — whether you are a direct brand, a CMO, or a creative partner.
+                        </p>
+                    </div>
+                </div>
             </div>
 
             <div class="mb-16 grid gap-[3px] lg:grid-cols-3">
@@ -165,10 +190,12 @@ class extends Component
         </div>
     </section>
 
-    <section class="relative overflow-hidden px-6 py-28 text-center sm:px-10 lg:px-20" style="background: linear-gradient(135deg, #0a0a0c 0%, #0d1228 50%, #0a0a0c 100%);">
+    <section class="marketing-deferred-section relative overflow-hidden bg-[#0a0a0c] px-6 py-28 text-center sm:px-10 lg:px-20">
+        <img src="/images/home5.webp" alt="" class="pointer-events-none absolute inset-0 h-full w-full object-cover object-center" loading="lazy" decoding="async" aria-hidden="true">
+        <div class="pointer-events-none absolute inset-0 bg-[linear-gradient(90deg,rgba(5,5,7,0.80)_0%,rgba(5,5,7,0.72)_50%,rgba(5,5,7,0.80)_100%)]"></div>
         <div class="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(54,107,195,0.14)_0%,transparent_65%)]"></div>
         <div class="relative z-10" data-reveal>
-            <p class="mb-4 text-[11px] font-semibold uppercase tracking-[0.26em] text-white/35">Ready to Scale?</p>
+            <p class="mb-4 text-[11px] font-semibold uppercase tracking-[0.26em] text-white/60">Ready to Scale?</p>
             <h2 class="mb-6 text-[clamp(2.8rem,6vw,5rem)] font-black uppercase leading-[1.05] tracking-[-0.03em]">
                 <span class="bg-linear-to-r from-[#366bc3] via-[#823665] to-[#e60012] bg-clip-text text-transparent">Ready to Scale</span><br>
                 <span>Your Vision?</span>

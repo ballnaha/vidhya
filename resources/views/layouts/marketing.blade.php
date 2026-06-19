@@ -4,13 +4,13 @@
         @include('partials.head')
     </head>
     <body class="min-h-screen bg-[#0a0a0c] text-white antialiased">
-        <header class="fixed inset-x-0 top-0 z-50 border-white/0 bg-[#0a0a0c]/82 backdrop-blur-xl" data-mobile-menu-shell>
+        <header class="fixed inset-x-0 top-0 z-50 border-white/0 bg-transparent transition-colors duration-300 data-[scrolled]:bg-black" data-mobile-menu-shell>
             <div class="mx-auto flex h-[72px] max-w-[1800px] items-center justify-between px-6 sm:px-10 lg:px-15">
                 <a href="{{ route('home') }}" wire:navigate.hover aria-label="Vidhya Studio home">
                     <img src="/images/vidhya-studio-logo-ui.png" alt="Vidhya Studio" class="h-7 w-auto object-contain" width="720" height="181" fetchpriority="high">
                 </a>
 
-                <nav class="hidden items-center gap-8 text-xs font-medium uppercase tracking-[0.08em] text-white/42 md:flex">
+                <nav class="hidden items-center gap-8 text-xs font-medium uppercase tracking-[0.08em] text-white/65 md:flex">
                     <a href="{{ route('home') }}" class="{{ request()->routeIs('home') ? 'border-b border-[#366bc3] text-white' : 'hover:text-white' }} pb-1 transition" wire:navigate.hover>Home</a>
                     <a href="{{ route('services') }}" class="{{ request()->routeIs('services') ? 'border-b border-[#366bc3] text-white' : 'hover:text-white' }} pb-1 transition" wire:navigate.hover>Services</a>
                     <a href="{{ route('portfolio') }}" class="{{ request()->routeIs('portfolio') ? 'border-b border-[#366bc3] text-white' : 'hover:text-white' }} pb-1 transition" wire:navigate.hover>Portfolio</a>
@@ -51,38 +51,38 @@
             <div class="mx-auto grid max-w-[1800px] gap-12 md:grid-cols-[1.4fr_1fr_1fr_1fr]">
                 <div>
                     <img src="/images/vidhya-studio-logo-ui.png" alt="Vidhya Studio" class="h-9 w-auto" width="720" height="181" loading="lazy">
-                    <p class="mt-5 max-w-60 text-sm leading-7 text-white/35">Cinematic perspective. AI speed. Measurable impact.</p>
-                    <p class="mt-2 max-w-60 text-xs leading-6 text-white/22">A new venture from Benetone Films.</p>
+                    <p class="mt-5 max-w-60 text-sm leading-7 text-white/60">Cinematic perspective. AI speed. Measurable impact.</p>
+                    <p class="mt-2 max-w-60 text-xs leading-6 text-white/55">A new venture from Benetone Films.</p>
                     <div class="mt-6 h-[3px] w-15 bg-linear-to-r from-[#366bc3] via-[#823665] to-[#e60012]"></div>
                 </div>
 
                 <div>
-                    <h3 class="mb-5 text-[0.65rem] font-bold uppercase tracking-[0.2em] text-white/28">Services</h3>
+                    <h3 class="mb-5 text-[0.65rem] font-bold uppercase tracking-[0.2em] text-white/55">Services</h3>
                     @foreach (['AI POCs & Previs', 'AI Advertising', 'AI Post Production', 'AI Models & Influencers', 'Micro Drama'] as $item)
-                        <a href="{{ route('services') }}" class="mb-2 block text-sm text-white/45 transition hover:text-white" wire:navigate.hover>{{ $item }}</a>
+                        <a href="{{ route('services') }}" class="mb-2 block text-sm text-white/60 transition hover:text-white" wire:navigate.hover>{{ $item }}</a>
                     @endforeach
                 </div>
 
                 <div>
-                    <h3 class="mb-5 text-[0.65rem] font-bold uppercase tracking-[0.2em] text-white/28">Company</h3>
-                    <a href="{{ route('ai-director') }}" class="mb-2 block text-sm text-white/45 transition hover:text-white" wire:navigate.hover>Director</a>
-                    <a href="{{ route('portfolio') }}" class="mb-2 block text-sm text-white/45 transition hover:text-white" wire:navigate.hover>Portfolio</a>
-                    <a href="{{ route('about') }}" class="mb-2 block text-sm text-white/45 transition hover:text-white" wire:navigate.hover>About Us</a>
-                    <a href="{{ route('services') }}" class="mb-2 block text-sm text-white/45 transition hover:text-white" wire:navigate.hover>Services</a>
-                    <a href="{{ route('faq') }}" class="mb-2 block text-sm text-white/45 transition hover:text-white" wire:navigate.hover>FAQ</a>
-                    <a href="{{ route('contact') }}" class="mb-2 block text-sm text-white/45 transition hover:text-white" wire:navigate.hover>Contact</a>
+                    <h3 class="mb-5 text-[0.65rem] font-bold uppercase tracking-[0.2em] text-white/55">Company</h3>
+                    <a href="{{ route('ai-director') }}" class="mb-2 block text-sm text-white/60 transition hover:text-white" wire:navigate.hover>Director</a>
+                    <a href="{{ route('portfolio') }}" class="mb-2 block text-sm text-white/60 transition hover:text-white" wire:navigate.hover>Portfolio</a>
+                    <a href="{{ route('about') }}" class="mb-2 block text-sm text-white/60 transition hover:text-white" wire:navigate.hover>About Us</a>
+                    <a href="{{ route('services') }}" class="mb-2 block text-sm text-white/60 transition hover:text-white" wire:navigate.hover>Services</a>
+                    <a href="{{ route('faq') }}" class="mb-2 block text-sm text-white/60 transition hover:text-white" wire:navigate.hover>FAQ</a>
+                    <a href="{{ route('contact') }}" class="mb-2 block text-sm text-white/60 transition hover:text-white" wire:navigate.hover>Contact</a>
                 </div>
 
                 <div>
-                    <h3 class="mb-5 text-[0.65rem] font-bold uppercase tracking-[0.2em] text-white/28">Connect</h3>
-                    <a href="{{ route('contact') }}" class="mb-2 block text-sm text-white/45 transition hover:text-white" wire:navigate.hover>Start a Project</a>
-                    <a href="{{ route('contact') }}" class="mb-2 block text-sm text-white/45 transition hover:text-white" wire:navigate.hover>Direct Email</a>
+                    <h3 class="mb-5 text-[0.65rem] font-bold uppercase tracking-[0.2em] text-white/55">Connect</h3>
+                    <a href="{{ route('contact') }}" class="mb-2 block text-sm text-white/60 transition hover:text-white" wire:navigate.hover>Start a Project</a>
+                    <a href="{{ route('contact') }}" class="mb-2 block text-sm text-white/60 transition hover:text-white" wire:navigate.hover>Direct Email</a>
                 </div>
             </div>
 
-            <div class="mx-auto mt-14 flex max-w-[1800px] flex-col justify-between gap-4 border-t border-white/7 pt-7 text-xs text-white/22 lg:flex-row">
+            <div class="mx-auto mt-14 flex max-w-[1800px] flex-col justify-between gap-4 border-t border-white/7 pt-7 text-xs text-white/55 lg:flex-row">
                 <span>© 2026 Vidhya Studio. A Benetone Films venture. All rights reserved.</span>
-                <span class="font-semibold uppercase tracking-[0.12em] text-white/18">Cinematic Perspective · AI Speed · Measurable Impact</span>
+                <span class="font-semibold uppercase tracking-[0.12em] text-white/50">Cinematic Perspective · AI Speed · Measurable Impact</span>
             </div>
         </footer>
 

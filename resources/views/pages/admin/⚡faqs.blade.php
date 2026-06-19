@@ -2,8 +2,8 @@
     use App\Models\Faq;
 
     $faqs = Faq::query()
-        ->orderBy('category')
         ->orderBy('sort_order')
+        ->orderBy('id')
         ->get()
         ->map(fn (Faq $faq) => [
             'id' => $faq->id,
@@ -23,6 +23,7 @@
     data-admin-faqs
     data-index-url="{{ route('admin.faqs.index') }}"
     data-store-url="{{ route('admin.faqs.store') }}"
+    data-reorder-url="{{ route('admin.faqs.reorder') }}"
     data-update-url-template="{{ url('admin/faqs/__FAQ__') }}"
     data-delete-url-template="{{ url('admin/faqs/__FAQ__') }}"
 >
@@ -85,8 +86,9 @@
                 </div>
 
                 <div>
-                    <label class="block mb-2 text-xs font-semibold text-white/45 uppercase tracking-wider">{{ __('Sort Order') }}</label>
-                    <input name="sort_order" type="number" min="0" placeholder="10" class="w-24 rounded border border-white/10 bg-white/[0.04] px-4 py-3.5 text-sm text-white outline-none transition focus:border-[#366bc3]" data-admin-faqs-field="sort_order">
+                    <label class="block mb-2 text-xs font-semibold text-white/45 uppercase tracking-wider">{{ __('Priority (Auto)') }}</label>
+                    <input name="sort_order" type="number" min="0" readonly aria-readonly="true" tabindex="-1" class="w-24 cursor-not-allowed rounded border border-white/8 bg-black/25 px-4 py-3.5 text-sm text-white/45 outline-none" data-admin-faqs-field="sort_order">
+                    <p class="mt-2 text-[11px] text-white/30">{{ __('Priority is managed automatically. Use Drag & Drop in the FAQ list to change it.') }}</p>
                     <p class="mt-2 hidden text-xs text-red-400" data-admin-faqs-error="sort_order"></p>
                 </div>
 
@@ -108,14 +110,17 @@
                 <input placeholder="{{ __('Search FAQs') }}" class="w-full rounded border border-white/10 bg-white/[0.04] px-4 py-3 text-sm text-white outline-none transition placeholder:text-white/28 focus:border-[#366bc3] sm:max-w-xs" data-admin-faqs-search>
             </div>
 
+            <div class="flex flex-wrap gap-2 border-b border-white/8 bg-white/[0.01] px-5 py-3.5" data-admin-faqs-category-filters></div>
+
             <div class="overflow-x-auto">
                 <table class="w-full min-w-[820px] text-left text-sm">
                     <thead class="border-b border-white/8 text-[11px] uppercase tracking-[0.16em] text-white/35">
                         <tr>
+                            <th class="w-16 px-3 py-4 text-center font-semibold">{{ __('Move') }}</th>
                             <th class="px-5 py-4 font-semibold w-1/4">{{ __('Category') }}</th>
                             <th class="px-5 py-4 font-semibold w-1/3">{{ __('Question') }}</th>
                             <th class="px-5 py-4 font-semibold w-1/3">{{ __('Answer') }}</th>
-                            <th class="px-5 py-4 font-semibold w-20">{{ __('Order') }}</th>
+                            <th class="px-5 py-4 font-semibold w-20">{{ __('Priority') }}</th>
                             <th class="px-5 py-4 text-right font-semibold w-40">{{ __('Actions') }}</th>
                         </tr>
                     </thead>

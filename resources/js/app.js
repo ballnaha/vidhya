@@ -6,6 +6,34 @@ var toastEventsReady = false;
 var toastLimit = 5;
 var contactServiceOutsideReady = false;
 var adminShellReady = false;
+var Sortable;
+var sortableModulePromise;
+
+function initSortableAdminPages() {
+    if (!document.querySelector('[data-admin-directors], [data-admin-faqs], [data-admin-services], [data-admin-portfolios]')) {
+        return;
+    }
+
+    function initialize() {
+        initAdminDirectors();
+        initAdminFaqs();
+        initAdminServices();
+        initAdminPortfolios();
+    }
+
+    if (Sortable) {
+        initialize();
+        return;
+    }
+
+    sortableModulePromise ??= import('sortablejs').then(function (module) {
+        Sortable = module.default;
+    });
+
+    sortableModulePromise.then(initialize).catch(function (error) {
+        console.error('Unable to load drag and drop controls.', error);
+    });
+}
 
 function initHomeAnimations() {
     document.documentElement.classList.add('home-animations-ready');
@@ -41,6 +69,18 @@ function syncScrollTopButton() {
     }
 
     scrollTopButton.toggleAttribute('data-visible', window.scrollY > 420);
+}
+
+function syncMarketingHeader() {
+    var header = document.querySelector('[data-mobile-menu-shell]');
+
+    if (header) {
+        header.toggleAttribute('data-scrolled', window.scrollY > 0);
+    }
+}
+
+function initMarketingHeader() {
+    syncMarketingHeader();
 }
 
 function initScrollTopButton() {
@@ -892,7 +932,7 @@ function initAdminUsers() {
                 url.searchParams.set('search', search.value.trim());
             }
 
-            return request(url.toString()).then(function (payload) {
+            return request(url.toString(), { cache: 'no-store' }).then(function (payload) {
                 users = payload.users || [];
                 render();
             }).catch(function (error) {
@@ -1027,6 +1067,7 @@ function initAdminUsers() {
         });
 
         render();
+        loadUsers();
     });
 }
 
@@ -1046,6 +1087,7 @@ function initAdminDirectors() {
         var deletingId = null;
         var searchTimer;
         var isSlugManuallyEdited = false;
+        var worksSortable = null;
 
         if (!table || !form) {
             return;
@@ -1060,38 +1102,27 @@ function initAdminDirectors() {
 
         function initDragAndDrop() {
             if (!worksContainer) return;
+            if (worksSortable) {
+                worksSortable.destroy();
+            }
 
-            var dragEl = null;
-
-            worksContainer.addEventListener('dragstart', function (e) {
-                var row = e.target.closest('[data-admin-directors-work-row]');
-                if (!row) return;
-
-                dragEl = row;
-                row.classList.add('opacity-40', 'border-[#366bc3]/40');
-                e.dataTransfer.effectAllowed = 'move';
-            });
-
-            worksContainer.addEventListener('dragover', function (e) {
-                e.preventDefault();
-                if (!dragEl) return;
-
-                var row = e.target.closest('[data-admin-directors-work-row]');
-                if (!row || row === dragEl) return;
-
-                var rect = row.getBoundingClientRect();
-                var next = (e.clientY - rect.top) / (rect.bottom - rect.top) > 0.5;
-
-                worksContainer.insertBefore(dragEl, next ? row.nextSibling : row);
-            });
-
-            worksContainer.addEventListener('dragend', function (e) {
-                if (dragEl) {
-                    dragEl.classList.remove('opacity-40', 'border-[#366bc3]/40');
-                    dragEl.removeAttribute('draggable');
-                    dragEl = null;
-                }
-                renumberWorks();
+            worksSortable = Sortable.create(worksContainer, {
+                handle: '[data-admin-directors-work-drag-handle]',
+                draggable: '[data-admin-directors-work-row]',
+                animation: 180,
+                ghostClass: 'opacity-25',
+                chosenClass: 'border-[#366bc3]/40',
+                dragClass: 'shadow-2xl',
+                delay: 120,
+                delayOnTouchOnly: true,
+                touchStartThreshold: 4,
+                fallbackTolerance: 3,
+                fallbackOnBody: true,
+                onEnd: function (event) {
+                    if (event.oldIndex !== event.newIndex) {
+                        renumberWorks();
+                    }
+                },
             });
         }
 
@@ -1141,27 +1172,19 @@ function initAdminDirectors() {
             var fileInput = row.querySelector('[data-admin-directors-work-file-input]');
             var previewWrapper = row.querySelector('[data-admin-directors-work-preview-wrapper]');
             var previewImg = row.querySelector('[data-admin-directors-work-preview]');
-            var pathLabel = row.querySelector('[data-admin-directors-work-path-label]');
+            var placeholder = row.querySelector('[data-admin-directors-work-upload-placeholder]');
 
             var removeImageBtn = row.querySelector('[data-admin-directors-work-remove-image-file]');
-
-            var showInPortfolioField = row.querySelector('[data-admin-directors-work-field="show_in_portfolio"]');
 
             if (data) {
                 if (titleField) titleField.value = data.title || '';
                 if (videoUrlField) videoUrlField.value = data.video_url || '';
                 if (imageField) imageField.value = data.image || '';
                 if (spanField) spanField.value = data.span || 'md:col-span-2';
-                if (showInPortfolioField) {
-                    showInPortfolioField.value = (data.show_in_portfolio !== undefined && data.show_in_portfolio !== null) ? (data.show_in_portfolio ? '1' : '0') : '1';
-                }
 
                 if (data.image) {
                     if (previewImg) previewImg.src = data.image;
-                    if (pathLabel) {
-                        pathLabel.textContent = data.image.substring(data.image.lastIndexOf('/') + 1);
-                        pathLabel.title = data.image;
-                    }
+                    if (placeholder) placeholder.classList.add('hidden');
                     if (previewWrapper) previewWrapper.classList.remove('hidden');
 
                     var isYoutubeThumbnail = data.image.indexOf('youtube.com') > -1 || data.image.indexOf('ytimg.com') > -1;
@@ -1188,15 +1211,19 @@ function initAdminDirectors() {
                 });
             }
 
+            var uploadCard = row.querySelector('[data-admin-directors-work-upload-card]');
+            if (uploadCard && fileInput) {
+                uploadCard.addEventListener('click', function () {
+                    fileInput.click();
+                });
+            }
+
             if (fileInput) {
                 fileInput.addEventListener('change', function () {
                     var file = this.files[0];
                     if (file) {
                         if (previewImg) previewImg.src = URL.createObjectURL(file);
-                        if (pathLabel) {
-                            pathLabel.textContent = file.name + ' (new)';
-                            pathLabel.title = file.name;
-                        }
+                        if (placeholder) placeholder.classList.add('hidden');
                         if (previewWrapper) previewWrapper.classList.remove('hidden');
                         if (imageField) imageField.value = '';
 
@@ -1208,27 +1235,13 @@ function initAdminDirectors() {
             }
 
             if (removeImageBtn) {
-                removeImageBtn.addEventListener('click', function () {
+                removeImageBtn.addEventListener('click', function (e) {
+                    e.stopPropagation();
                     if (fileInput) fileInput.value = '';
                     if (imageField) imageField.value = '';
                     if (previewWrapper) previewWrapper.classList.add('hidden');
                     if (previewImg) previewImg.src = '';
-                    if (pathLabel) {
-                        pathLabel.textContent = '';
-                        pathLabel.title = '';
-                    }
-                });
-            }
-
-            var dragHandle = row.querySelector('[data-admin-directors-work-drag-handle]');
-            if (dragHandle) {
-                dragHandle.addEventListener('mouseenter', function () {
-                    row.setAttribute('draggable', 'true');
-                });
-                dragHandle.addEventListener('mouseleave', function () {
-                    if (!dragEl) {
-                        row.removeAttribute('draggable');
-                    }
+                    if (placeholder) placeholder.classList.remove('hidden');
                 });
             }
 
@@ -1258,7 +1271,7 @@ function initAdminDirectors() {
                 var videoUrl = row.querySelector('[data-admin-directors-work-field="video_url"]')?.value.trim() || '';
                 var image = row.querySelector('[data-admin-directors-work-field="image"]')?.value.trim() || '';
                 var span = row.querySelector('[data-admin-directors-work-field="span"]')?.value || 'md:col-span-2';
-                var showInPortfolio = row.querySelector('[data-admin-directors-work-field="show_in_portfolio"]')?.value === '1';
+                var showInPortfolio = true;
                 
                 var fileInput = row.querySelector('[data-admin-directors-work-file-input]');
 
@@ -1437,15 +1450,6 @@ function initAdminDirectors() {
             return errors;
         }
 
-        function syncGeneralSlugFields() {
-            if (!form) return;
-            var slug = (form.elements.slug?.value || '').trim().toLowerCase();
-            var isGeneral = slug === 'general';
-            
-            shell.querySelectorAll('[data-admin-directors-not-general]').forEach(function (el) {
-                el.classList.toggle('hidden', isGeneral);
-            });
-        }
 
         function resetForm() {
             form.reset();
@@ -1457,7 +1461,6 @@ function initAdminDirectors() {
                 worksContainer.replaceChildren();
             }
             formShell.classList.add('hidden');
-            syncGeneralSlugFields();
         }
 
         function openForm(director, isDuplicate) {
@@ -1535,7 +1538,6 @@ function initAdminDirectors() {
                 ? 'Create Director (Duplicate)'
                 : (director ? 'Edit Director' : 'Create Director');
             form.elements.first_name.focus();
-            syncGeneralSlugFields();
         }
 
         function filteredDirectors() {
@@ -1872,22 +1874,12 @@ function initAdminDirectors() {
             var last = form.elements.last_name.value || '';
             var combined = (first + ' ' + last).trim();
             form.elements.slug.value = slugify(combined);
-            syncGeneralSlugFields();
         }
 
         form.elements.first_name?.addEventListener('input', updateAutoSlug);
         form.elements.last_name?.addEventListener('input', updateAutoSlug);
         form.elements.slug?.addEventListener('input', function () {
             isSlugManuallyEdited = true;
-            syncGeneralSlugFields();
-        });
-
-        shell.querySelector('[data-admin-directors-fill-general]')?.addEventListener('click', function () {
-            form.elements.first_name.value = 'Vidhya';
-            form.elements.last_name.value = 'Studio';
-            form.elements.slug.value = 'general';
-            isSlugManuallyEdited = true;
-            syncGeneralSlugFields();
         });
 
 
@@ -1938,12 +1930,14 @@ function initAdminFaqs() {
         var formShell = shell.querySelector('[data-admin-faqs-form-shell]');
         var form = shell.querySelector('[data-admin-faqs-form]');
         var search = shell.querySelector('[data-admin-faqs-search]');
+        var categoryFilters = shell.querySelector('[data-admin-faqs-category-filters]');
         var deleteModal = shell.querySelector('[data-admin-faqs-delete-modal]');
         var deleteConfirm = shell.querySelector('[data-admin-faqs-delete-confirm]');
         var csrf = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
         var faqs = [];
         var deletingId = null;
-        var searchTimer;
+        var selectedCategory = '';
+        var faqSortable = null;
 
         if (!table || !form) {
             return;
@@ -2114,6 +2108,86 @@ function initAdminFaqs() {
             return errors;
         }
 
+        function initDragAndDrop() {
+            if (faqSortable) {
+                faqSortable.destroy();
+            }
+
+            faqSortable = Sortable.create(table, {
+                handle: '[data-admin-faqs-drag-handle]',
+                draggable: '[data-admin-faqs-row]',
+                animation: 180,
+                ghostClass: 'opacity-25',
+                chosenClass: 'bg-white/[0.055]',
+                dragClass: 'shadow-2xl',
+                delay: 120,
+                delayOnTouchOnly: true,
+                touchStartThreshold: 4,
+                fallbackTolerance: 3,
+                fallbackOnBody: true,
+                onEnd: function (event) {
+                    if (event.oldIndex !== event.newIndex) {
+                        saveNewOrder();
+                    }
+                },
+            });
+        }
+
+        function saveNewOrder() {
+            var ids = Array.from(table.querySelectorAll('[data-faq-id]')).map(function (row) {
+                return parseInt(row.getAttribute('data-faq-id'), 10);
+            }).filter(Boolean);
+
+            if (!ids.length) return;
+
+            request(shell.dataset.reorderUrl, {
+                method: 'PATCH',
+                body: JSON.stringify({ ids: ids }),
+            }).then(function (response) {
+                toast('success', 'Success', response.message || 'FAQ order updated.');
+                return loadFaqs();
+            }).catch(function (error) {
+                toast('danger', 'Unable to reorder', error.message || 'Please try again.');
+                loadFaqs();
+            });
+        }
+
+        function renderCategoryFilters() {
+            if (!categoryFilters) return;
+
+            var categories = Array.from(new Set(faqs.map(function (faq) {
+                return faq.category;
+            }).filter(Boolean))).sort();
+
+            if (selectedCategory && !categories.includes(selectedCategory)) {
+                selectedCategory = '';
+            }
+
+            categoryFilters.replaceChildren();
+
+            [['', 'All Groups']].concat(categories.map(function (category) {
+                return [category, category];
+            })).forEach(function (item) {
+                var button = document.createElement('button');
+                var active = selectedCategory === item[0];
+                var count = item[0]
+                    ? faqs.filter(function (faq) { return faq.category === item[0]; }).length
+                    : faqs.length;
+
+                button.type = 'button';
+                button.className = active
+                    ? 'rounded border border-[#366bc3] bg-[#366bc3]/10 px-4 py-2.5 text-[10px] font-bold uppercase tracking-wider text-white'
+                    : 'rounded border border-white/10 px-4 py-2.5 text-[10px] font-bold uppercase tracking-wider text-white/42 transition hover:border-white/25 hover:text-white';
+                button.textContent = item[1] + ' (' + count + ')';
+                button.addEventListener('click', function () {
+                    selectedCategory = item[0];
+                    renderCategoryFilters();
+                    render();
+                });
+                categoryFilters.appendChild(button);
+            });
+        }
+
         function resetForm() {
             form.reset();
             clearErrors();
@@ -2133,38 +2207,45 @@ function initAdminFaqs() {
             form.elements.question.value = faq?.question || '';
             form.elements.answer.value = faq?.answer || '';
             form.elements.keywords.value = faq?.keywords || '';
-            form.elements.sort_order.value = faq ? faq.sort_order : '10';
+            form.elements.sort_order.value = faq
+                ? faq.sort_order
+                : (faqs.length ? Math.max.apply(Math, faqs.map(function (item) {
+                    return Number(item.sort_order) || 0;
+                })) + 10 : 10);
             shell.querySelector('[data-admin-faqs-form-title]').textContent = faq ? 'Edit FAQ' : 'Create FAQ';
             form.elements.question.focus();
         }
 
         function filteredFaqs() {
             var value = (search?.value || '').trim().toLowerCase();
-
-            if (!value) {
-                return faqs;
-            }
-
             return faqs.filter(function (faq) {
-                return (
+                var matchesCategory = !selectedCategory || faq.category === selectedCategory;
+                var matchesSearch = !value || (
                     faq.category.toLowerCase().includes(value) ||
                     faq.question.toLowerCase().includes(value) ||
                     faq.answer.toLowerCase().includes(value) ||
                     (faq.keywords && faq.keywords.toLowerCase().includes(value))
                 );
+
+                return matchesCategory && matchesSearch;
             });
         }
 
         function render() {
             var rows = filteredFaqs();
+            var hasSearch = Boolean((search?.value || '').trim());
 
             table.replaceChildren();
+
+            if (faqSortable) {
+                faqSortable.option('disabled', hasSearch);
+            }
 
             if (!rows.length) {
                 var emptyRow = document.createElement('tr');
                 var emptyCell = document.createElement('td');
 
-                emptyCell.colSpan = 5;
+                emptyCell.colSpan = 6;
                 emptyCell.className = 'px-5 py-12 text-center text-sm text-white/35';
                 emptyCell.textContent = 'No FAQs found.';
                 emptyRow.appendChild(emptyCell);
@@ -2174,6 +2255,7 @@ function initAdminFaqs() {
 
             rows.forEach(function (faq) {
                 var row = document.createElement('tr');
+                var dragCell = document.createElement('td');
                 var categoryCell = document.createElement('td');
                 var questionCell = document.createElement('td');
                 var answerCell = document.createElement('td');
@@ -2184,6 +2266,19 @@ function initAdminFaqs() {
                 var remove = document.createElement('button');
 
                 row.className = 'transition hover:bg-white/[0.035]';
+                row.setAttribute('data-admin-faqs-row', '');
+                row.setAttribute('data-faq-id', faq.id);
+
+                dragCell.className = 'w-16 px-3 py-4 text-center';
+                var dragHandle = document.createElement('button');
+                dragHandle.type = 'button';
+                dragHandle.className = 'inline-flex size-9 touch-none select-none items-center justify-center rounded border border-transparent text-white/35 transition hover:border-white/10 hover:bg-white/[0.06] hover:text-white/75 disabled:cursor-not-allowed disabled:opacity-20';
+                dragHandle.setAttribute('data-admin-faqs-drag-handle', '');
+                dragHandle.setAttribute('aria-label', 'Drag FAQ to reorder');
+                dragHandle.title = selectedCategory ? 'Drag to reorder within this group' : 'Drag to reorder all FAQs';
+                dragHandle.disabled = hasSearch;
+                dragHandle.innerHTML = '<svg class="size-5 pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.25" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M9 6h.01M15 6h.01M9 12h.01M15 12h.01M9 18h.01M15 18h.01" /></svg>';
+                dragCell.appendChild(dragHandle);
                 categoryCell.className = 'px-5 py-4 font-semibold text-white/70';
                 categoryCell.textContent = faq.category;
 
@@ -2228,7 +2323,7 @@ function initAdminFaqs() {
 
                 actionsWrap.append(edit, remove);
                 actions.appendChild(actionsWrap);
-                row.append(categoryCell, questionCell, answerCell, orderCell, actions);
+                row.append(dragCell, categoryCell, questionCell, answerCell, orderCell, actions);
                 table.appendChild(row);
             });
         }
@@ -2236,12 +2331,10 @@ function initAdminFaqs() {
         function loadFaqs() {
             var url = new URL(shell.dataset.indexUrl, window.location.origin);
 
-            if (search?.value.trim()) {
-                url.searchParams.set('search', search.value.trim());
-            }
-
-            return request(url.toString()).then(function (payload) {
+            return request(url.toString(), { cache: 'no-store' }).then(function (payload) {
                 faqs = payload.faqs || [];
+                populateCategoryDropdown();
+                renderCategoryFilters();
                 render();
             }).catch(function (error) {
                 toast('danger', 'Unable to load FAQs', error.message || 'Please refresh the page and try again.');
@@ -2256,8 +2349,6 @@ function initAdminFaqs() {
 
         search?.addEventListener('input', function () {
             render();
-            clearTimeout(searchTimer);
-            searchTimer = window.setTimeout(loadFaqs, 300);
         });
 
         form.addEventListener('submit', function (event) {
@@ -2328,7 +2419,1092 @@ function initAdminFaqs() {
             });
         });
 
+        initDragAndDrop();
+        populateCategoryDropdown();
+        renderCategoryFilters();
         render();
+        loadFaqs();
+    });
+}
+
+function initAdminServices() {
+    document.querySelectorAll('[data-admin-services]:not([data-admin-services-ready])').forEach(function (shell) {
+        var initialData = shell.querySelector('[data-admin-services-initial]');
+        var table = shell.querySelector('[data-admin-services-table]');
+        var formShell = shell.querySelector('[data-admin-services-form-shell]');
+        var form = shell.querySelector('[data-admin-services-form]');
+        var search = shell.querySelector('[data-admin-services-search]');
+        var deleteModal = shell.querySelector('[data-admin-services-delete-modal]');
+        var deleteConfirm = shell.querySelector('[data-admin-services-delete-confirm]');
+        var csrf = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
+        var services = [];
+        var deletingId = null;
+        var searchTimer;
+        var sortable = null;
+
+        if (!table || !form) {
+            return;
+        }
+
+        shell.setAttribute('data-admin-services-ready', '');
+
+        try {
+            services = JSON.parse(initialData?.textContent || '[]');
+        } catch (error) {
+            services = [];
+        }
+
+        function serviceUrl(template, serviceId) {
+            return template.replace('__SERVICE__', serviceId);
+        }
+
+        function request(url, options) {
+            var headers = {
+                Accept: 'application/json',
+                'X-CSRF-TOKEN': csrf,
+            };
+            if (options && options.body && !(options.body instanceof FormData)) {
+                headers['Content-Type'] = 'application/json';
+            }
+            return fetch(url, Object.assign({
+                headers: headers
+            }, options || {})).then(function (response) {
+                return response.json().catch(function () {
+                    return {};
+                }).then(function (payload) {
+                    if (!response.ok) {
+                        throw payload;
+                    }
+                    return payload;
+                });
+            });
+        }
+
+        function toast(variant, heading, text) {
+            showToast(variant, heading, text);
+        }
+
+        function setBusy(busy) {
+            var save = shell.querySelector('[data-admin-services-save]');
+            var spinner = shell.querySelector('[data-admin-services-spinner]');
+            var label = shell.querySelector('[data-admin-services-save-label]');
+
+            if (save) {
+                save.disabled = busy;
+            }
+
+            spinner?.classList.toggle('hidden', !busy);
+
+            if (label) {
+                label.textContent = busy ? 'Saving...' : 'Save Service';
+            }
+        }
+
+        function clearErrors() {
+            shell.querySelectorAll('[data-admin-services-error]').forEach(function (error) {
+                error.textContent = '';
+                error.classList.add('hidden');
+            });
+
+            shell.querySelectorAll('[data-admin-services-field]').forEach(function (field) {
+                field.classList.remove('border-red-500', 'focus:border-red-500');
+                field.classList.add('border-white/10');
+            });
+        }
+
+        function showErrors(errors) {
+            Object.entries(errors || {}).forEach(function ([name, messages]) {
+                var error = shell.querySelector('[data-admin-services-error="' + name + '"]');
+                var field = shell.querySelector('[data-admin-services-field="' + name + '"]');
+
+                if (error) {
+                    error.textContent = Array.isArray(messages) ? messages[0] : messages;
+                    error.classList.remove('hidden');
+                }
+
+                if (field) {
+                    field.classList.remove('border-white/10');
+                    field.classList.add('border-red-500', 'focus:border-red-500');
+                }
+            });
+        }
+
+        function validateServicePayload(payload, hasFile) {
+            var errors = {};
+
+            if (!payload.num.trim()) {
+                errors.num = ['Please enter service number (e.g. 01).'];
+            }
+            if (!payload.title.trim()) {
+                errors.title = ['Please enter a title.'];
+            }
+            if (!payload.description.trim()) {
+                errors.description = ['Please enter a description.'];
+            }
+            if (!payload.bullets_raw.trim()) {
+                errors.bullets_raw = ['Please enter at least one bullet point.'];
+            }
+            if (!payload.accent.trim()) {
+                errors.accent = ['Please enter an accent color hex code.'];
+            }
+            if (!payload.sort_order.trim() || isNaN(parseInt(payload.sort_order))) {
+                errors.sort_order = ['Please enter a valid sort order.'];
+            }
+
+            return errors;
+        }
+
+        function initDragAndDrop() {
+            if (!table) return;
+            if (sortable) {
+                sortable.destroy();
+            }
+
+            sortable = Sortable.create(table, {
+                handle: '[data-admin-services-drag-handle]',
+                draggable: '[data-admin-services-row]',
+                animation: 180,
+                ghostClass: 'opacity-25',
+                chosenClass: 'bg-white/[0.055]',
+                dragClass: 'shadow-2xl',
+                delay: 120,
+                delayOnTouchOnly: true,
+                touchStartThreshold: 4,
+                fallbackTolerance: 3,
+                fallbackOnBody: true,
+                onStart: function () {
+                    shell.setAttribute('data-admin-services-sorting', '');
+                },
+                onEnd: function (event) {
+                    shell.removeAttribute('data-admin-services-sorting');
+                    if (event.oldIndex !== event.newIndex) {
+                        saveNewOrder();
+                    }
+                },
+            });
+        }
+
+        function saveNewOrder() {
+            var ids = [];
+            table.querySelectorAll('[data-service-id]').forEach(function (row) {
+                var id = parseInt(row.getAttribute('data-service-id'));
+                if (id) {
+                    ids.push(id);
+                }
+            });
+
+            if (!ids.length) return;
+
+            setBusy(true);
+
+            request(shell.dataset.reorderUrl, {
+                method: 'PATCH',
+                body: JSON.stringify({ ids: ids }),
+            }).then(function (res) {
+                toast('success', 'Reorder successful', res.message);
+                loadServices();
+            }).catch(function (error) {
+                toast('danger', 'Reorder failed', error.message || 'Unable to save new order.');
+                loadServices();
+            }).finally(function () {
+                setBusy(false);
+            });
+        }
+
+        function render() {
+            table.replaceChildren();
+
+            var searchVal = (search?.value || '').toLowerCase().trim();
+            var rows = services;
+
+            if (sortable) {
+                sortable.option('disabled', Boolean(searchVal));
+            }
+
+            if (searchVal) {
+                rows = services.filter(function (s) {
+                    return (s.title || '').toLowerCase().indexOf(searchVal) > -1 ||
+                        (s.description || '').toLowerCase().indexOf(searchVal) > -1 ||
+                        (s.num || '').toLowerCase().indexOf(searchVal) > -1;
+                });
+            }
+
+            if (!rows.length) {
+                var emptyRow = document.createElement('tr');
+                var emptyCell = document.createElement('td');
+                emptyCell.colSpan = 7;
+                emptyCell.className = 'px-5 py-12 text-center text-sm text-white/35';
+                emptyCell.textContent = 'No services found.';
+                emptyRow.appendChild(emptyCell);
+                table.appendChild(emptyRow);
+                return;
+            }
+
+            rows.forEach(function (service) {
+                var row = document.createElement('tr');
+                row.setAttribute('data-admin-services-row', '');
+                row.setAttribute('data-service-id', service.id);
+
+                var dragCell = document.createElement('td');
+                dragCell.className = 'px-3 py-2 w-16 text-center';
+                dragCell.innerHTML = '<button type="button" class="inline-flex size-10 touch-none select-none items-center justify-center rounded-md border border-transparent text-white/35 transition hover:border-white/10 hover:bg-white/[0.06] hover:text-white/75 active:cursor-grabbing active:bg-white/10 cursor-grab" title="Drag to reorder" aria-label="Drag service to reorder" data-admin-services-drag-handle>' +
+                    '<svg class="size-5 pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.25" aria-hidden="true">' +
+                    '<path stroke-linecap="round" stroke-linejoin="round" d="M9 6h.01M15 6h.01M9 12h.01M15 12h.01M9 18h.01M15 18h.01" />' +
+                    '</svg>' +
+                    '</button>';
+
+                var imageCell = document.createElement('td');
+                var imageWrap = document.createElement('div');
+                var numCell = document.createElement('td');
+                var titleCell = document.createElement('td');
+                var descCell = document.createElement('td');
+                var orderCell = document.createElement('td');
+                var actions = document.createElement('td');
+                var actionsWrap = document.createElement('div');
+                var edit = document.createElement('button');
+                var remove = document.createElement('button');
+
+                row.className = 'transition hover:bg-white/[0.035]';
+                imageCell.className = 'px-5 py-4 w-24';
+                imageWrap.className = 'relative aspect-video w-16 overflow-hidden border border-white/10 bg-black rounded';
+                if (service.image) {
+                    var img = document.createElement('img');
+                    img.src = service.image;
+                    img.className = 'h-full w-full object-cover';
+                    img.draggable = false;
+                    imageWrap.appendChild(img);
+                } else {
+                    var imagePlaceholder = document.createElement('div');
+                    imagePlaceholder.className = 'flex h-full w-full items-center justify-center text-white/30';
+                    imagePlaceholder.style.backgroundColor = service.accent || '#366bc3';
+                    imagePlaceholder.innerHTML = '<div class="absolute inset-0 bg-black/55"></div>' +
+                        '<svg class="relative size-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5" aria-hidden="true">' +
+                        '<path stroke-linecap="round" stroke-linejoin="round" d="m2.25 15.75 5.159-5.159a2.25 2.25 0 0 1 3.182 0l5.159 5.159m-1.5-1.5 1.409-1.409a2.25 2.25 0 0 1 3.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 0 0 1.5-1.5V6a1.5 1.5 0 0 0-1.5-1.5H3.75A1.5 1.5 0 0 0 2.25 6v12a1.5 1.5 0 0 0 1.5 1.5Z" />' +
+                        '</svg>';
+                    imageWrap.appendChild(imagePlaceholder);
+                }
+                imageCell.appendChild(imageWrap);
+
+                numCell.className = 'px-5 py-4 text-white/48 font-mono text-xs w-16';
+                numCell.textContent = service.num;
+
+                titleCell.className = 'px-5 py-4 font-semibold text-white w-1/4';
+                titleCell.textContent = service.title;
+
+                descCell.className = 'px-5 py-4 text-white/48 max-w-sm truncate';
+                descCell.textContent = service.description;
+
+                orderCell.className = 'px-5 py-4 text-white/35 font-mono text-xs w-20';
+                orderCell.textContent = service.sort_order;
+
+                actions.className = 'px-5 py-4';
+                actionsWrap.className = 'flex justify-end gap-2';
+
+                edit.type = 'button';
+                edit.className = 'rounded border border-white/10 px-3 py-2 text-xs font-medium text-white/58 transition hover:border-white/25 hover:text-white';
+                edit.textContent = 'Edit';
+                edit.addEventListener('click', function () {
+                    openForm(service);
+                });
+
+                remove.type = 'button';
+                remove.className = 'rounded border border-[#e60012]/25 px-3 py-2 text-xs font-medium text-white/58 transition hover:border-[#e60012]/55 hover:bg-[#e60012]/12 hover:text-white';
+                remove.textContent = 'Delete';
+                remove.addEventListener('click', function () {
+                    deletingId = service.id;
+                    deleteModal?.classList.remove('hidden');
+                    deleteModal?.classList.add('grid');
+                });
+
+                actionsWrap.append(edit, remove);
+                actions.appendChild(actionsWrap);
+                row.append(dragCell, imageCell, numCell, titleCell, descCell, orderCell, actions);
+                table.appendChild(row);
+            });
+        }
+
+        function loadServices() {
+            var url = new URL(shell.dataset.indexUrl, window.location.origin);
+
+            return request(url.toString(), { cache: 'no-store' }).then(function (payload) {
+                services = payload.services || [];
+                render();
+            }).catch(function (error) {
+                toast('danger', 'Unable to load services', error.message || 'Please refresh the page and try again.');
+            });
+        }
+
+        shell.querySelector('[data-admin-services-create]')?.addEventListener('click', function () {
+            openForm(null);
+        });
+
+        shell.querySelector('[data-admin-services-cancel]')?.addEventListener('click', resetForm);
+
+        var uploadCard = form.querySelector('[data-admin-services-upload-card]');
+        var fileInput = form.querySelector('[data-admin-services-file-input]');
+        var previewWrapper = form.querySelector('[data-admin-services-preview-wrapper]');
+        var previewImg = form.querySelector('[data-admin-services-preview]');
+        var uploadPlaceholder = form.querySelector('[data-admin-services-upload-placeholder]');
+        var removeImageBtn = form.querySelector('[data-admin-services-remove-image-file]');
+
+        function syncUploadPlaceholderAccent() {
+            if (!uploadCard) return;
+            var accent = form.elements.accent?.value.trim() || '#366bc3';
+            uploadCard.style.background = 'linear-gradient(rgba(0, 0, 0, .58), rgba(0, 0, 0, .58)), ' + accent;
+        }
+
+        form.elements.accent?.addEventListener('input', syncUploadPlaceholderAccent);
+
+        if (uploadCard && fileInput) {
+            uploadCard.addEventListener('click', function () {
+                fileInput.click();
+            });
+        }
+
+        if (fileInput) {
+            fileInput.addEventListener('change', function () {
+                var file = this.files[0];
+                if (file) {
+                    if (previewImg) previewImg.src = URL.createObjectURL(file);
+                    if (uploadPlaceholder) uploadPlaceholder.classList.add('hidden');
+                    if (previewWrapper) previewWrapper.classList.remove('hidden');
+                    var imgField = form.querySelector('[data-admin-services-field="image"]');
+                    if (imgField) imgField.value = '';
+                }
+            });
+        }
+
+        if (removeImageBtn) {
+            removeImageBtn.addEventListener('click', function (e) {
+                e.stopPropagation();
+                if (fileInput) fileInput.value = '';
+                var imgField = form.querySelector('[data-admin-services-field="image"]');
+                if (imgField) imgField.value = '';
+                if (previewWrapper) previewWrapper.classList.add('hidden');
+                if (previewImg) previewImg.src = '';
+                if (uploadPlaceholder) uploadPlaceholder.classList.remove('hidden');
+            });
+        }
+
+        search?.addEventListener('input', function () {
+            render();
+        });
+
+        form.addEventListener('submit', function (event) {
+            event.preventDefault();
+            clearErrors();
+
+            var id = form.querySelector('[data-admin-services-id]').value;
+            var payload = {
+                num: form.elements.num.value.trim(),
+                title: form.elements.title.value.trim(),
+                description: form.elements.description.value.trim(),
+                bullets_raw: form.elements.bullets_raw.value.trim(),
+                accent: form.elements.accent.value.trim(),
+                sort_order: form.elements.sort_order.value.trim(),
+            };
+
+            var hasFile = Boolean(fileInput?.files.length);
+            var validationErrors = validateServicePayload(payload, hasFile);
+            var url = id ? serviceUrl(shell.dataset.updateUrlTemplate, id) : shell.dataset.storeUrl;
+
+            if (Object.keys(validationErrors).length) {
+                showErrors(validationErrors);
+                toast('danger', 'Please check the form', 'Some details need attention.');
+                return;
+            }
+
+            setBusy(true);
+
+            var formData = new FormData(form);
+            if (id) {
+                formData.append('_method', 'PATCH');
+            }
+
+            request(url, {
+                method: 'POST',
+                body: formData,
+            }).then(function (res) {
+                toast('success', id ? 'Service updated' : 'Service created', res.message);
+                resetForm();
+                loadServices();
+            }).catch(function (err) {
+                if (err.errors) {
+                    showErrors(err.errors);
+                    toast('danger', 'Save failed', 'Please correct the validation errors.');
+                } else {
+                    toast('danger', 'Save failed', err.message || 'An error occurred while saving.');
+                }
+            }).finally(function () {
+                setBusy(false);
+            });
+        });
+
+        shell.querySelector('[data-admin-services-delete-cancel]')?.addEventListener('click', function () {
+            deletingId = null;
+            deleteModal?.classList.add('hidden');
+            deleteModal?.classList.remove('grid');
+        });
+
+        deleteConfirm?.addEventListener('click', function () {
+            if (!deletingId) return;
+
+            setBusy(true);
+            var url = serviceUrl(shell.dataset.deleteUrlTemplate, deletingId);
+
+            request(url, {
+                method: 'DELETE',
+            }).then(function (res) {
+                toast('success', 'Service deleted', res.message);
+                deletingId = null;
+                deleteModal?.classList.add('hidden');
+                deleteModal?.classList.remove('grid');
+                loadServices();
+            }).catch(function (err) {
+                toast('danger', 'Deletion failed', err.message || 'Unable to delete service.');
+            }).finally(function () {
+                setBusy(false);
+            });
+        });
+
+        function resetForm() {
+            form.reset();
+            form.querySelector('[data-admin-services-id]').value = '';
+            if (fileInput) fileInput.value = '';
+            if (previewWrapper) previewWrapper.classList.add('hidden');
+            if (previewImg) previewImg.src = '';
+            if (uploadPlaceholder) uploadPlaceholder.classList.remove('hidden');
+            clearErrors();
+            formShell.classList.add('hidden');
+        }
+
+        function openForm(service) {
+            resetForm();
+            formShell.classList.remove('hidden');
+
+            shell.querySelector('[data-admin-services-form-title]').textContent = service ? 'Edit Service' : 'Create Service';
+
+            if (service) {
+                form.querySelector('[data-admin-services-id]').value = service.id;
+                form.elements.num.value = service.num || '';
+                form.elements.title.value = service.title || '';
+                form.elements.description.value = service.description || '';
+                form.elements.bullets_raw.value = service.bullets_raw || '';
+                form.elements.accent.value = service.accent || '#366bc3';
+                form.elements.sort_order.value = service.sort_order ?? 0;
+                var imgField = form.querySelector('[data-admin-services-field="image"]');
+                if (imgField) imgField.value = service.image || '';
+
+                if (service.image) {
+                    if (previewImg) previewImg.src = service.image;
+                    if (uploadPlaceholder) uploadPlaceholder.classList.add('hidden');
+                    if (previewWrapper) previewWrapper.classList.remove('hidden');
+                }
+            } else {
+                form.elements.accent.value = '#366bc3';
+                form.elements.sort_order.value = (services.length ? Math.max.apply(Math, services.map(function(s){return s.sort_order;})) + 10 : 10);
+            }
+            syncUploadPlaceholderAccent();
+            form.elements.num.focus();
+        }
+
+        initDragAndDrop();
+        render();
+
+        // Livewire may restore a page that was prefetched before a create/update/delete.
+        // Always reconcile the embedded snapshot with the current database state.
+        loadServices();
+    });
+}
+
+function initAdminPortfolios() {
+    document.querySelectorAll('[data-admin-portfolios]:not([data-admin-portfolios-ready])').forEach(function (shell) {
+        var initialData = shell.querySelector('[data-admin-portfolios-initial]');
+        var table = shell.querySelector('[data-admin-portfolios-table]');
+        var formShell = shell.querySelector('[data-admin-portfolios-form-shell]');
+        var form = shell.querySelector('[data-admin-portfolios-form]');
+        var search = shell.querySelector('[data-admin-portfolios-search]');
+        var deleteModal = shell.querySelector('[data-admin-portfolios-delete-modal]');
+        var deleteConfirm = shell.querySelector('[data-admin-portfolios-delete-confirm]');
+        var csrf = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
+        var portfolios = [];
+        var services = [];
+        var deletingId = null;
+        var searchTimer;
+        var selectedServiceId = '';
+        var portfolioSortable = null;
+
+        if (!table || !form) {
+            return;
+        }
+
+        shell.setAttribute('data-admin-portfolios-ready', '');
+
+        var tabsContainer = shell.querySelector('[data-admin-portfolios-tabs]');
+        var serviceSelect = shell.querySelector('[data-admin-portfolios-field="service_id"]');
+
+        function updateTabStyles() {
+            shell.querySelectorAll('[data-admin-portfolios-tab]').forEach(function (btn) {
+                var id = btn.getAttribute('data-admin-portfolios-tab') || '';
+                if (id === (selectedServiceId + '')) {
+                    if (id === '') {
+                        btn.className = 'rounded border px-4 py-2.5 text-[10px] font-bold uppercase tracking-wider transition-all duration-200 border-[#366bc3] bg-[#366bc3]/10 text-white';
+                        btn.style.borderColor = '';
+                        btn.style.backgroundColor = '';
+                        btn.style.color = '';
+                        btn.style.boxShadow = '';
+                    } else {
+                        var accent = btn.getAttribute('data-accent') || '#366bc3';
+                        btn.className = 'rounded border px-4 py-2.5 text-[10px] font-bold uppercase tracking-wider transition-all duration-200 text-white';
+                        btn.style.borderColor = accent;
+                        btn.style.backgroundColor = accent + '18';
+                        btn.style.boxShadow = '0 10px 15px -3px ' + accent + '20';
+                    }
+                } else {
+                    btn.className = 'rounded border px-4 py-2.5 text-[10px] font-bold uppercase tracking-wider transition-all duration-200 border-white/10 text-white/42 hover:border-white/25 hover:text-white';
+                    btn.style.borderColor = '';
+                    btn.style.backgroundColor = '';
+                    btn.style.color = '';
+                    btn.style.boxShadow = '';
+                }
+            });
+        }
+
+        function bindTabEvents() {
+            shell.querySelectorAll('[data-admin-portfolios-tab]').forEach(function (tabBtn) {
+                tabBtn.addEventListener('click', function () {
+                    selectedServiceId = tabBtn.getAttribute('data-admin-portfolios-tab') || '';
+                    updateTabStyles();
+                    render();
+                });
+            });
+        }
+
+        function renderServices() {
+            if (!tabsContainer || !serviceSelect) return;
+
+            // 1. Re-render select options
+            var selectedVal = serviceSelect.value;
+            serviceSelect.replaceChildren();
+            
+            var defaultOpt = document.createElement('option');
+            defaultOpt.value = '';
+            defaultOpt.textContent = 'None / General';
+            serviceSelect.appendChild(defaultOpt);
+
+            services.forEach(function (service) {
+                var opt = document.createElement('option');
+                opt.value = service.id;
+                opt.textContent = service.title;
+                serviceSelect.appendChild(opt);
+            });
+            serviceSelect.value = selectedVal;
+
+            // 2. Re-render tabs
+            tabsContainer.replaceChildren();
+
+            var allBtn = document.createElement('button');
+            allBtn.type = 'button';
+            allBtn.setAttribute('data-admin-portfolios-tab', '');
+            allBtn.textContent = 'All Services (' + portfolios.length + ')';
+            tabsContainer.appendChild(allBtn);
+
+            services.forEach(function (service) {
+                var btn = document.createElement('button');
+                var count = portfolios.filter(function (portfolio) {
+                    return String(portfolio.service_id || '') === String(service.id);
+                }).length;
+                btn.type = 'button';
+                btn.setAttribute('data-admin-portfolios-tab', service.id);
+                btn.setAttribute('data-accent', service.accent || '');
+                btn.textContent = service.title + ' (' + count + ')';
+                tabsContainer.appendChild(btn);
+            });
+
+            // 3. Re-bind click events & styles
+            bindTabEvents();
+            updateTabStyles();
+        }
+
+        try {
+            portfolios = JSON.parse(initialData?.textContent || '[]');
+        } catch (error) {
+            portfolios = [];
+        }
+
+        try {
+            services = JSON.parse(shell.querySelector('[data-admin-services-initial]')?.textContent || '[]');
+        } catch (error) {
+            services = [];
+        }
+
+        bindTabEvents();
+        updateTabStyles();
+
+        function portfolioUrl(template, portfolioId) {
+            return template.replace('__PORTFOLIO__', portfolioId);
+        }
+
+        function request(url, options) {
+            var headers = {
+                Accept: 'application/json',
+                'X-CSRF-TOKEN': csrf,
+            };
+            if (options && options.body && !(options.body instanceof FormData)) {
+                headers['Content-Type'] = 'application/json';
+            }
+            return fetch(url, Object.assign({
+                headers: headers
+            }, options || {})).then(function (response) {
+                return response.json().catch(function () {
+                    return {};
+                }).then(function (payload) {
+                    if (!response.ok) {
+                        throw payload;
+                    }
+                    return payload;
+                });
+            });
+        }
+
+        function toast(variant, heading, text) {
+            showToast(variant, heading, text);
+        }
+
+        function setBusy(busy) {
+            var save = shell.querySelector('[data-admin-portfolios-save]');
+            var spinner = shell.querySelector('[data-admin-portfolios-spinner]');
+            var label = shell.querySelector('[data-admin-portfolios-save-label]');
+
+            if (save) {
+                save.disabled = busy;
+            }
+
+            spinner?.classList.toggle('hidden', !busy);
+
+            if (label) {
+                label.textContent = busy ? 'Saving...' : 'Save Portfolio Item';
+            }
+        }
+
+        function clearErrors() {
+            shell.querySelectorAll('[data-admin-portfolios-error]').forEach(function (error) {
+                error.textContent = '';
+                error.classList.add('hidden');
+            });
+
+            shell.querySelectorAll('[data-admin-portfolios-field]').forEach(function (field) {
+                field.classList.remove('border-red-500', 'focus:border-red-500');
+                field.classList.add('border-white/10');
+            });
+        }
+
+        function showErrors(errors) {
+            Object.entries(errors || {}).forEach(function ([name, messages]) {
+                var error = shell.querySelector('[data-admin-portfolios-error="' + name + '"]');
+                var field = shell.querySelector('[data-admin-portfolios-field="' + name + '"]');
+
+                if (error) {
+                    error.textContent = Array.isArray(messages) ? messages[0] : messages;
+                    error.classList.remove('hidden');
+                }
+
+                if (field) {
+                    field.classList.remove('border-white/10');
+                    field.classList.add('border-red-500', 'focus:border-red-500');
+                }
+            });
+        }
+
+        function validatePayload(payload) {
+            var errors = {};
+
+            if (!payload.title.trim()) {
+                errors.title = ['Please enter a title.'];
+            }
+
+            if (!payload.span.trim()) {
+                errors.span = ['Please select a display size.'];
+            }
+
+            return errors;
+        }
+
+        function initDragAndDrop() {
+            if (!table) return;
+            if (portfolioSortable) {
+                portfolioSortable.destroy();
+            }
+
+            portfolioSortable = Sortable.create(table, {
+                handle: '[data-admin-portfolios-drag-handle]',
+                draggable: '[data-admin-portfolios-row]',
+                animation: 180,
+                ghostClass: 'opacity-25',
+                chosenClass: 'bg-white/[0.055]',
+                dragClass: 'shadow-2xl',
+                delay: 120,
+                delayOnTouchOnly: true,
+                touchStartThreshold: 4,
+                fallbackTolerance: 3,
+                fallbackOnBody: true,
+                onStart: function () {
+                    shell.setAttribute('data-admin-portfolios-sorting', '');
+                },
+                onEnd: function (event) {
+                    shell.removeAttribute('data-admin-portfolios-sorting');
+                    if (event.oldIndex !== event.newIndex) {
+                        saveNewOrder();
+                    }
+                },
+            });
+        }
+
+        function saveNewOrder() {
+            var ids = [];
+            table.querySelectorAll('[data-portfolio-id]').forEach(function (row) {
+                var id = parseInt(row.getAttribute('data-portfolio-id'), 10);
+                if (id) {
+                    ids.push(id);
+                }
+            });
+
+            if (!ids.length) return;
+
+            request(shell.dataset.reorderUrl, {
+                method: 'PATCH',
+                body: JSON.stringify({ ids: ids })
+            }).then(function (response) {
+                toast('success', 'Success', response.message || 'New order saved.');
+                loadPortfolios();
+            }).catch(function (error) {
+                toast('danger', 'Unable to reorder', error.message || 'Please try again.');
+            });
+        }
+
+        function render() {
+            table.replaceChildren();
+
+            var searchVal = (search?.value || '').toLowerCase().trim();
+            var rows = portfolios;
+
+            if (portfolioSortable) {
+                // Reordering a service tab is safe; the backend preserves the
+                // selected items' existing global sort slots.
+                portfolioSortable.option('disabled', Boolean(searchVal));
+            }
+
+            if (searchVal) {
+                rows = portfolios.filter(function (p) {
+                    return (p.title || '').toLowerCase().indexOf(searchVal) > -1 ||
+                        (p.video_url || '').toLowerCase().indexOf(searchVal) > -1;
+                });
+            }
+
+            if (selectedServiceId !== '') {
+                rows = rows.filter(function (p) {
+                    return (p.service_id + '') === (selectedServiceId + '');
+                });
+            }
+
+            if (!rows.length) {
+                var emptyRow = document.createElement('tr');
+                var emptyCell = document.createElement('td');
+                emptyCell.colSpan = 10;
+                emptyCell.className = 'px-5 py-12 text-center text-sm text-white/35';
+                emptyCell.textContent = 'No portfolio items found.';
+                emptyRow.appendChild(emptyCell);
+                table.appendChild(emptyRow);
+                return;
+            }
+
+            rows.forEach(function (portfolio) {
+                var row = document.createElement('tr');
+                row.setAttribute('data-portfolio-id', portfolio.id);
+                row.setAttribute('data-admin-portfolios-row', '');
+
+                var dragCell = document.createElement('td');
+                dragCell.className = 'px-3 py-2 w-16 text-center';
+                dragCell.innerHTML = '<button type="button" class="inline-flex size-10 touch-none select-none items-center justify-center rounded-md border border-transparent text-white/35 transition hover:border-white/10 hover:bg-white/[0.06] hover:text-white/75 active:cursor-grabbing active:bg-white/10 cursor-grab" title="Drag to reorder" aria-label="Drag portfolio item to reorder" data-admin-portfolios-drag-handle>' +
+                    '<svg class="size-5 pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.25" aria-hidden="true">' +
+                    '<path stroke-linecap="round" stroke-linejoin="round" d="M9 6h.01M15 6h.01M9 12h.01M15 12h.01M9 18h.01M15 18h.01" />' +
+                    '</svg>' +
+                    '</button>';
+
+                var imageCell = document.createElement('td');
+                var imageWrap = document.createElement('div');
+                var img = document.createElement('img');
+                imageCell.className = 'px-5 py-4';
+                imageWrap.className = 'relative aspect-video w-16 overflow-hidden border border-white/8 bg-black rounded';
+                img.className = 'h-full w-full object-cover';
+                img.src = portfolio.image || '/images/ai-director.jpg';
+                img.alt = portfolio.title;
+                img.draggable = false;
+                imageWrap.appendChild(img);
+                imageCell.appendChild(imageWrap);
+
+                var titleCell = document.createElement('td');
+                titleCell.className = 'px-5 py-4 font-medium text-white max-w-[200px] truncate';
+                titleCell.textContent = portfolio.title;
+
+                var serviceCell = document.createElement('td');
+                serviceCell.className = 'px-5 py-4 text-white/60 text-xs max-w-[180px] truncate';
+                serviceCell.textContent = portfolio.service_title || 'N/A';
+
+                var videoCell = document.createElement('td');
+                videoCell.className = 'px-5 py-4 text-white/48 font-mono text-xs max-w-[200px] truncate';
+                videoCell.textContent = portfolio.video_url || 'N/A';
+
+                var sizeCell = document.createElement('td');
+                sizeCell.className = 'px-5 py-4 text-white/45 text-xs';
+                var sizeText = '1/3 Width';
+                if (portfolio.span === 'md:col-span-3') sizeText = '1/2 Width';
+                else if (portfolio.span === 'md:col-span-4') sizeText = '2/3 Width';
+                else if (portfolio.span === 'md:col-span-6') sizeText = 'Full Width';
+                sizeCell.textContent = sizeText;
+
+                var ratioCell = document.createElement('td');
+                ratioCell.className = 'px-5 py-4 text-white/60 text-xs font-mono';
+                ratioCell.textContent = portfolio.video_aspect_ratio || '16:9';
+
+                var activeCell = document.createElement('td');
+                activeCell.className = 'px-5 py-4';
+                var activeBadge = document.createElement('span');
+                if (portfolio.show_in_portfolio) {
+                    activeBadge.className = 'rounded-full bg-emerald-500/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-emerald-400 border border-emerald-500/20';
+                    activeBadge.textContent = 'Yes';
+                } else {
+                    activeBadge.className = 'rounded-full bg-white/5 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-white/38 border border-white/10';
+                    activeBadge.textContent = 'No';
+                }
+                activeCell.appendChild(activeBadge);
+
+                var orderCell = document.createElement('td');
+                orderCell.className = 'px-5 py-4 text-white/35 font-mono text-xs';
+                orderCell.textContent = portfolio.sort_order ?? 0;
+
+                var actions = document.createElement('td');
+                var actionsWrap = document.createElement('div');
+                var edit = document.createElement('button');
+                var remove = document.createElement('button');
+
+                row.className = 'transition hover:bg-white/[0.025]';
+                actions.className = 'px-5 py-4';
+                actionsWrap.className = 'flex justify-end gap-2';
+
+                edit.type = 'button';
+                edit.className = 'rounded border border-white/10 px-3 py-2 text-xs font-medium text-white/58 transition hover:border-white/25 hover:text-white';
+                edit.textContent = 'Edit';
+                edit.addEventListener('click', function () {
+                    openForm(portfolio);
+                });
+
+                remove.type = 'button';
+                remove.className = 'rounded border border-[#e60012]/25 px-3 py-2 text-xs font-medium text-white/58 transition hover:border-[#e60012]/55 hover:bg-[#e60012]/12 hover:text-white';
+                remove.textContent = 'Delete';
+                remove.addEventListener('click', function () {
+                    deletingId = portfolio.id;
+                    deleteModal?.classList.remove('hidden');
+                    deleteModal?.classList.add('grid');
+                });
+
+                actionsWrap.append(edit, remove);
+                actions.appendChild(actionsWrap);
+                row.append(dragCell, imageCell, titleCell, serviceCell, videoCell, sizeCell, ratioCell, activeCell, orderCell, actions);
+                table.appendChild(row);
+            });
+        }
+
+        function loadPortfolios() {
+            var url = new URL(shell.dataset.indexUrl, window.location.origin);
+
+            return request(url.toString(), { cache: 'no-store' }).then(function (payload) {
+                portfolios = payload.portfolios || [];
+                if (payload.services) {
+                    services = payload.services;
+                    renderServices();
+                }
+                render();
+            }).catch(function (error) {
+                toast('danger', 'Unable to load portfolio items', error.message || 'Please refresh the page and try again.');
+            });
+        }
+
+        var uploadCard = shell.querySelector('[data-admin-portfolios-upload-card]');
+        var fileInput = shell.querySelector('[data-admin-portfolios-file-input]');
+        var previewWrapper = shell.querySelector('[data-admin-portfolios-preview-wrapper]');
+        var previewImg = shell.querySelector('[data-admin-portfolios-preview]');
+        var uploadPlaceholder = shell.querySelector('[data-admin-portfolios-upload-placeholder]');
+        var removeImageBtn = shell.querySelector('[data-admin-portfolios-remove-image-file]');
+
+        if (uploadCard && fileInput) {
+            uploadCard.addEventListener('click', function () {
+                fileInput.click();
+            });
+        }
+
+        if (fileInput) {
+            fileInput.addEventListener('change', function () {
+                var file = this.files[0];
+                if (file) {
+                    if (previewImg) previewImg.src = URL.createObjectURL(file);
+                    if (uploadPlaceholder) uploadPlaceholder.classList.add('hidden');
+                    if (previewWrapper) previewWrapper.classList.remove('hidden');
+                    
+                    var imgField = form.querySelector('[data-admin-portfolios-field="image"]');
+                    if (imgField) imgField.value = '';
+
+                    if (removeImageBtn) removeImageBtn.classList.remove('hidden');
+                }
+            });
+        }
+
+        if (removeImageBtn) {
+            removeImageBtn.addEventListener('click', function (e) {
+                e.stopPropagation();
+                if (fileInput) fileInput.value = '';
+                if (previewWrapper) previewWrapper.classList.add('hidden');
+                if (previewImg) previewImg.src = '';
+                if (uploadPlaceholder) uploadPlaceholder.classList.remove('hidden');
+                
+                var imgField = form.querySelector('[data-admin-portfolios-field="image"]');
+                if (imgField) imgField.value = '';
+            });
+        }
+
+        shell.querySelector('[data-admin-portfolios-create]')?.addEventListener('click', function () {
+            openForm(null);
+        });
+
+        shell.querySelector('[data-admin-portfolios-cancel]')?.addEventListener('click', resetForm);
+
+        search?.addEventListener('input', function () {
+            render();
+        });
+
+        form.addEventListener('submit', function (event) {
+            event.preventDefault();
+            clearErrors();
+
+            var id = form.querySelector('[data-admin-portfolios-id]').value;
+            
+            var payload = {
+                title: form.elements.title.value.trim(),
+                video_url: form.elements.video_url.value.trim(),
+                video_aspect_ratio: form.elements.video_aspect_ratio.value,
+                span: form.elements.span.value,
+                show_in_portfolio: form.elements.show_in_portfolio.checked ? '1' : '0',
+                sort_order: form.elements.sort_order.value,
+            };
+
+            var validationErrors = validatePayload(payload);
+            if (Object.keys(validationErrors).length) {
+                showErrors(validationErrors);
+                toast('danger', 'Please check the form', 'Some details need attention.');
+                return;
+            }
+
+            var url = id ? portfolioUrl(shell.dataset.updateUrlTemplate, id) : shell.dataset.storeUrl;
+            
+            var formData = new FormData(form);
+            if (id) {
+                formData.append('_method', 'PATCH');
+            }
+            formData.set('show_in_portfolio', payload.show_in_portfolio);
+
+            setBusy(true);
+
+            request(url, {
+                method: 'POST',
+                body: formData,
+            }).then(function (response) {
+                resetForm();
+                toast('success', 'Success', response.message || 'Portfolio item saved.');
+                return loadPortfolios();
+            }).catch(function (error) {
+                showErrors(error.errors || {});
+                toast('danger', 'Unable to save', error.message || 'Please check the form.');
+            }).finally(function () {
+                setBusy(false);
+            });
+        });
+
+        shell.querySelector('[data-admin-portfolios-delete-cancel]')?.addEventListener('click', function () {
+            deletingId = null;
+            deleteModal?.classList.add('hidden');
+            deleteModal?.classList.remove('grid');
+        });
+
+        deleteConfirm?.addEventListener('click', function () {
+            if (!deletingId) {
+                return;
+            }
+
+            deleteConfirm.disabled = true;
+
+            request(portfolioUrl(shell.dataset.deleteUrlTemplate, deletingId), {
+                method: 'DELETE',
+            }).then(function (response) {
+                toast('success', 'Success', response.message || 'Portfolio item deleted.');
+                deletingId = null;
+                deleteModal?.classList.add('hidden');
+                deleteModal?.classList.remove('grid');
+                return loadPortfolios();
+            }).catch(function (error) {
+                toast('danger', 'Unable to delete', error.message || 'Please try again.');
+            }).finally(function () {
+                deleteConfirm.disabled = false;
+            });
+        });
+
+        function resetForm() {
+            form.reset();
+            form.querySelector('[data-admin-portfolios-id]').value = '';
+            if (fileInput) fileInput.value = '';
+            if (previewWrapper) previewWrapper.classList.add('hidden');
+            if (previewImg) previewImg.src = '';
+            if (uploadPlaceholder) uploadPlaceholder.classList.remove('hidden');
+            clearErrors();
+            formShell.classList.add('hidden');
+        }
+
+        function openForm(portfolio) {
+            resetForm();
+            formShell.classList.remove('hidden');
+
+            shell.querySelector('[data-admin-portfolios-form-title]').textContent = portfolio ? 'Edit Portfolio Item' : 'Create Portfolio Item';
+
+            if (portfolio) {
+                form.querySelector('[data-admin-portfolios-id]').value = portfolio.id;
+                form.elements.title.value = portfolio.title || '';
+                form.elements.service_id.value = portfolio.service_id || '';
+                form.elements.video_url.value = portfolio.video_url || '';
+                form.elements.video_aspect_ratio.value = portfolio.video_aspect_ratio || '16:9';
+                form.elements.span.value = portfolio.span || 'md:col-span-2';
+                form.elements.show_in_portfolio.checked = Boolean(portfolio.show_in_portfolio);
+                form.elements.sort_order.value = portfolio.sort_order ?? 0;
+                
+                var imgField = form.querySelector('[data-admin-portfolios-field="image"]');
+                if (imgField) imgField.value = portfolio.image || '';
+
+                if (portfolio.image) {
+                    if (previewImg) previewImg.src = portfolio.image;
+                    if (uploadPlaceholder) uploadPlaceholder.classList.add('hidden');
+                    if (previewWrapper) previewWrapper.classList.remove('hidden');
+                }
+            } else {
+                form.elements.service_id.value = selectedServiceId || '';
+                form.elements.video_aspect_ratio.value = '16:9';
+                form.elements.span.value = 'md:col-span-2';
+                form.elements.show_in_portfolio.checked = true;
+                form.elements.sort_order.value = (portfolios.length ? Math.max.apply(Math, portfolios.map(function(p){return p.sort_order;})) + 10 : 10);
+            }
+            form.elements.title.focus();
+        }
+
+        initDragAndDrop();
+        render();
+        loadPortfolios();
     });
 }
 
@@ -2420,15 +3596,16 @@ function finishNavigation() {
 
 document.addEventListener('DOMContentLoaded', initHomeAnimations);
 document.addEventListener('DOMContentLoaded', initScrollTopButton);
+document.addEventListener('DOMContentLoaded', initMarketingHeader);
 document.addEventListener('DOMContentLoaded', initMobileMenu);
 document.addEventListener('DOMContentLoaded', initToastEvents);
 document.addEventListener('DOMContentLoaded', initContactForm);
 document.addEventListener('DOMContentLoaded', initDirectorTabs);
 document.addEventListener('DOMContentLoaded', initAdminUsers);
-document.addEventListener('DOMContentLoaded', initAdminDirectors);
-document.addEventListener('DOMContentLoaded', initAdminFaqs);
+document.addEventListener('DOMContentLoaded', initSortableAdminPages);
 document.addEventListener('DOMContentLoaded', initAdminChrome);
 window.addEventListener('scroll', syncScrollTopButton, { passive: true });
+window.addEventListener('scroll', syncMarketingHeader, { passive: true });
 
 document.addEventListener('livewire:init', function () {
     Livewire.hook('request', function (request) {
@@ -2444,12 +3621,12 @@ document.addEventListener('livewire:navigating', function () {
 
 document.addEventListener('livewire:navigated', initHomeAnimations);
 document.addEventListener('livewire:navigated', initScrollTopButton);
+document.addEventListener('livewire:navigated', initMarketingHeader);
 document.addEventListener('livewire:navigated', initMobileMenu);
 document.addEventListener('livewire:navigated', initToastEvents);
 document.addEventListener('livewire:navigated', initContactForm);
 document.addEventListener('livewire:navigated', initDirectorTabs);
 document.addEventListener('livewire:navigated', initAdminUsers);
-document.addEventListener('livewire:navigated', initAdminDirectors);
-document.addEventListener('livewire:navigated', initAdminFaqs);
+document.addEventListener('livewire:navigated', initSortableAdminPages);
 document.addEventListener('livewire:navigated', initAdminChrome);
 document.addEventListener('livewire:navigated', finishNavigation);
