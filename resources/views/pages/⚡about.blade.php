@@ -12,8 +12,18 @@ class extends Component
 }; ?>
 
 <main class="bg-[#0a0a0c] text-white">
-    <section class="relative overflow-hidden px-6 pb-24 pt-40 sm:px-10 lg:px-20" style="background: radial-gradient(ellipse at 15% 85%, rgba(54,107,195,0.18) 0%, #0a0a0c 60%);">
-        <div class="pointer-events-none absolute -right-15 -top-15 h-[400px] w-[400px] bg-[radial-gradient(ellipse,rgba(54,107,195,0.13)_0%,transparent_65%)]"></div>
+    <section class="relative isolate overflow-hidden px-6 pb-24 pt-40 sm:px-10 lg:px-20">
+        <img
+            src="/images/bg_about.webp"
+            alt=""
+            class="pointer-events-none absolute inset-0 -z-30 h-full w-full object-cover object-center"
+            fetchpriority="high"
+            decoding="async"
+            aria-hidden="true"
+        >
+        <div class="pointer-events-none absolute inset-0 -z-20 bg-[linear-gradient(90deg,rgba(5,5,7,0.92)_0%,rgba(5,5,7,0.66)_48%,rgba(5,5,7,0.84)_100%)]"></div>
+        <div class="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(ellipse_at_15%_85%,rgba(54,107,195,0.25)_0%,transparent_58%)]"></div>
+        <div class="pointer-events-none absolute inset-x-0 bottom-0 -z-10 h-32 bg-linear-to-t from-[#0a0a0c] to-transparent"></div>
         <div class="relative z-10 mx-auto max-w-[1800px]" data-reveal>
             <p class="mb-4 text-xs font-semibold uppercase tracking-[0.26em] text-white/35">Our DNA</p>
             <h1 class="max-w-none text-[clamp(3rem,6.4vw,5.35rem)] font-black uppercase leading-none tracking-[-0.03em] lg:whitespace-nowrap">

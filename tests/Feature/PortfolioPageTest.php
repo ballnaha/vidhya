@@ -92,6 +92,33 @@ test('portfolio page hides works marked as hide_from_portfolio', function () {
         ->assertDontSee('Hidden Work');
 });
 
+test('portfolio page groups videos above still images', function () {
+    Portfolio::create([
+        'title' => 'Still Created First',
+        'span' => 'md:col-span-2',
+        'image' => '/images/still-first.png',
+        'show_in_portfolio' => true,
+        'sort_order' => 10,
+    ]);
+
+    Portfolio::create([
+        'title' => 'Video Created Second',
+        'span' => 'md:col-span-2',
+        'video_url' => 'https://example.com/video.mp4',
+        'image' => '/images/video-second.png',
+        'show_in_portfolio' => true,
+        'sort_order' => 20,
+    ]);
+
+    Livewire::test('pages::portfolio')
+        ->assertSeeInOrder([
+            'Films &amp; Video',
+            'Video Created Second',
+            'Images &amp; Stills',
+            'Still Created First',
+        ], false);
+});
+
 test('portfolio page applies each work display size to the grid', function () {
     Portfolio::create([
         'title' => 'Wide Portfolio Work',

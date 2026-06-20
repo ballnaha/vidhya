@@ -81,11 +81,18 @@ class extends Component
     @keydown.escape.window="showModal = false; modalVideoUrl = ''"
 >
     <!-- Hero Section -->
-    <section class="relative overflow-hidden px-6 pb-24 pt-40 sm:px-10 lg:px-20"
-        style="background: radial-gradient(ellipse at 15% 85%, rgba(54,107,195,0.18) 0%, #0a0a0c 60%);">
-        <div
-            class="pointer-events-none absolute -right-15 -top-15 h-[400px] w-[400px] bg-[radial-gradient(ellipse,rgba(54,107,195,0.13)_0%,transparent_65%)]">
-        </div>
+    <section class="relative isolate overflow-hidden px-6 pb-24 pt-40 sm:px-10 lg:px-20">
+        <img
+            src="/images/bg_portfolio.webp"
+            alt=""
+            class="pointer-events-none absolute inset-0 -z-30 h-full w-full object-cover object-center"
+            fetchpriority="high"
+            decoding="async"
+            aria-hidden="true"
+        >
+        <div class="pointer-events-none absolute inset-0 -z-20 bg-[linear-gradient(90deg,rgba(5,5,7,0.92)_0%,rgba(5,5,7,0.66)_48%,rgba(5,5,7,0.84)_100%)]"></div>
+        <div class="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(ellipse_at_15%_85%,rgba(54,107,195,0.25)_0%,transparent_58%)]"></div>
+        <div class="pointer-events-none absolute inset-x-0 bottom-0 -z-10 h-32 bg-linear-to-t from-[#0a0a0c] to-transparent"></div>
         <div class="relative z-10 mx-auto max-w-[1800px]" data-reveal>
             <p class="mb-4 text-xs font-semibold uppercase tracking-[0.26em] text-white/35">Our Creative Output</p>
             <h1
@@ -154,8 +161,54 @@ class extends Component
                     </button>
                 </div>
             @else
-                <div class="grid gap-6 md:grid-cols-6">
-                    @foreach ($works as $index => $work)
+                @php
+                    $workGroups = [
+                        [
+                            'key' => 'video',
+                            'eyebrow' => 'Motion',
+                            'title' => 'Films & Video',
+                            'description' => 'Director-led films, commercials, and moving-image stories.',
+                            'accent' => '#e60012',
+                            'works' => $works->filter(fn ($work) => filled($work->video_url))->values(),
+                        ],
+                        [
+                            'key' => 'still',
+                            'eyebrow' => 'Visuals',
+                            'title' => 'Images & Stills',
+                            'description' => 'Crafted key visuals, campaign imagery, and cinematic stills.',
+                            'accent' => '#366bc3',
+                            'works' => $works->filter(fn ($work) => blank($work->video_url))->values(),
+                        ],
+                    ];
+                    $visibleGroupNumber = 0;
+                @endphp
+
+                <div class="space-y-24 lg:space-y-32">
+                    @foreach ($workGroups as $group)
+                        @continue($group['works']->isEmpty())
+                        @php
+                            $visibleGroupNumber++;
+                        @endphp
+
+                        <section wire:key="portfolio-group-{{ $group['key'] }}" class="space-y-8">
+                            <div class="flex flex-col gap-5 border-b border-white/8 pb-6 sm:flex-row sm:items-end sm:justify-between" data-reveal>
+                                <div class="flex items-start gap-4 sm:gap-6">
+                                    <span class="pt-1 font-mono text-[11px] tracking-[0.2em] text-white/25">{{ str_pad((string) $visibleGroupNumber, 2, '0', STR_PAD_LEFT) }}</span>
+                                    <div>
+                                        <p class="mb-2 text-[10px] font-bold uppercase tracking-[0.24em]" style="color: {{ $group['accent'] }}">{{ $group['eyebrow'] }}</p>
+                                        <h2 class="text-[clamp(1.75rem,4vw,3rem)] font-black uppercase leading-none tracking-[-0.025em] text-white">{{ $group['title'] }}</h2>
+                                    </div>
+                                </div>
+                                <div class="sm:max-w-sm sm:text-right">
+                                    <p class="text-sm leading-6 text-white/40">{{ $group['description'] }}</p>
+                                    <p class="mt-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-white/25">
+                                        {{ $group['works']->count() }} {{ Str::plural('project', $group['works']->count()) }}
+                                    </p>
+                                </div>
+                            </div>
+
+                            <div class="grid gap-6 md:grid-cols-6">
+                    @foreach ($group['works'] as $index => $work)
                         @php
                             $delay = ($index % 3) * 100;
                             $spanClass = match ($work->span) {
@@ -217,6 +270,9 @@ class extends Component
                                 </div>
                             </button>
                         </div>
+                    @endforeach
+                            </div>
+                        </section>
                     @endforeach
                 </div>
             @endif

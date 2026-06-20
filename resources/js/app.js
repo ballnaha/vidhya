@@ -1705,7 +1705,7 @@ function initAdminDirectors() {
                 url.searchParams.set('search', search.value.trim());
             }
 
-            return request(url.toString()).then(function (payload) {
+            return request(url.toString(), { cache: 'no-store' }).then(function (payload) {
                 directors = payload.directors || [];
                 render();
             }).catch(function (error) {
@@ -1961,12 +1961,16 @@ function initAdminDirectors() {
             request(directorUrl(shell.dataset.deleteUrlTemplate, deletingId), {
                 method: 'DELETE',
             }).then(function (response) {
-                return loadDirectors().catch(function () {}).then(function () {
-                    toast('success', 'Success', response.message || 'Director deleted.');
-                    deletingId = null;
-                    deleteModal?.classList.add('hidden');
-                    deleteModal?.classList.remove('grid');
+                directors = directors.filter(function (director) {
+                    return director.id !== deletingId;
                 });
+                render();
+                toast('success', 'Success', response.message || 'Director deleted.');
+                deletingId = null;
+                deleteModal?.classList.add('hidden');
+                deleteModal?.classList.remove('grid');
+
+                return loadDirectors().catch(function () {});
             }).catch(function (error) {
                 toast('danger', 'Unable to delete', error.message || 'Please try again.');
             }).finally(function () {
@@ -1977,6 +1981,7 @@ function initAdminDirectors() {
         });
 
         render();
+        loadDirectors();
     });
 }
 
