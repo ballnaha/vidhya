@@ -84,6 +84,30 @@ function initMarketingHeader() {
     syncMarketingHeader();
 }
 
+function initAdminHomeForm() {
+    document.querySelectorAll('[data-admin-home-form]:not([data-admin-home-ready])').forEach(function (form) {
+        var save = form.querySelector('[data-admin-home-save]');
+        var spinner = form.querySelector('[data-admin-home-spinner]');
+        var label = form.querySelector('[data-admin-home-save-label]');
+
+        form.setAttribute('data-admin-home-ready', '');
+
+        form.addEventListener('submit', function () {
+            if (save) {
+                save.disabled = true;
+            }
+
+            if (spinner) {
+                spinner.classList.remove('hidden');
+            }
+
+            if (label) {
+                label.textContent = 'Saving...';
+            }
+        });
+    });
+}
+
 function initScrollTopButton() {
     if (scrollTopButton && document.body.contains(scrollTopButton)) {
         syncScrollTopButton();
@@ -3660,6 +3684,7 @@ document.addEventListener('DOMContentLoaded', initHomeAnimations);
 document.addEventListener('DOMContentLoaded', initScrollTopButton);
 document.addEventListener('DOMContentLoaded', initMarketingHeader);
 document.addEventListener('DOMContentLoaded', initMobileMenu);
+document.addEventListener('DOMContentLoaded', initAdminHomeForm);
 document.addEventListener('DOMContentLoaded', initToastEvents);
 document.addEventListener('DOMContentLoaded', initContactForm);
 document.addEventListener('DOMContentLoaded', initDirectorTabs);
@@ -3685,6 +3710,7 @@ document.addEventListener('livewire:navigated', initHomeAnimations);
 document.addEventListener('livewire:navigated', initScrollTopButton);
 document.addEventListener('livewire:navigated', initMarketingHeader);
 document.addEventListener('livewire:navigated', initMobileMenu);
+document.addEventListener('livewire:navigated', initAdminHomeForm);
 document.addEventListener('livewire:navigated', initToastEvents);
 document.addEventListener('livewire:navigated', initContactForm);
 document.addEventListener('livewire:navigated', initDirectorTabs);

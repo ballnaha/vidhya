@@ -27,6 +27,10 @@
                         <span aria-hidden="true">⌂</span>
                         {{ __('Dashboard') }}
                     </a>
+                    <a class="vidhya-sidebar-item {{ request()->routeIs('admin.home') ? 'is-current' : '' }}" href="{{ route('admin.home') }}" wire:navigate.hover data-admin-sidebar-link>
+                        <span aria-hidden="true">H</span>
+                        {{ __('Home') }}
+                    </a>
                     <a class="vidhya-sidebar-item {{ request()->routeIs('admin.services') ? 'is-current' : '' }}" href="{{ route('admin.services') }}" wire:navigate.hover data-admin-sidebar-link>
                         <span aria-hidden="true">⚙</span>
                         {{ __('Services') }}

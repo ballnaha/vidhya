@@ -12,12 +12,14 @@ class extends Component
 }; ?>
 
 @php
-    $heroYoutubeId = 'lboLBQ2QaeE';
+    use App\Models\SiteSetting;
+
+    $heroYoutubeId = SiteSetting::homeHeroYoutubeId();
 @endphp
 
 <main class="relative overflow-hidden bg-[#0a0a0c] text-white">
     <section class="relative min-h-screen overflow-hidden bg-[#0a0a0c] px-6 pb-12 pt-36 sm:px-10 lg:px-20">
-        
+        <img src="/images/home2.webp" alt="" class="home-hero-youtube-video pointer-events-none absolute left-1/2 top-0 max-w-none -translate-x-1/2 object-cover object-center" width="1024" height="1024" fetchpriority="high" aria-hidden="true">
         <iframe
             src="https://www.youtube-nocookie.com/embed/{{ $heroYoutubeId }}?autoplay=1&mute=1&controls=0&loop=1&playlist={{ $heroYoutubeId }}&playsinline=1&modestbranding=1&rel=0&disablekb=1&fs=0&iv_load_policy=3"
             title=""

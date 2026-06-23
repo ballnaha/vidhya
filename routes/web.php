@@ -2,6 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AdminUserController;
+use App\Http\Controllers\AdminHomeController;
 use App\Http\Controllers\AdminDirectorController;
 use App\Http\Controllers\AdminFaqController;
 use App\Http\Controllers\AdminServiceController;
@@ -21,6 +22,8 @@ Route::livewire('/faq', 'pages::faq')->name('faq');
 
 Route::middleware(['auth', 'verified', 'admin'])->group(function () {
     Route::view('dashboard', 'dashboard')->name('dashboard');
+    Route::get('admin/home', [AdminHomeController::class, 'edit'])->name('admin.home');
+    Route::patch('admin/home', [AdminHomeController::class, 'update'])->name('admin.home.update');
     Route::get('admin/users/data', [AdminUserController::class, 'index'])->name('admin.users.index');
     Route::get('admin/users/check-email', [AdminUserController::class, 'checkEmail'])->name('admin.users.check-email');
     Route::post('admin/users', [AdminUserController::class, 'store'])->name('admin.users.store');
