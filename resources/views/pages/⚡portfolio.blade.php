@@ -109,7 +109,7 @@ class extends Component
     </section>
  
     <!-- Portfolio Section -->
-    <section class="px-6 py-12 sm:px-10 lg:px-20 bg-black">
+    <section class="px-6 py-12 sm:px-10 lg:px-20 bg-[#0a0a0c]">
         <div class="mx-auto max-w-[1800px] space-y-12">
  
             <!-- Filters Bar -->
