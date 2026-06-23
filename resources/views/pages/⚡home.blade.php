@@ -11,14 +11,26 @@ class extends Component
     //
 }; ?>
 
+@php
+    $heroYoutubeId = 'lboLBQ2QaeE';
+@endphp
+
 <main class="relative overflow-hidden bg-[#0a0a0c] text-white">
     <section class="relative min-h-screen overflow-hidden bg-[#0a0a0c] px-6 pb-12 pt-36 sm:px-10 lg:px-20">
-        <img src="/images/home2.webp" alt="" class="pointer-events-none absolute inset-0 h-full w-full object-cover object-center" width="1024" height="1024" fetchpriority="high" aria-hidden="true">
+        
+        <iframe
+            src="https://www.youtube-nocookie.com/embed/{{ $heroYoutubeId }}?autoplay=1&mute=1&controls=0&loop=1&playlist={{ $heroYoutubeId }}&playsinline=1&modestbranding=1&rel=0&disablekb=1&fs=0&iv_load_policy=3"
+            title=""
+            class="home-hero-youtube-video pointer-events-none absolute left-1/2 top-0 max-w-none -translate-x-1/2 border-0"
+            allow="autoplay; encrypted-media; picture-in-picture"
+            tabindex="-1"
+            aria-hidden="true"
+        ></iframe>
         <div class="pointer-events-none absolute inset-0 bg-[linear-gradient(90deg,rgba(5,7,12,0.82)_0%,rgba(5,7,12,0.68)_38%,rgba(5,7,12,0.30)_70%,rgba(5,7,12,0.16)_100%)]"></div>
         <div class="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,rgba(5,7,12,0.28)_0%,rgba(5,7,12,0.06)_42%,rgba(0,0,0,0.62)_82%,#000_100%)]"></div>
         <div class="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_20%_80%,rgba(54,107,195,0.22)_0%,transparent_58%)]"></div>
         <div class="pointer-events-none absolute right-[-5%] top-[5%] h-[600px] w-[600px] bg-[radial-gradient(ellipse,rgba(230,0,18,0.12)_0%,transparent_65%)]"></div>
-        <div class="pointer-events-none absolute inset-x-0 bottom-0 h-64 bg-[linear-gradient(180deg,transparent_0%,rgba(8,8,9,0.45)_32%,rgba(8,8,9,0.88)_68%,#080809_100%)]"></div>
+        <div class="pointer-events-none absolute inset-x-0 bottom-0 h-[42vh] min-h-80 bg-[linear-gradient(180deg,transparent_0%,rgba(8,8,9,0.58)_26%,rgba(8,8,9,0.94)_58%,#080809_82%,#080809_100%)]"></div>
         <div class="pointer-events-none absolute right-[-10px] top-1/2 hidden -translate-y-1/2 select-none text-[clamp(200px,28vw,400px)] font-black leading-none tracking-[-0.05em] text-white/[0.022] lg:block"></div>
         <div class="relative z-10 mx-auto max-w-[1800px]">
             <div class="max-w-[1100px]">

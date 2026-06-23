@@ -140,6 +140,11 @@
         contain-intrinsic-size: auto 900px;
     }
 
+    .home-hero-youtube-video {
+        width: max(100vw, 177.7778vh);
+        height: max(100vh, 56.25vw);
+    }
+
     body::before {
         position: fixed;
         z-index: 9999;
