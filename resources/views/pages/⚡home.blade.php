@@ -14,20 +14,24 @@ class extends Component
 @php
     use App\Models\SiteSetting;
 
-    $heroYoutubeId = SiteSetting::homeHeroYoutubeId();
+    $heroVideoPath = SiteSetting::homeHeroVideoPath();
 @endphp
 
 <main class="relative overflow-hidden bg-[#0a0a0c] text-white">
     <section class="relative min-h-screen overflow-hidden bg-[#0a0a0c] px-6 pb-12 pt-36 sm:px-10 lg:px-20">
-        <img src="/images/home2.webp" alt="" class="home-hero-youtube-video pointer-events-none absolute left-1/2 top-0 max-w-none -translate-x-1/2 object-cover object-center" width="1024" height="1024" fetchpriority="high" aria-hidden="true">
-        <iframe
-            src="https://www.youtube-nocookie.com/embed/{{ $heroYoutubeId }}?autoplay=1&mute=1&controls=0&loop=1&playlist={{ $heroYoutubeId }}&playsinline=1&modestbranding=1&rel=0&disablekb=1&fs=0&iv_load_policy=3"
-            title=""
-            class="home-hero-youtube-video pointer-events-none absolute left-1/2 top-0 max-w-none -translate-x-1/2 border-0"
-            allow="autoplay; encrypted-media; picture-in-picture"
-            tabindex="-1"
+        <video
+            class="home-hero-youtube-video pointer-events-none absolute left-1/2 top-0 max-w-none -translate-x-1/2 object-cover object-center border-0"
+            autoplay
+            muted
+            loop
+            playsinline
+            preload="auto"
+            poster="/images/home2.webp"
             aria-hidden="true"
-        ></iframe>
+            tabindex="-1"
+        >
+            <source src="{{ $heroVideoPath }}" type="video/mp4">
+        </video>
         <div class="pointer-events-none absolute inset-0 bg-[linear-gradient(90deg,rgba(5,7,12,0.82)_0%,rgba(5,7,12,0.68)_38%,rgba(5,7,12,0.30)_70%,rgba(5,7,12,0.16)_100%)]"></div>
         <div class="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,rgba(5,7,12,0.28)_0%,rgba(5,7,12,0.06)_42%,rgba(0,0,0,0.62)_82%,#000_100%)]"></div>
         <div class="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_20%_80%,rgba(54,107,195,0.22)_0%,transparent_58%)]"></div>

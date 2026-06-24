@@ -9,6 +9,9 @@ class SiteSetting extends Model
     public const HOME_HERO_YOUTUBE_URL = 'home_hero_youtube_url';
     public const DEFAULT_HOME_HERO_YOUTUBE_URL = 'https://youtu.be/lboLBQ2QaeE';
 
+    public const HOME_HERO_VIDEO_PATH = 'home_hero_video_path';
+    public const DEFAULT_HOME_HERO_VIDEO_PATH = '/images/showreels_720.mp4';
+
     protected $fillable = [
         'key',
         'value',
@@ -49,5 +52,11 @@ class SiteSetting extends Model
     public static function homeHeroYoutubeId(): string
     {
         return static::youtubeIdFromUrl(static::homeHeroYoutubeUrl()) ?: 'lboLBQ2QaeE';
+    }
+
+    public static function homeHeroVideoPath(): string
+    {
+        return static::valueFor(static::HOME_HERO_VIDEO_PATH, static::DEFAULT_HOME_HERO_VIDEO_PATH)
+            ?: static::DEFAULT_HOME_HERO_VIDEO_PATH;
     }
 }
