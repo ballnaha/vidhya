@@ -12,6 +12,9 @@ class SiteSetting extends Model
     public const HOME_HERO_VIDEO_PATH = 'home_hero_video_path';
     public const DEFAULT_HOME_HERO_VIDEO_PATH = '/images/showreels_720.mp4';
 
+    public const HOME_HERO_POSTER_PATH = 'home_hero_poster_path';
+    public const DEFAULT_HOME_HERO_POSTER_PATH = '/images/home2.webp';
+
     protected $fillable = [
         'key',
         'value',
@@ -58,5 +61,11 @@ class SiteSetting extends Model
     {
         return static::valueFor(static::HOME_HERO_VIDEO_PATH, static::DEFAULT_HOME_HERO_VIDEO_PATH)
             ?: static::DEFAULT_HOME_HERO_VIDEO_PATH;
+    }
+
+    public static function homeHeroPosterPath(): string
+    {
+        return static::valueFor(static::HOME_HERO_POSTER_PATH, static::DEFAULT_HOME_HERO_POSTER_PATH)
+            ?: static::DEFAULT_HOME_HERO_POSTER_PATH;
     }
 }

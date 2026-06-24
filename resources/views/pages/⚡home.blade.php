@@ -15,6 +15,7 @@ class extends Component
     use App\Models\SiteSetting;
 
     $heroVideoPath = SiteSetting::homeHeroVideoPath();
+    $heroPosterPath = SiteSetting::homeHeroPosterPath();
 @endphp
 
 <main class="relative overflow-hidden bg-[#0a0a0c] text-white">
@@ -26,7 +27,7 @@ class extends Component
             loop
             playsinline
             preload="auto"
-            poster="/images/home2.webp"
+            poster="{{ $heroPosterPath }}"
             aria-hidden="true"
             tabindex="-1"
         >
