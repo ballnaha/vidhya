@@ -622,7 +622,7 @@ function initDirectorTabs() {
                 if (isYoutube || isVimeo) {
                     var embedUrl = url;
                     if (isYoutube) {
-                        var regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
+                        var regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|shorts\/|watch\?v=|\&v=)([^#\&\?]*).*/;
                         var match = url.match(regExp);
                         if (match && match[2].length === 11) {
                             embedUrl = 'https://www.youtube.com/embed/' + match[2] + '?autoplay=1';
@@ -1288,7 +1288,36 @@ function initAdminDirectors() {
 
             if (videoUrlField) {
                 videoUrlField.addEventListener('input', function () {
-                    // Custom cover uploads can coexist with a video URL.
+                    // Don't overwrite a custom-uploaded file
+                    if (fileInput && fileInput.files.length > 0) return;
+
+                    var url = this.value.trim();
+                    var currentSrc = previewImg ? previewImg.src : '';
+                    var isYoutubeSrc = currentSrc.includes('img.youtube.com') || currentSrc.includes('ytimg.com');
+
+                    if (!url) {
+                        if (isYoutubeSrc) {
+                            if (previewWrapper) previewWrapper.classList.add('hidden');
+                            if (previewImg) previewImg.src = '';
+                            if (placeholder) placeholder.classList.remove('hidden');
+                            if (imageField) imageField.value = '';
+                        }
+                        return;
+                    }
+
+                    var isYoutube = url.indexOf('youtube.com') > -1 || url.indexOf('youtu.be') > -1;
+                    if (!isYoutube) return;
+
+                    var regExp = /^.*(youtu\.be\/|v\/|u\/\w\/|embed\/|shorts\/|watch\?v=|&v=)([^#&?]*).*/;
+                    var match = url.match(regExp);
+                    if (match && match[2] && match[2].length === 11) {
+                        var thumbUrl = 'https://img.youtube.com/vi/' + match[2] + '/mqdefault.jpg';
+                        if (previewImg) previewImg.src = thumbUrl;
+                        if (placeholder) placeholder.classList.add('hidden');
+                        if (previewWrapper) previewWrapper.classList.remove('hidden');
+                        if (imageField) imageField.value = thumbUrl;
+                        if (removeImageBtn) removeImageBtn.classList.add('hidden');
+                    }
                 });
             }
 
@@ -3452,9 +3481,46 @@ function initAdminPortfolios() {
                 if (previewWrapper) previewWrapper.classList.add('hidden');
                 if (previewImg) previewImg.src = '';
                 if (uploadPlaceholder) uploadPlaceholder.classList.remove('hidden');
-                
+
                 var imgField = form.querySelector('[data-admin-portfolios-field="image"]');
                 if (imgField) imgField.value = '';
+            });
+        }
+
+        var videoUrlField = form.querySelector('[name="video_url"]');
+        if (videoUrlField) {
+            videoUrlField.addEventListener('input', function () {
+                // Don't overwrite a custom-uploaded file
+                if (fileInput && fileInput.files.length > 0) return;
+
+                var url = this.value.trim();
+                var imgField = form.querySelector('[data-admin-portfolios-field="image"]');
+                var currentSrc = previewImg ? previewImg.src : '';
+                var isYoutubeSrc = currentSrc.includes('img.youtube.com') || currentSrc.includes('ytimg.com');
+
+                if (!url) {
+                    // Clear auto-thumbnail when URL is removed
+                    if (isYoutubeSrc) {
+                        if (previewWrapper) previewWrapper.classList.add('hidden');
+                        if (previewImg) previewImg.src = '';
+                        if (uploadPlaceholder) uploadPlaceholder.classList.remove('hidden');
+                        if (imgField) imgField.value = '';
+                    }
+                    return;
+                }
+
+                var isYoutube = url.indexOf('youtube.com') > -1 || url.indexOf('youtu.be') > -1;
+                if (!isYoutube) return;
+
+                var regExp = /^.*(youtu\.be\/|v\/|u\/\w\/|embed\/|shorts\/|watch\?v=|&v=)([^#&?]*).*/;
+                var match = url.match(regExp);
+                if (match && match[2] && match[2].length === 11) {
+                    var thumbUrl = 'https://img.youtube.com/vi/' + match[2] + '/mqdefault.jpg';
+                    if (previewImg) previewImg.src = thumbUrl;
+                    if (uploadPlaceholder) uploadPlaceholder.classList.add('hidden');
+                    if (previewWrapper) previewWrapper.classList.remove('hidden');
+                    if (imgField) imgField.value = thumbUrl;
+                }
             });
         }
 

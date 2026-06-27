@@ -305,7 +305,7 @@ class AdminDirectorController extends Controller
                     $file->move($dir, $fallbackFilename);
                     $work['image'] = '/images/directors/' . $fallbackFilename;
                 }
-            } elseif (empty($work['image']) && !empty($work['video_url'])) {
+            } elseif (!empty($work['video_url']) && (empty($work['image']) || $this->isYoutubeThumbnail($work['image']))) {
                 $work['image'] = $this->getYoutubeThumbnail($work['video_url']);
             }
         }
@@ -330,9 +330,14 @@ class AdminDirectorController extends Controller
     }
 
 
+    private function isYoutubeThumbnail(string $url): bool
+    {
+        return str_contains($url, 'img.youtube.com') || str_contains($url, 'ytimg.com');
+    }
+
     private function getYoutubeThumbnail(string $url): string
     {
-        $regExp = '/^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/';
+        $regExp = '/^.*(youtu.be\/|v\/|u\/\w\/|embed\/|shorts\/|watch\?v=|\&v=)([^#\&\?]*).*/';
         if (preg_match($regExp, $url, $matches)) {
             if (isset($matches[2]) && strlen($matches[2]) === 11) {
                 return "https://img.youtube.com/vi/{$matches[2]}/mqdefault.jpg";

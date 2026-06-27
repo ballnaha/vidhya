@@ -100,7 +100,19 @@ class AdminPortfolioController extends Controller
                 @unlink(public_path($portfolio->image));
             }
         } else {
-            $data['image'] = $request->input('image') ?: $portfolio->image;
+            $existingImage = $request->input('image') ?: $portfolio->image;
+
+            // If the current image is a YouTube auto-thumbnail, regenerate it from
+            // the (possibly changed) video_url so swapping the URL updates the cover.
+            if ($this->isYoutubeThumbnail($existingImage) || empty($existingImage)) {
+                if (!empty($validated['video_url'])) {
+                    $data['image'] = $this->getYoutubeThumbnail($validated['video_url']);
+                } else {
+                    $data['image'] = $existingImage ?: '/images/ai-director.jpg';
+                }
+            } else {
+                $data['image'] = $existingImage;
+            }
         }
 
         $portfolio = DB::transaction(function () use ($portfolio, $data) {
@@ -213,9 +225,14 @@ class AdminPortfolioController extends Controller
         ];
     }
 
+    private function isYoutubeThumbnail(string $url): bool
+    {
+        return str_contains($url, 'img.youtube.com') || str_contains($url, 'ytimg.com');
+    }
+
     private function getYoutubeThumbnail(string $url): string
     {
-        $regExp = '/^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/';
+        $regExp = '/^.*(youtu.be\/|v\/|u\/\w\/|embed\/|shorts\/|watch\?v=|\&v=)([^#\&\?]*).*/';
         if (preg_match($regExp, $url, $matches)) {
             if (isset($matches[2]) && strlen($matches[2]) === 11) {
                 return "https://img.youtube.com/vi/{$matches[2]}/mqdefault.jpg";

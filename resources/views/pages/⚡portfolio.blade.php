@@ -59,7 +59,7 @@ class extends Component
             var isVimeo = url.indexOf('vimeo.com') > -1;
 
             if (isYoutube) {
-                var regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
+                var regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|shorts\/|watch\?v=|\&v=)([^#\&\?]*).*/;
                 var match = url.match(regExp);
                 if (match && match[2].length === 11) {
                     return 'https://www.youtube.com/embed/' + match[2] + '?autoplay=1';
