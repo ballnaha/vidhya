@@ -16,9 +16,35 @@ class extends Component
 
     $heroVideoPath = SiteSetting::homeHeroVideoPath();
     $heroPosterPath = SiteSetting::homeHeroPosterPath();
+    $socialLinks = SiteSetting::socialLinks();
 @endphp
 
-<main class="relative overflow-hidden bg-[#0a0a0c] text-white">
+<main class="relative overflow-hidden bg-[#0a0a0c] text-white"
+    x-data="{
+        showModal: false,
+        modalType: 'video',
+        modalVideoUrl: '{{ SiteSetting::homeHeroYoutubeUrl() }}',
+        modalVideoAspectRatio: '16:9',
+        modalTitle: 'Watch the Reel',
+        getEmbedUrl(url) {
+            if (!url) return '';
+            var isYoutube = url.indexOf('youtube.com') > -1 || url.indexOf('youtu.be') > -1;
+            if (isYoutube) {
+                var regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|shorts\/|watch\?v=|\&v=)([^#\&\?]*).*/;
+                var match = url.match(regExp);
+                if (match && match[2].length === 11) {
+                    return 'https://www.youtube.com/embed/' + match[2] + '?autoplay=1';
+                }
+            }
+            return url;
+        },
+        isIframeUrl(url) {
+            if (!url) return false;
+            return url.indexOf('youtube.com') > -1 || url.indexOf('youtu.be') > -1;
+        }
+    }"
+    @keydown.escape.window="showModal = false"
+>
     <section class="relative min-h-screen overflow-hidden bg-[#0a0a0c] px-6 pb-12 pt-36 sm:px-10 lg:px-20">
         <video
             class="home-hero-youtube-video pointer-events-none absolute left-1/2 top-0 max-w-none -translate-x-1/2 object-cover object-center border-0"
@@ -57,13 +83,46 @@ class extends Component
                     {{ __('We are a creative AI studio that directs, not just generates. Backed by two decades of cinematic excellence, our knowledgeable team builds everything from high volume advertising to premium AI hybrids and micro dramas — delivering superior visual output in a fraction of the time.') }}
                 </p>
 
-                <div class="mt-[52px] flex flex-col gap-4 sm:flex-row" data-hero-reveal style="--hero-delay: 600ms; --hero-duration: 800ms; --hero-y: 20px;">
-                    <a href="{{ route('contact') }}" class="inline-flex min-h-12 items-center justify-center rounded px-9 text-[13px] font-bold uppercase tracking-[0.1em] text-white shadow-[0_14px_34px_rgba(230,0,18,0.28)] transition hover:brightness-110" style="background: linear-gradient(90deg, #366bc3, #823665, #e60012);" wire:navigate.hover>
-                        {{ __('Start a project') }}
-                    </a>
-                    <a href="{{ route('services') }}" class="inline-flex min-h-12 items-center justify-center rounded border border-white/22 px-9 text-[13px] font-semibold uppercase tracking-[0.08em] text-white transition hover:border-white/50 hover:bg-white/5" wire:navigate.hover>
-                        {{ __('Our services') }}
-                    </a>
+                <div class="mt-[52px] flex flex-col gap-4 sm:flex-row sm:items-center" data-hero-reveal style="--hero-delay: 600ms; --hero-duration: 800ms; --hero-y: 20px;">
+                    <button
+                        type="button"
+                        @click="showModal = true"
+                        class="inline-flex min-h-12 cursor-pointer items-center justify-center gap-3 rounded px-9 text-[13px] font-bold uppercase tracking-[0.1em] text-white shadow-[0_14px_34px_rgba(230,0,18,0.28)] transition hover:brightness-110"
+                        style="background: linear-gradient(90deg, #366bc3, #823665, #e60012);"
+                    >
+                        <svg class="size-4" viewBox="0 0 24 24" aria-hidden="true" style="fill: #ffffff; color: #ffffff;">
+                            <path d="M8 5v14l11-7z" fill="#ffffff"/>
+                        </svg>
+                        <span>{{ __('Watch the reel') }}</span>
+                    </button>
+                    
+                    <div class="flex items-center gap-4">
+                        <a href="{{ route('services') }}" class="inline-flex min-h-12 items-center justify-center rounded border border-white/22 px-9 text-[13px] font-semibold uppercase tracking-[0.08em] text-white transition hover:border-white/50 hover:bg-white/5" wire:navigate.hover>
+                            {{ __('Our services') }}
+                        </a>
+
+                        @if(!empty($socialLinks))
+                            <div class="flex items-center gap-1">
+                                @foreach($socialLinks as $link)
+                                    <a 
+                                        href="{{ $link['url'] }}" 
+                                        target="_blank" 
+                                        rel="noopener noreferrer" 
+                                        class="grid size-9 place-items-center rounded-full text-white hover:opacity-70 transition duration-300"
+                                        title="{{ $link['name'] }}"
+                                    >
+                                        @if(($link['type'] ?? 'svg') === 'svg' && !empty($link['icon_svg']))
+                                            <div class="size-7 flex items-center justify-center fill-current text-white">{!! $link['icon_svg'] !!}</div>
+                                        @elseif(($link['type'] ?? 'svg') === 'image' && !empty($link['icon_path']))
+                                            <img src="{{ $link['icon_path'] }}" alt="{{ $link['name'] }}" class="size-7 object-contain">
+                                        @else
+                                            <span class="text-[10px] font-black uppercase">{{ substr($link['name'], 0, 2) }}</span>
+                                        @endif
+                                    </a>
+                                @endforeach
+                            </div>
+                        @endif
+                    </div>
                 </div>
             </div>
 
@@ -223,4 +282,53 @@ class extends Component
             <a href="{{ route('contact') }}" class="inline-flex rounded px-14 py-4 text-sm font-bold uppercase tracking-[0.1em] transition hover:brightness-110" style="background: linear-gradient(90deg, #366bc3, #823665, #e60012);" wire:navigate.hover>Start a Project</a>
         </div>
     </section>
+
+    <!-- Premium Unified Lightbox Modal -->
+    <div 
+        class="fixed inset-0 z-[110] flex flex-col justify-center items-center bg-black/95 px-4 py-6 backdrop-blur-md sm:px-8" 
+        x-show="showModal"
+        x-transition:enter="transition ease-out duration-300"
+        x-transition:enter-start="opacity-0 scale-95"
+        x-transition:enter-end="opacity-100 scale-100"
+        x-transition:leave="transition ease-in duration-200"
+        x-transition:leave-start="opacity-100 scale-100"
+        x-transition:leave-end="opacity-0 scale-95"
+        @click="showModal = false"
+        x-cloak
+    >
+        <!-- Close Button -->
+        <button 
+            type="button" 
+            class="absolute top-4 right-4 sm:top-6 sm:right-6 z-50 grid size-10 place-items-center rounded-full border border-white/20 bg-black/72 text-2xl font-light text-white/70 transition hover:border-white/40 hover:bg-black/90 hover:text-white cursor-pointer" 
+            @click="showModal = false" 
+            aria-label="Close lightbox"
+        >×</button>
+        
+        <div class="relative w-full max-w-[1200px] flex flex-col items-center gap-4" @click.stop>
+            <!-- Content Wrapper -->
+            <div
+                class="relative overflow-hidden bg-black shadow-2xl border border-white/10 rounded-lg max-h-[80vh] flex items-center justify-center w-full"
+                style="aspect-ratio: 16 / 9;"
+            >
+                <!-- Video Lightbox (YouTube Iframe) -->
+                <div x-show="isIframeUrl(modalVideoUrl)" class="absolute inset-0 h-full w-full">
+                    <template x-if="showModal && isIframeUrl(modalVideoUrl)">
+                        <iframe :src="getEmbedUrl(modalVideoUrl)" class="absolute inset-0 h-full w-full" frameborder="0" allow="autoplay; fullscreen" allowfullscreen></iframe>
+                    </template>
+                </div>
+
+                <!-- Video Lightbox (HTML5 Native Video player) -->
+                <div x-show="!isIframeUrl(modalVideoUrl)" class="h-full w-full flex items-center justify-center">
+                    <template x-if="showModal && !isIframeUrl(modalVideoUrl)">
+                        <video :src="modalVideoUrl" class="h-full w-full object-contain" controls autoplay></video>
+                    </template>
+                </div>
+            </div>
+            
+            <!-- Title -->
+            <div class="text-center px-4">
+                <h4 class="text-base font-bold uppercase tracking-wider text-white" x-text="modalTitle"></h4>
+            </div>
+        </div>
+    </div>
 </main>

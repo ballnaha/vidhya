@@ -24,6 +24,8 @@ Route::middleware(['auth', 'verified', 'admin'])->group(function () {
     Route::view('dashboard', 'dashboard')->name('dashboard');
     Route::get('admin/home', [AdminHomeController::class, 'edit'])->name('admin.home');
     Route::patch('admin/home', [AdminHomeController::class, 'update'])->name('admin.home.update');
+    Route::patch('admin/home/youtube', [AdminHomeController::class, 'updateYoutube'])->name('admin.home.youtube');
+    Route::patch('admin/home/social-links', [AdminHomeController::class, 'updateSocialLinks'])->name('admin.home.social-links');
     Route::post('admin/home/poster', [AdminHomeController::class, 'updatePoster'])->name('admin.home.poster');
     Route::get('admin/users/data', [AdminUserController::class, 'index'])->name('admin.users.index');
     Route::get('admin/users/check-email', [AdminUserController::class, 'checkEmail'])->name('admin.users.check-email');

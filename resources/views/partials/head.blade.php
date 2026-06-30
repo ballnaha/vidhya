@@ -84,6 +84,7 @@
 
 <link rel="preload" href="/fonts/vidhya/poppins-regular.ttf" as="font" type="font/ttf" crossorigin>
 <link rel="preload" href="/fonts/vidhya/lemon-milk-bold.otf" as="font" type="font/otf" crossorigin>
+<style>[x-cloak] { display: none !important; }</style>
 
 @vite(['resources/css/app.css', 'resources/js/app.js'])
 @fluxAppearance

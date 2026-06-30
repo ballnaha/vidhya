@@ -15,6 +15,8 @@ class SiteSetting extends Model
     public const HOME_HERO_POSTER_PATH = 'home_hero_poster_path';
     public const DEFAULT_HOME_HERO_POSTER_PATH = '/images/home2.webp';
 
+    public const SOCIAL_LINKS = 'social_links';
+
     protected $fillable = [
         'key',
         'value',
@@ -67,5 +69,11 @@ class SiteSetting extends Model
     {
         return static::valueFor(static::HOME_HERO_POSTER_PATH, static::DEFAULT_HOME_HERO_POSTER_PATH)
             ?: static::DEFAULT_HOME_HERO_POSTER_PATH;
+    }
+
+    public static function socialLinks(): array
+    {
+        $value = static::valueFor(static::SOCIAL_LINKS);
+        return $value ? json_decode($value, true) : [];
     }
 }
