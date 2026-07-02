@@ -103,6 +103,63 @@ it('resizes uploaded Portfolio images to a 16:9 frame', function () {
     }
 });
 
+it('preserves the vertical framing of portrait Portfolio cover uploads', function () {
+    $response = $this->actingAs($this->adminUser)->post(route('admin.portfolios.store'), [
+        'title' => 'Uploaded Vertical Film',
+        'video_url' => '',
+        'span' => 'md:col-span-3',
+        'show_in_portfolio' => '1',
+        'sort_order' => 21,
+        'image_file' => UploadedFile::fake()->image('portfolio-portrait.jpg', 1200, 2400),
+    ]);
+
+    $response->assertCreated();
+
+    $imagePath = public_path($response->json('portfolio.image'));
+
+    try {
+        [$width, $height] = getimagesize($imagePath);
+
+        // Source is 1200x2400 (2:4 ratio); scaled to fit within 900x1600
+        // without upscaling yields 800x1600.
+        expect($width)->toBe(800)
+            ->and($height)->toBe(1600)
+            ->and($response->json('portfolio.image'))->toEndWith('.webp');
+    } finally {
+        if (file_exists($imagePath)) {
+            unlink($imagePath);
+        }
+    }
+});
+
+it('falls back to the default cover when the image is explicitly removed', function () {
+    $portfolio = Portfolio::create([
+        'title' => 'No Cover Anymore',
+        'span' => 'md:col-span-2',
+        'video_url' => '',
+        'image' => '/images/portfolios/existing-cover.webp',
+        'show_in_portfolio' => true,
+        'sort_order' => 12,
+    ]);
+
+    $payload = [
+        'title' => 'No Cover Anymore',
+        'span' => 'md:col-span-2',
+        'video_url' => '',
+        'image' => '',
+        'show_in_portfolio' => true,
+        'sort_order' => 12,
+    ];
+
+    $response = $this->actingAs($this->adminUser)->patchJson(route('admin.portfolios.update', $portfolio), $payload);
+
+    $response->assertStatus(200);
+    $this->assertDatabaseHas('portfolios', [
+        'id' => $portfolio->id,
+        'image' => '/images/portfolio-default-cover.webp',
+    ]);
+});
+
 it('updates an existing Portfolio item successfully', function () {
     $service = \App\Models\Service::create([
         'num' => '01',

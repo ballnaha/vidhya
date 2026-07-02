@@ -53,6 +53,26 @@ class extends Component
         modalTitle: '', 
         modalVideoUrl: '',
         modalVideoAspectRatio: '16:9',
+        modalImageIsPortrait: false,
+        openImageModal(src, title) {
+            var self = this;
+            var probe = new Image();
+            probe.onload = function () {
+                self.modalImageIsPortrait = probe.naturalHeight > probe.naturalWidth;
+                self.modalType = 'image';
+                self.modalImage = src;
+                self.modalTitle = title;
+                self.showModal = true;
+            };
+            probe.onerror = function () {
+                self.modalImageIsPortrait = false;
+                self.modalType = 'image';
+                self.modalImage = src;
+                self.modalTitle = title;
+                self.showModal = true;
+            };
+            probe.src = src;
+        },
         getEmbedUrl(url) {
             if (!url) return '';
             var isYoutube = url.indexOf('youtube.com') > -1 || url.indexOf('youtu.be') > -1;
@@ -227,19 +247,20 @@ class extends Component
                                 type="button"
                                 class="w-full h-full text-left relative block"
                                 @click="
-                                    modalTitle = '{{ addslashes($work->title) }}';
                                     @if(!empty($work->video_url))
+                                        modalTitle = '{{ addslashes($work->title) }}';
+                                        modalVideoAspectRatio = '{{ $work->video_aspect_ratio ?? '16:9' }}';
                                         modalType = 'video';
                                         modalVideoUrl = '{{ $work->video_url }}';
-                                        modalVideoAspectRatio = '{{ $work->video_aspect_ratio ?? '16:9' }}';
+                                        showModal = true;
                                     @else
-                                        modalType = 'image';
-                                        modalImage = '{{ $work->image }}';
+                                        openImageModal('{{ $work->image }}', '{{ addslashes($work->title) }}');
                                     @endif
-                                    showModal = true;
                                 "
                             >
-                                <img src="{{ $work->image }}" alt="{{ $work->title }}" class="h-full w-full object-cover transition duration-500 group-hover:scale-105" loading="lazy">
+                                <!-- Blurred backdrop fills the frame behind portrait covers -->
+                                <img src="{{ $work->image }}" alt="" aria-hidden="true" class="absolute inset-0 h-full w-full scale-110 object-cover blur-sm opacity-60" loading="lazy">
+                                <img src="{{ $work->image }}" alt="{{ $work->title }}" class="relative h-full w-full object-contain transition duration-500 group-hover:scale-105" loading="lazy">
                                 <div class="absolute inset-0 bg-linear-to-t from-black/85 via-black/20 to-transparent transition-all duration-300 group-hover:from-black/90"></div>
                                 
                                 <!-- Type Badge -->
@@ -280,9 +301,22 @@ class extends Component
         </div>
     </section>
  
+    <style>
+        @media (max-width: 640px) {
+            .portfolio-lightbox-box {
+                width: 100% !important;
+                height: calc(100dvh - 132px) !important;
+                max-height: calc(100dvh - 132px) !important;
+                aspect-ratio: auto !important;
+                border-radius: 0 !important;
+                border: none !important;
+            }
+        }
+    </style>
+
     <!-- Global Premium Unified Lightbox Modal -->
-    <div 
-        class="fixed inset-0 z-[110] flex flex-col justify-center items-center bg-black/95 px-4 py-6 backdrop-blur-md sm:px-8" 
+    <div
+        class="fixed inset-0 z-[110] flex flex-col justify-center items-center bg-black/95 p-0 backdrop-blur-md sm:px-8 sm:py-6"
         x-show="showModal"
         x-transition:enter="transition ease-out duration-300"
         x-transition:enter-start="opacity-0 scale-95"
@@ -293,28 +327,33 @@ class extends Component
         @click="showModal = false; modalVideoUrl = ''"
         x-cloak
     >
-        <!-- Close Button -->
-        <button 
-            type="button" 
-            class="absolute top-4 right-4 sm:top-6 sm:right-6 z-50 grid size-10 place-items-center rounded-full border border-white/20 bg-black/72 text-2xl font-light text-white/70 transition hover:border-white/40 hover:bg-black/90 hover:text-white" 
-            @click="showModal = false; modalVideoUrl = ''" 
-            aria-label="Close lightbox"
-        >×</button>
-        
-        <div class="relative w-full max-w-[1200px] flex flex-col items-center gap-4" @click.stop>
+        <div class="relative w-full h-full sm:h-auto max-w-[1200px] flex flex-col items-center justify-center gap-3" @click.stop>
+            <!-- Close Button Bar: kept out of the video frame so it never
+                 overlaps the YouTube/Vimeo player's own on-screen controls. -->
+            <div class="flex w-full justify-end px-1 sm:px-0">
+                <button
+                    type="button"
+                    class="grid size-10 place-items-center rounded-full border border-white/20 bg-black/72 text-2xl font-light text-white/70 transition hover:border-white/40 hover:bg-black/90 hover:text-white"
+                    @click="showModal = false; modalVideoUrl = ''"
+                    aria-label="Close lightbox"
+                >×</button>
+            </div>
+
             <!-- Content Wrapper -->
             <div
-                class="relative overflow-hidden bg-black shadow-2xl border border-white/10 rounded-lg max-h-[80vh] flex items-center justify-center"
-                :class="modalType === 'video' ? '' : 'w-full'"
+                class="portfolio-lightbox-box relative overflow-hidden bg-black shadow-2xl border border-white/10 rounded-lg sm:max-h-[80vh] flex items-center justify-center"
                 :style="modalType === 'video' ? {
                     aspectRatio: modalVideoAspectRatio === '9:16' ? '9 / 16' : '16 / 9',
                     width: modalVideoAspectRatio === '9:16' ? 'min(100%, 45vh)' : '100%'
-                } : {}"
+                } : {
+                    aspectRatio: modalImageIsPortrait ? '9 / 16' : '16 / 9',
+                    width: modalImageIsPortrait ? 'min(100%, 45vh)' : '100%'
+                }"
             >
-                
+
                 <!-- Image Lightbox -->
                 <div x-show="modalType === 'image'" class="h-full w-full flex items-center justify-center">
-                    <img :src="modalImage" :alt="modalTitle" class="max-h-[80vh] max-w-full object-contain">
+                    <img :src="modalImage" :alt="modalTitle" class="h-full w-full object-contain">
                 </div>
 
                 <!-- Video Lightbox (YouTube/Vimeo Iframe) -->

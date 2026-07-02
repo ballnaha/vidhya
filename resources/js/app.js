@@ -3348,13 +3348,20 @@ function initAdminPortfolios() {
 
                 var imageCell = document.createElement('td');
                 var imageWrap = document.createElement('div');
+                var imgBg = document.createElement('img');
                 var img = document.createElement('img');
                 imageCell.className = 'px-5 py-4';
                 imageWrap.className = 'relative aspect-video w-16 overflow-hidden border border-white/8 bg-black rounded';
-                img.className = 'h-full w-full object-cover';
-                img.src = portfolio.image || '/images/ai-director.jpg';
+                imgBg.className = 'absolute inset-0 h-full w-full scale-110 object-cover blur-sm opacity-60';
+                imgBg.src = portfolio.image || '/images/portfolio-default-cover.webp';
+                imgBg.alt = '';
+                imgBg.setAttribute('aria-hidden', 'true');
+                imgBg.draggable = false;
+                img.className = 'relative h-full w-full object-contain';
+                img.src = portfolio.image || '/images/portfolio-default-cover.webp';
                 img.alt = portfolio.title;
                 img.draggable = false;
+                imageWrap.appendChild(imgBg);
                 imageWrap.appendChild(img);
                 imageCell.appendChild(imageWrap);
 
@@ -3449,8 +3456,14 @@ function initAdminPortfolios() {
         var fileInput = shell.querySelector('[data-admin-portfolios-file-input]');
         var previewWrapper = shell.querySelector('[data-admin-portfolios-preview-wrapper]');
         var previewImg = shell.querySelector('[data-admin-portfolios-preview]');
+        var previewImgBg = shell.querySelector('[data-admin-portfolios-preview-bg]');
         var uploadPlaceholder = shell.querySelector('[data-admin-portfolios-upload-placeholder]');
         var removeImageBtn = shell.querySelector('[data-admin-portfolios-remove-image-file]');
+
+        function setPreviewSrc(src) {
+            if (previewImg) previewImg.src = src;
+            if (previewImgBg) previewImgBg.src = src;
+        }
 
         if (uploadCard && fileInput) {
             uploadCard.addEventListener('click', function () {
@@ -3462,7 +3475,7 @@ function initAdminPortfolios() {
             fileInput.addEventListener('change', function () {
                 var file = this.files[0];
                 if (file) {
-                    if (previewImg) previewImg.src = URL.createObjectURL(file);
+                    setPreviewSrc(URL.createObjectURL(file));
                     if (uploadPlaceholder) uploadPlaceholder.classList.add('hidden');
                     if (previewWrapper) previewWrapper.classList.remove('hidden');
                     
@@ -3479,7 +3492,7 @@ function initAdminPortfolios() {
                 e.stopPropagation();
                 if (fileInput) fileInput.value = '';
                 if (previewWrapper) previewWrapper.classList.add('hidden');
-                if (previewImg) previewImg.src = '';
+                setPreviewSrc('');
                 if (uploadPlaceholder) uploadPlaceholder.classList.remove('hidden');
 
                 var imgField = form.querySelector('[data-admin-portfolios-field="image"]');
@@ -3502,7 +3515,7 @@ function initAdminPortfolios() {
                     // Clear auto-thumbnail when URL is removed
                     if (isYoutubeSrc) {
                         if (previewWrapper) previewWrapper.classList.add('hidden');
-                        if (previewImg) previewImg.src = '';
+                        setPreviewSrc('');
                         if (uploadPlaceholder) uploadPlaceholder.classList.remove('hidden');
                         if (imgField) imgField.value = '';
                     }
@@ -3516,7 +3529,7 @@ function initAdminPortfolios() {
                 var match = url.match(regExp);
                 if (match && match[2] && match[2].length === 11) {
                     var thumbUrl = 'https://img.youtube.com/vi/' + match[2] + '/mqdefault.jpg';
-                    if (previewImg) previewImg.src = thumbUrl;
+                    setPreviewSrc(thumbUrl);
                     if (uploadPlaceholder) uploadPlaceholder.classList.add('hidden');
                     if (previewWrapper) previewWrapper.classList.remove('hidden');
                     if (imgField) imgField.value = thumbUrl;
@@ -3614,7 +3627,7 @@ function initAdminPortfolios() {
             form.querySelector('[data-admin-portfolios-id]').value = '';
             if (fileInput) fileInput.value = '';
             if (previewWrapper) previewWrapper.classList.add('hidden');
-            if (previewImg) previewImg.src = '';
+            setPreviewSrc('');
             if (uploadPlaceholder) uploadPlaceholder.classList.remove('hidden');
             clearErrors();
             formShell.classList.add('hidden');
@@ -3640,7 +3653,7 @@ function initAdminPortfolios() {
                 if (imgField) imgField.value = portfolio.image || '';
 
                 if (portfolio.image) {
-                    if (previewImg) previewImg.src = portfolio.image;
+                    setPreviewSrc(portfolio.image);
                     if (uploadPlaceholder) uploadPlaceholder.classList.add('hidden');
                     if (previewWrapper) previewWrapper.classList.remove('hidden');
                 }

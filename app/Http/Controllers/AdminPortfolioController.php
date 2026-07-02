@@ -13,6 +13,9 @@ use Illuminate\Validation\ValidationException;
 
 class AdminPortfolioController extends Controller
 {
+    private const DEFAULT_COVER_IMAGE = '/images/portfolio-default-cover.webp';
+
+
     public function index(Request $request): JsonResponse
     {
         return response()->json([
@@ -31,7 +34,7 @@ class AdminPortfolioController extends Controller
             'span' => ['required', 'string', 'max:50'],
             'show_in_portfolio' => ['required', 'boolean'],
             'image' => ['nullable', 'string', 'max:255'],
-            'image_file' => ['nullable', 'image', 'mimes:jpeg,png,jpg,webp', 'max:5120'],
+            'image_file' => ['nullable', 'image', 'mimes:jpeg,png,jpg,webp', 'max:10240'],
             'sort_order' => ['required', 'integer', 'min:0', Rule::unique('portfolios', 'sort_order')],
         ]);
 
@@ -52,7 +55,7 @@ class AdminPortfolioController extends Controller
         } elseif (!empty($validated['video_url'])) {
             $data['image'] = $this->getYoutubeThumbnail($validated['video_url']);
         } else {
-            $data['image'] = '/images/ai-director.jpg'; // fallback
+            $data['image'] = self::DEFAULT_COVER_IMAGE;
         }
 
         $portfolio = DB::transaction(function () use ($data) {
@@ -78,7 +81,7 @@ class AdminPortfolioController extends Controller
             'span' => ['required', 'string', 'max:50'],
             'show_in_portfolio' => ['required', 'boolean'],
             'image' => ['nullable', 'string', 'max:255'],
-            'image_file' => ['nullable', 'image', 'mimes:jpeg,png,jpg,webp', 'max:5120'],
+            'image_file' => ['nullable', 'image', 'mimes:jpeg,png,jpg,webp', 'max:10240'],
             'sort_order' => ['required', 'integer', 'min:0', Rule::unique('portfolios', 'sort_order')->ignore($portfolio)],
         ]);
 
@@ -100,15 +103,22 @@ class AdminPortfolioController extends Controller
                 @unlink(public_path($portfolio->image));
             }
         } else {
-            $existingImage = $request->input('image') ?: $portfolio->image;
+            // An explicitly emptied field (the admin clicked "remove image") means
+            // the cover was intentionally cleared — don't fall back to the old image.
+            $imageInput = $request->has('image') ? (string) $request->input('image') : $portfolio->image;
+            $existingImage = $imageInput !== '' ? $imageInput : null;
 
-            // If the current image is a YouTube auto-thumbnail, regenerate it from
-            // the (possibly changed) video_url so swapping the URL updates the cover.
-            if ($this->isYoutubeThumbnail($existingImage) || empty($existingImage)) {
+            // If there's no cover left, or the current one is a YouTube
+            // auto-thumbnail, (re)generate it from the (possibly changed) video_url.
+            if ($existingImage === null || $this->isYoutubeThumbnail($existingImage)) {
                 if (!empty($validated['video_url'])) {
                     $data['image'] = $this->getYoutubeThumbnail($validated['video_url']);
                 } else {
-                    $data['image'] = $existingImage ?: '/images/ai-director.jpg';
+                    $data['image'] = $existingImage ?? self::DEFAULT_COVER_IMAGE;
+                }
+
+                if ($existingImage === null && $portfolio->image && file_exists(public_path($portfolio->image)) && str_starts_with($portfolio->image, '/images/portfolios/')) {
+                    @unlink(public_path($portfolio->image));
                 }
             } else {
                 $data['image'] = $existingImage;
@@ -238,7 +248,7 @@ class AdminPortfolioController extends Controller
                 return "https://img.youtube.com/vi/{$matches[2]}/mqdefault.jpg";
             }
         }
-        return '/images/ai-director.jpg'; // fallback
+        return self::DEFAULT_COVER_IMAGE;
     }
 
     private function storePortfolioImage(UploadedFile $file): string
@@ -296,48 +306,97 @@ class AdminPortfolioController extends Controller
             return false;
         }
 
+        // Phones store portrait photos as landscape pixel data plus an EXIF
+        // orientation tag; without correcting for it the crop below treats
+        // a vertical photo as horizontal and slices out the wrong region.
+        if ($mime === 'image/jpeg' && function_exists('exif_read_data')) {
+            $exif = @exif_read_data($uploadedFile->getRealPath());
+            $orientation = $exif['Orientation'] ?? 1;
+
+            switch ($orientation) {
+                case 3:
+                    $source = imagerotate($source, 180, 0);
+                    break;
+                case 6:
+                    $source = imagerotate($source, -90, 0);
+                    break;
+                case 8:
+                    $source = imagerotate($source, 90, 0);
+                    break;
+            }
+        }
+
         $origWidth = imagesx($source);
         $origHeight = imagesy($source);
 
-        $maxWidth = 1600;
-        $maxHeight = 900;
-        $targetRatio = $maxWidth / $maxHeight;
-        $sourceRatio = $origWidth / $origHeight;
+        // Portrait uploads keep their full vertical framing instead of being
+        // force-cropped into a landscape strip; the front end letterboxes
+        // them inside the 16:9 cover card with a blurred backdrop.
+        if ($origHeight > $origWidth) {
+            $maxWidth = 900;
+            $maxHeight = 1600;
 
-        // Crop from the centre to the 16:9 ratio used by portfolio cards.
-        if ($sourceRatio > $targetRatio) {
-            $cropHeight = $origHeight;
-            $cropWidth = (int) round($origHeight * $targetRatio);
-            $sourceX = (int) floor(($origWidth - $cropWidth) / 2);
-            $sourceY = 0;
+            // Never upscale small uploads.
+            $scale = min(1, $maxWidth / $origWidth, $maxHeight / $origHeight);
+            $targetWidth = max(1, (int) round($origWidth * $scale));
+            $targetHeight = max(1, (int) round($origHeight * $scale));
+
+            $destination = imagecreatetruecolor($targetWidth, $targetHeight);
+
+            if ($mime == 'image/png' || $mime == 'image/webp') {
+                imagealphablending($destination, false);
+                imagesavealpha($destination, true);
+            }
+
+            imagecopyresampled(
+                $destination,
+                $source,
+                0, 0,
+                0, 0,
+                $targetWidth, $targetHeight,
+                $origWidth, $origHeight
+            );
         } else {
-            $cropWidth = $origWidth;
-            $cropHeight = (int) round($origWidth / $targetRatio);
-            $sourceX = 0;
-            $sourceY = (int) floor(($origHeight - $cropHeight) / 2);
+            $maxWidth = 1600;
+            $maxHeight = 900;
+            $targetRatio = $maxWidth / $maxHeight;
+            $sourceRatio = $origWidth / $origHeight;
+
+            // Crop from the centre to the 16:9 ratio used by portfolio cards.
+            if ($sourceRatio > $targetRatio) {
+                $cropHeight = $origHeight;
+                $cropWidth = (int) round($origHeight * $targetRatio);
+                $sourceX = (int) floor(($origWidth - $cropWidth) / 2);
+                $sourceY = 0;
+            } else {
+                $cropWidth = $origWidth;
+                $cropHeight = (int) round($origWidth / $targetRatio);
+                $sourceX = 0;
+                $sourceY = (int) floor(($origHeight - $cropHeight) / 2);
+            }
+
+            // Never upscale small uploads.
+            $scale = min(1, $maxWidth / $cropWidth, $maxHeight / $cropHeight);
+            $targetWidth = max(1, (int) round($cropWidth * $scale));
+            $targetHeight = max(1, (int) round($cropHeight * $scale));
+
+            $destination = imagecreatetruecolor($targetWidth, $targetHeight);
+
+            // Keep alpha channel for PNG/WEBP
+            if ($mime == 'image/png' || $mime == 'image/webp') {
+                imagealphablending($destination, false);
+                imagesavealpha($destination, true);
+            }
+
+            imagecopyresampled(
+                $destination,
+                $source,
+                0, 0,
+                $sourceX, $sourceY,
+                $targetWidth, $targetHeight,
+                $cropWidth, $cropHeight
+            );
         }
-
-        // Never upscale small uploads.
-        $scale = min(1, $maxWidth / $cropWidth, $maxHeight / $cropHeight);
-        $targetWidth = max(1, (int) round($cropWidth * $scale));
-        $targetHeight = max(1, (int) round($cropHeight * $scale));
-
-        $destination = imagecreatetruecolor($targetWidth, $targetHeight);
-
-        // Keep alpha channel for PNG/WEBP
-        if ($mime == 'image/png' || $mime == 'image/webp') {
-            imagealphablending($destination, false);
-            imagesavealpha($destination, true);
-        }
-
-        imagecopyresampled(
-            $destination,
-            $source,
-            0, 0,
-            $sourceX, $sourceY,
-            $targetWidth, $targetHeight,
-            $cropWidth, $cropHeight
-        );
 
         $dir = dirname($destinationPath);
         if (!file_exists($dir)) {

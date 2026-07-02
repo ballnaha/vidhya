@@ -142,7 +142,9 @@
 
                                 <!-- Preview Wrapper -->
                                 <div class="absolute inset-0 hidden" data-admin-portfolios-preview-wrapper>
-                                    <img src="" class="h-full w-full object-cover" data-admin-portfolios-preview>
+                                    <!-- Blurred backdrop fills the box behind portrait covers -->
+                                    <img src="" class="absolute inset-0 h-full w-full scale-110 object-cover blur-sm opacity-60" aria-hidden="true" data-admin-portfolios-preview-bg>
+                                    <img src="" class="relative h-full w-full object-contain" data-admin-portfolios-preview>
                                     <!-- Hover Action Overlay -->
                                     <div class="absolute inset-0 bg-black/75 opacity-0 group-hover/uploader:opacity-100 transition-opacity flex items-center justify-center gap-3 z-10">
                                         <span class="text-[10px] font-bold uppercase tracking-wider text-white bg-white/10 px-2.5 py-1 rounded border border-white/10">{{ __('Change') }}</span>
