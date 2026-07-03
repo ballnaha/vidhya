@@ -9,6 +9,7 @@ use App\Http\Controllers\AdminServiceController;
 use App\Http\Controllers\AdminPortfolioController;
 use App\Http\Controllers\AdminClientController;
 use App\Http\Controllers\ContactController;
+use App\Http\Controllers\DashboardController;
 
 Route::livewire('/', 'pages::home')->name('home');
 Route::livewire('/about', 'pages::about')->name('about');
@@ -23,7 +24,7 @@ Route::post('/contact', [ContactController::class, 'store'])
 Route::livewire('/faq', 'pages::faq')->name('faq');
 
 Route::middleware(['auth', 'verified', 'admin'])->group(function () {
-    Route::view('dashboard', 'dashboard')->name('dashboard');
+    Route::get('dashboard', [DashboardController::class, 'index'])->name('dashboard');
     Route::get('admin/home', [AdminHomeController::class, 'edit'])->name('admin.home');
     Route::patch('admin/home', [AdminHomeController::class, 'update'])->name('admin.home.update');
     Route::patch('admin/home/youtube', [AdminHomeController::class, 'updateYoutube'])->name('admin.home.youtube');
