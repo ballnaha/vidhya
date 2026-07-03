@@ -129,19 +129,21 @@ class extends Component
     </section>
  
     <!-- Portfolio Section -->
-    <section class="px-6 py-12 sm:px-10 lg:px-20 bg-[#0a0a0c]">
-        <div class="mx-auto max-w-[1800px] space-y-12">
+    <section class="bg-[#0a0a0c] px-6 py-6 sm:px-10 sm:py-12 lg:px-20">
+        <div class="mx-auto max-w-[1800px] space-y-5 sm:space-y-12">
  
             <!-- Filters Bar -->
-            <div class="border-b border-white/5 pb-10" data-reveal>
+            <div class="border-b border-white/5 pb-4 sm:pb-10" data-reveal>
                 <!-- Service Filters -->
-                <div class="space-y-4 mb-8">
-                    <p class="text-[10px] font-semibold uppercase tracking-[0.22em] text-[#366bc3]">Filter by Service Category</p>
-                    <div class="flex flex-wrap gap-3">
+                <div class="space-y-2 sm:mb-8 sm:space-y-4">
+                    <p class="sr-only text-[10px] font-semibold uppercase tracking-[0.22em] text-[#366bc3] sm:not-sr-only">Filter by Service Category</p>
+                    <div class="-mx-6 flex snap-x snap-mandatory gap-2 overflow-x-auto px-6 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:gap-3 sm:pb-2 md:mx-0 md:flex-wrap md:overflow-visible md:px-0 md:pb-0" role="tablist" aria-label="Service categories">
                         <button 
                             type="button" 
                             wire:click="selectService('')" 
-                            class="rounded border px-7 py-3 text-xs font-bold uppercase tracking-[0.12em] transition-all duration-300 {{ $selectedServiceId === '' ? 'border-[#366bc3] bg-[#366bc3]/10 text-white shadow-lg shadow-[#366bc3]/15' : 'border-white/10 text-white/42 hover:border-white/25 hover:text-white hover:bg-white/[0.02]' }}"
+                            role="tab"
+                            aria-selected="{{ $selectedServiceId === '' ? 'true' : 'false' }}"
+                            class="shrink-0 snap-start whitespace-nowrap rounded border px-5 py-2.5 text-xs font-bold uppercase tracking-[0.12em] transition-all duration-300 sm:px-7 sm:py-3 {{ $selectedServiceId === '' ? 'border-[#366bc3] bg-[#366bc3]/10 text-white shadow-lg shadow-[#366bc3]/15' : 'border-white/10 text-white/42 hover:border-white/25 hover:text-white hover:bg-white/[0.02]' }}"
                         >
                             All Services
                         </button>
@@ -152,12 +154,15 @@ class extends Component
                             <button 
                                 type="button" 
                                 wire:click="selectService('{{ $service->id }}')" 
-                                class="rounded border px-7 py-3 text-xs font-bold uppercase tracking-[0.12em] transition-all duration-300 {{ $isActive ? 'text-white' : 'border-white/10 text-white/42 hover:border-white/25 hover:text-white hover:bg-white/[0.02]' }}"
+                                role="tab"
+                                aria-selected="{{ $isActive ? 'true' : 'false' }}"
+                                class="shrink-0 snap-start whitespace-nowrap rounded border px-5 py-2.5 text-xs font-bold uppercase tracking-[0.12em] transition-all duration-300 sm:px-7 sm:py-3 {{ $isActive ? 'text-white' : 'border-white/10 text-white/42 hover:border-white/25 hover:text-white hover:bg-white/[0.02]' }}"
                                 style="{{ $isActive ? 'border-color: ' . $service->accent . '; background-color: ' . $service->accent . '18; box-shadow: 0 10px 15px -3px ' . $service->accent . '20;' : '' }}"
                             >
                                 {{ $service->title }}
                             </button>
                         @endforeach
+                    </div>
                 </div>
             </div>
 
@@ -203,23 +208,23 @@ class extends Component
                     $visibleGroupNumber = 0;
                 @endphp
 
-                <div class="space-y-24 lg:space-y-32">
+                <div class="space-y-16 sm:space-y-24 lg:space-y-32">
                     @foreach ($workGroups as $group)
                         @continue($group['works']->isEmpty())
                         @php
                             $visibleGroupNumber++;
                         @endphp
 
-                        <section wire:key="portfolio-group-{{ $group['key'] }}" class="space-y-8">
-                            <div class="flex flex-col gap-5 border-b border-white/8 pb-6 sm:flex-row sm:items-end sm:justify-between" data-reveal>
+                        <section wire:key="portfolio-group-{{ $group['key'] }}" class="space-y-4 sm:space-y-8">
+                            <div class="flex flex-col gap-5 border-b border-white/8 pb-4 sm:flex-row sm:items-end sm:justify-between sm:pb-6" data-reveal>
                                 <div class="flex items-start gap-4 sm:gap-6">
-                                    <span class="pt-1 font-mono text-[11px] tracking-[0.2em] text-white/25">{{ str_pad((string) $visibleGroupNumber, 2, '0', STR_PAD_LEFT) }}</span>
+                                    <span class="hidden pt-1 font-mono text-[11px] tracking-[0.2em] text-white/25 sm:inline">{{ str_pad((string) $visibleGroupNumber, 2, '0', STR_PAD_LEFT) }}</span>
                                     <div>
                                         <p class="mb-2 text-[10px] font-bold uppercase tracking-[0.24em]" style="color: {{ $group['accent'] }}">{{ $group['eyebrow'] }}</p>
                                         <h2 class="text-[clamp(1.75rem,4vw,3rem)] font-black uppercase leading-none tracking-[-0.025em] text-white">{{ $group['title'] }}</h2>
                                     </div>
                                 </div>
-                                <div class="sm:max-w-sm sm:text-right">
+                                <div class="hidden sm:block sm:max-w-sm sm:text-right">
                                     <p class="text-sm leading-6 text-white/40">{{ $group['description'] }}</p>
                                     <p class="mt-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-white/25">
                                         {{ $group['works']->count() }} {{ Str::plural('project', $group['works']->count()) }}

@@ -7,6 +7,7 @@ use App\Http\Controllers\AdminDirectorController;
 use App\Http\Controllers\AdminFaqController;
 use App\Http\Controllers\AdminServiceController;
 use App\Http\Controllers\AdminPortfolioController;
+use App\Http\Controllers\AdminClientController;
 use App\Http\Controllers\ContactController;
 
 Route::livewire('/', 'pages::home')->name('home');
@@ -14,6 +15,7 @@ Route::livewire('/about', 'pages::about')->name('about');
 Route::livewire('/services', 'pages::services')->name('services');
 Route::livewire('/ai-director', 'pages::ai-director')->name('ai-director');
 Route::livewire('/portfolio', 'pages::portfolio')->name('portfolio');
+Route::livewire('/client', 'pages::client')->name('client');
 Route::livewire('/contact', 'pages::contact')->name('contact');
 Route::post('/contact', [ContactController::class, 'store'])
     ->middleware('throttle:5,1')
@@ -61,6 +63,13 @@ Route::middleware(['auth', 'verified', 'admin'])->group(function () {
     Route::patch('admin/portfolios/{portfolio}', [AdminPortfolioController::class, 'update'])->name('admin.portfolios.update');
     Route::delete('admin/portfolios/{portfolio}', [AdminPortfolioController::class, 'destroy'])->name('admin.portfolios.destroy');
     Route::view('admin/portfolios', 'pages.admin.⚡portfolios')->name('admin.portfolios');
+
+    Route::get('admin/clients', [AdminClientController::class, 'index'])->name('admin.clients');
+    Route::get('admin/clients/data', [AdminClientController::class, 'data'])->name('admin.clients.data');
+    Route::post('admin/clients', [AdminClientController::class, 'store'])->name('admin.clients.store');
+    Route::patch('admin/clients/reorder', [AdminClientController::class, 'reorder'])->name('admin.clients.reorder');
+    Route::patch('admin/clients/{client}', [AdminClientController::class, 'update'])->name('admin.clients.update');
+    Route::delete('admin/clients/{client}', [AdminClientController::class, 'destroy'])->name('admin.clients.destroy');
 });
 
 Route::get('sitemap.xml', function () {
@@ -70,6 +79,7 @@ Route::get('sitemap.xml', function () {
         ['loc' => route('services'), 'lastmod' => now()->startOfDay()->toAtomString(), 'changefreq' => 'monthly', 'priority' => '0.8'],
         ['loc' => route('ai-director'), 'lastmod' => now()->startOfDay()->toAtomString(), 'changefreq' => 'weekly', 'priority' => '0.9'],
         ['loc' => route('portfolio'), 'lastmod' => now()->startOfDay()->toAtomString(), 'changefreq' => 'weekly', 'priority' => '0.9'],
+        ['loc' => route('client'), 'lastmod' => now()->startOfDay()->toAtomString(), 'changefreq' => 'monthly', 'priority' => '0.7'],
         ['loc' => route('faq'), 'lastmod' => now()->startOfDay()->toAtomString(), 'changefreq' => 'monthly', 'priority' => '0.5'],
         ['loc' => route('contact'), 'lastmod' => now()->startOfDay()->toAtomString(), 'changefreq' => 'monthly', 'priority' => '0.7'],
     ];

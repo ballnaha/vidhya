@@ -39,6 +39,10 @@
                         <span aria-hidden="true">■</span>
                         {{ __('Portfolio') }}
                     </a>
+                    <a class="vidhya-sidebar-item {{ request()->routeIs('admin.clients*') ? 'is-current' : '' }}" href="{{ route('admin.clients') }}" wire:navigate.hover data-admin-sidebar-link>
+                        <span aria-hidden="true">◇</span>
+                        {{ __('Clients') }}
+                    </a>
                     <a class="vidhya-sidebar-item {{ request()->routeIs('admin.directors') ? 'is-current' : '' }}" href="{{ route('admin.directors') }}" wire:navigate.hover data-admin-sidebar-link>
                         <span aria-hidden="true">☼</span>
                         {{ __('Directors') }}

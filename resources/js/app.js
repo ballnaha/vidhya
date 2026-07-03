@@ -1,6 +1,7 @@
 var revealObserver;
 var scrollTopButton;
 var mobileMenuShell;
+var mobileMenuEventsReady = false;
 var toastRoot;
 var toastEventsReady = false;
 var toastLimit = 5;
@@ -131,14 +132,17 @@ function initScrollTopButton() {
     syncScrollTopButton();
 }
 
-function setMobileMenuOpen(open) {
-    if (!mobileMenuShell) {
+function setMobileMenuOpen(open, shell) {
+    var currentShell = shell || document.querySelector('[data-mobile-menu-shell]');
+
+    if (!currentShell) {
         return;
     }
 
-    var toggle = mobileMenuShell.querySelector('[data-mobile-menu-toggle]');
+    mobileMenuShell = currentShell;
+    var toggle = currentShell.querySelector('[data-mobile-menu-toggle]');
 
-    mobileMenuShell.toggleAttribute('data-mobile-menu-open', open);
+    currentShell.toggleAttribute('data-mobile-menu-open', open);
 
     if (toggle) {
         toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
@@ -148,22 +152,29 @@ function setMobileMenuOpen(open) {
 function initMobileMenu() {
     mobileMenuShell = document.querySelector('[data-mobile-menu-shell]');
 
-    if (!mobileMenuShell || mobileMenuShell.hasAttribute('data-mobile-menu-ready')) {
+    if (!mobileMenuShell || mobileMenuEventsReady) {
         return;
     }
 
-    mobileMenuShell.setAttribute('data-mobile-menu-ready', '');
+    mobileMenuEventsReady = true;
 
-    mobileMenuShell.addEventListener('click', function (event) {
+    document.addEventListener('click', function (event) {
         var toggle = event.target.closest('[data-mobile-menu-toggle]');
 
         if (toggle) {
-            setMobileMenuOpen(!mobileMenuShell.hasAttribute('data-mobile-menu-open'));
+            var shell = toggle.closest('[data-mobile-menu-shell]');
+
+            if (shell) {
+                setMobileMenuOpen(!shell.hasAttribute('data-mobile-menu-open'), shell);
+            }
+
             return;
         }
 
-        if (event.target.closest('[data-mobile-menu-close]')) {
-            setMobileMenuOpen(false);
+        var close = event.target.closest('[data-mobile-menu-close]');
+
+        if (close) {
+            setMobileMenuOpen(false, close.closest('[data-mobile-menu-shell]'));
         }
     });
 
@@ -784,6 +795,7 @@ function initAdminUsers() {
         var csrf = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
         var users = [];
         var deletingId = null;
+        var sortable = null;
         var searchTimer;
 
         if (!table || !form) {
@@ -3673,6 +3685,153 @@ function initAdminPortfolios() {
     });
 }
 
+function initAdminClients() {
+    document.querySelectorAll('[data-admin-clients]:not([data-admin-clients-ready])').forEach(function (shell) {
+        var table = shell.querySelector('[data-admin-clients-table]');
+        var form = shell.querySelector('[data-admin-clients-form]');
+        var formShell = shell.querySelector('[data-admin-clients-form-shell]');
+        var search = shell.querySelector('[data-admin-clients-search]');
+        var fileInput = shell.querySelector('[data-admin-clients-file-input]');
+        var preview = shell.querySelector('[data-admin-clients-preview]');
+        var placeholder = shell.querySelector('[data-admin-clients-upload-placeholder]');
+        var modal = shell.querySelector('[data-admin-clients-delete-modal]');
+        var clients = [];
+        var deletingId = null;
+        var sortable = null;
+        var csrf = document.querySelector('meta[name="csrf-token"]')?.content || '';
+
+        if (!table || !form) return;
+        shell.setAttribute('data-admin-clients-ready', '');
+
+        try { clients = JSON.parse(shell.querySelector('[data-admin-clients-initial]')?.textContent || '[]'); } catch (_) { clients = []; }
+
+        function url(template, id) { return template.replace('__CLIENT__', id); }
+        function request(requestUrl, options) {
+            var headers = { Accept: 'application/json', 'X-CSRF-TOKEN': csrf };
+            if (options?.body && !(options.body instanceof FormData)) headers['Content-Type'] = 'application/json';
+            return fetch(requestUrl, Object.assign({ headers: headers }, options || {}))
+                .then(function (response) { return response.json().catch(function () { return {}; }).then(function (body) { if (!response.ok) throw body; return body; }); });
+        }
+        function clearErrors() {
+            shell.querySelectorAll('[data-admin-clients-error]').forEach(function (item) { item.textContent = ''; item.classList.add('hidden'); });
+        }
+        function showErrors(errors) {
+            Object.entries(errors || {}).forEach(function (entry) {
+                var item = shell.querySelector('[data-admin-clients-error="' + entry[0] + '"]');
+                if (item) { item.textContent = Array.isArray(entry[1]) ? entry[1][0] : entry[1]; item.classList.remove('hidden'); }
+            });
+        }
+        function setBusy(busy) {
+            var button = shell.querySelector('[data-admin-clients-save]');
+            if (button) button.disabled = busy;
+            shell.querySelector('[data-admin-clients-spinner]')?.classList.toggle('hidden', !busy);
+            var label = shell.querySelector('[data-admin-clients-save-label]');
+            if (label) label.textContent = busy ? 'Saving...' : 'Save Client';
+        }
+        function setPreview(src) {
+            if (!preview || !placeholder) return;
+            preview.src = src || '';
+            preview.classList.toggle('hidden', !src);
+            placeholder.classList.toggle('hidden', Boolean(src));
+        }
+        function resetForm() {
+            form.reset();
+            form.querySelector('[data-admin-clients-id]').value = '';
+            form.elements.logo.value = '';
+            form.elements.is_active.checked = true;
+            form.elements.sort_order.value = clients.length ? Math.max.apply(Math, clients.map(function (item) { return item.sort_order; })) + 10 : 10;
+            if (fileInput) fileInput.value = '';
+            setPreview(''); clearErrors(); formShell.classList.add('hidden');
+        }
+        function openForm(client) {
+            resetForm(); formShell.classList.remove('hidden');
+            shell.querySelector('[data-admin-clients-form-title]').textContent = client ? 'Edit Client' : 'Create Client';
+            if (client) {
+                form.querySelector('[data-admin-clients-id]').value = client.id;
+                form.elements.name.value = client.name || '';
+                form.elements.website_url.value = client.website_url || '';
+                form.elements.logo.value = client.logo || '';
+                form.elements.sort_order.value = client.sort_order || 0;
+                form.elements.is_active.checked = Boolean(client.is_active);
+                setPreview(client.logo);
+            }
+            form.elements.name.focus();
+        }
+        function render() {
+            var term = (search?.value || '').trim().toLowerCase();
+            var filtered = clients.filter(function (client) { return (client.name || '').toLowerCase().includes(term) || (client.website_url || '').toLowerCase().includes(term); });
+            var fragment = document.createDocumentFragment();
+            if (!filtered.length) { var empty = document.createElement('tr'); empty.innerHTML = '<td colspan="8" class="px-5 py-12 text-center text-sm text-white/35">No clients found.</td>'; fragment.appendChild(empty); table.replaceChildren(fragment); return; }
+            if (sortable) sortable.option('disabled', Boolean(term));
+            filtered.forEach(function (client) {
+                var row = document.createElement('tr'); row.className = 'transition hover:bg-white/[0.035]'; row.dataset.adminClientsRow = ''; row.dataset.clientId = client.id;
+                var dragCell = document.createElement('td'); dragCell.className = 'px-5 py-4'; dragCell.innerHTML = '<button type="button" class="cursor-grab p-2 text-white/25 hover:text-white/60 active:cursor-grabbing" data-admin-clients-drag-handle aria-label="Drag to reorder"><span class="text-base leading-none">⋮⋮</span></button>';
+                var logoCell = document.createElement('td'); logoCell.className = 'px-5 py-4';
+                var image = document.createElement('img'); image.src = client.logo; image.alt = client.name; image.className = 'h-14 w-24 object-contain'; image.draggable = false; logoCell.appendChild(image);
+                var nameCell = document.createElement('td'); nameCell.className = 'px-5 py-4 font-semibold'; nameCell.textContent = client.name;
+                var websiteCell = document.createElement('td'); websiteCell.className = 'max-w-xs truncate px-5 py-4 text-white/45'; websiteCell.textContent = client.website_url || '—';
+                var statusCell = document.createElement('td'); statusCell.className = 'px-5 py-4'; statusCell.innerHTML = '<span class="rounded-full px-2.5 py-1 text-[10px] font-semibold uppercase ' + (client.is_active ? 'bg-emerald-500/10 text-emerald-300' : 'bg-white/5 text-white/35') + '">' + (client.is_active ? 'Active' : 'Hidden') + '</span>';
+                var createdCell = document.createElement('td'); createdCell.className = 'px-5 py-4 text-xs text-white/35'; createdCell.textContent = client.created_at || '—';
+                var orderCell = document.createElement('td'); orderCell.className = 'px-5 py-4 font-mono text-xs text-white/35'; orderCell.textContent = client.sort_order;
+                var actionCell = document.createElement('td'); actionCell.className = 'px-5 py-4'; var actions = document.createElement('div'); actions.className = 'flex justify-end gap-2';
+                var edit = document.createElement('button'); edit.type = 'button'; edit.className = 'rounded border border-white/10 px-3 py-2 text-xs text-white/58 hover:border-white/25 hover:text-white'; edit.textContent = 'Edit'; edit.onclick = function () { openForm(client); };
+                var remove = document.createElement('button'); remove.type = 'button'; remove.className = 'rounded border border-[#e60012]/25 px-3 py-2 text-xs text-white/58 hover:border-[#e60012]/55 hover:text-white'; remove.textContent = 'Delete'; remove.onclick = function () { deletingId = client.id; modal?.classList.remove('hidden'); modal?.classList.add('grid'); };
+                actions.append(edit, remove); actionCell.appendChild(actions); row.append(dragCell, logoCell, nameCell, websiteCell, statusCell, createdCell, orderCell, actionCell); fragment.appendChild(row);
+            });
+            table.replaceChildren(fragment);
+        }
+        function saveOrder() {
+            var ids = Array.from(table.querySelectorAll('[data-client-id]')).map(function (row) { return Number(row.dataset.clientId); });
+            request(shell.dataset.reorderUrl, { method: 'PATCH', body: JSON.stringify({ ids: ids }) }).then(function (response) { showToast('success', 'Reorder successful', response.message); return loadClients(); }).catch(function (error) { showToast('danger', 'Reorder failed', error.message || 'Unable to save order.'); return loadClients(); });
+        }
+        function initDragAndDrop() {
+            if (!Sortable || !table) return;
+            if (sortable) sortable.destroy();
+            sortable = Sortable.create(table, { handle: '[data-admin-clients-drag-handle]', draggable: '[data-admin-clients-row]', animation: 180, ghostClass: 'opacity-25', chosenClass: 'bg-white/[0.055]', delay: 120, delayOnTouchOnly: true, touchStartThreshold: 4, fallbackTolerance: 3, fallbackOnBody: true, onEnd: function (event) { if (event.oldIndex !== event.newIndex) saveOrder(); } });
+        }
+        function loadClients() {
+            return request(shell.dataset.indexUrl, { cache: 'no-store' }).then(function (data) {
+                if (!Array.isArray(data.clients)) throw new Error('Invalid client data response.');
+                clients = data.clients;
+                render();
+            }).catch(function (error) { showToast('danger', 'Unable to load clients', error.message || 'Please refresh and try again.'); });
+        }
+
+        shell.querySelector('[data-admin-clients-create]')?.addEventListener('click', function () { openForm(null); });
+        shell.querySelector('[data-admin-clients-cancel]')?.addEventListener('click', resetForm);
+        shell.querySelector('[data-admin-clients-upload-card]')?.addEventListener('click', function () { fileInput?.click(); });
+        fileInput?.addEventListener('change', function () { if (fileInput.files[0]) setPreview(URL.createObjectURL(fileInput.files[0])); });
+        search?.addEventListener('input', render);
+        form.addEventListener('submit', function (event) {
+            event.preventDefault(); clearErrors(); var id = form.querySelector('[data-admin-clients-id]').value;
+            if (!form.elements.name.value.trim() || (!id && !fileInput?.files.length)) { showToast('danger', 'Please check the form', 'Client name and logo are required.'); return; }
+            var data = new FormData(form); if (id) data.append('_method', 'PATCH'); setBusy(true);
+            request(id ? url(shell.dataset.updateUrlTemplate, id) : shell.dataset.storeUrl, { method: 'POST', body: data })
+                .then(function (response) { showToast('success', id ? 'Client updated' : 'Client created', response.message); resetForm(); return loadClients(); })
+                .catch(function (error) { showErrors(error.errors); showToast('danger', 'Save failed', error.message || 'Please correct the form.'); })
+                .finally(function () { setBusy(false); });
+        });
+        shell.querySelector('[data-admin-clients-delete-cancel]')?.addEventListener('click', function () { deletingId = null; modal?.classList.add('hidden'); modal?.classList.remove('grid'); });
+        shell.querySelector('[data-admin-clients-delete-confirm]')?.addEventListener('click', function () {
+            if (!deletingId) return;
+            request(url(shell.dataset.deleteUrlTemplate, deletingId), { method: 'DELETE' }).then(function (response) { showToast('success', 'Client deleted', response.message); deletingId = null; modal?.classList.add('hidden'); modal?.classList.remove('grid'); return loadClients(); }).catch(function (error) { showToast('danger', 'Deletion failed', error.message || 'Please try again.'); });
+        });
+        render();
+        loadClients();
+
+        if (Sortable) {
+            initDragAndDrop();
+        } else {
+            sortableModulePromise ??= import('sortablejs').then(function (module) {
+                Sortable = module.default;
+            });
+            sortableModulePromise.then(initDragAndDrop).catch(function (error) {
+                console.error('Unable to load client drag and drop controls.', error);
+            });
+        }
+    });
+}
+
 function initAdminChrome() {
     if (adminShellReady) {
         return;
@@ -3759,6 +3918,139 @@ function finishNavigation() {
     });
 }
 
+function initClientCarousel() {
+    document.querySelectorAll('[data-client-carousel]').forEach(function (carousel) {
+        if (carousel.dataset.dragReady === 'true') {
+            return;
+        }
+
+        carousel.dataset.dragReady = 'true';
+        var dragging = false;
+        var startX = 0;
+        var startScroll = 0;
+        var originalSnapType = '';
+        var paused = false;
+        var resumeTimer = null;
+        var shell = carousel.closest('[data-client-carousel-shell]');
+        var previousButton = shell?.querySelector('[data-client-carousel-prev]');
+        var nextButton = shell?.querySelector('[data-client-carousel-next]');
+
+        function pauseAutoScroll(delay) {
+            paused = true;
+            window.clearTimeout(resumeTimer);
+
+            if (delay) {
+                resumeTimer = window.setTimeout(function () {
+                    paused = false;
+                }, delay);
+            }
+        }
+
+        carousel.addEventListener('dragstart', function (event) {
+            event.preventDefault();
+        });
+
+        carousel.addEventListener('pointerdown', function (event) {
+            if (event.pointerType !== 'mouse' || event.button !== 0) {
+                return;
+            }
+
+            dragging = true;
+            pauseAutoScroll();
+            startX = event.clientX;
+            startScroll = carousel.scrollLeft;
+            originalSnapType = carousel.style.scrollSnapType;
+            carousel.style.scrollSnapType = 'none';
+            carousel.style.cursor = 'grabbing';
+            carousel.setPointerCapture(event.pointerId);
+            event.preventDefault();
+        });
+
+        carousel.addEventListener('pointermove', function (event) {
+            if (!dragging) {
+                return;
+            }
+
+            carousel.scrollLeft = startScroll - (event.clientX - startX);
+            event.preventDefault();
+        });
+
+        function stopDragging() {
+            if (!dragging) {
+                return;
+            }
+
+            dragging = false;
+            carousel.style.cursor = '';
+            carousel.style.scrollSnapType = originalSnapType;
+            pauseAutoScroll(1800);
+        }
+
+        carousel.addEventListener('pointerup', stopDragging);
+        carousel.addEventListener('pointercancel', stopDragging);
+        carousel.addEventListener('lostpointercapture', stopDragging);
+
+        carousel.addEventListener('mouseenter', function () {
+            pauseAutoScroll();
+        });
+
+        carousel.addEventListener('mouseleave', function () {
+            pauseAutoScroll(700);
+        });
+
+        carousel.addEventListener('touchstart', function () {
+            pauseAutoScroll();
+        }, { passive: true });
+
+        carousel.addEventListener('touchend', function () {
+            pauseAutoScroll(1800);
+        }, { passive: true });
+
+        function getStep() {
+            var firstCard = carousel.querySelector('[data-client-carousel-item]');
+            var gap = parseFloat(window.getComputedStyle(carousel).columnGap) || 0;
+            return (firstCard ? firstCard.getBoundingClientRect().width : 280) + gap;
+        }
+
+        function moveCarousel(direction) {
+            var step = getStep();
+            var maximum = carousel.scrollWidth - carousel.clientWidth;
+            var target = carousel.scrollLeft + (step * direction);
+
+            if (direction > 0 && target >= maximum - (step * 0.35)) {
+                target = 0;
+            } else if (direction < 0 && target < 0) {
+                target = maximum;
+            }
+
+            carousel.scrollTo({ left: target, behavior: 'smooth' });
+        }
+
+        previousButton?.addEventListener('click', function () {
+            pauseAutoScroll(1800);
+            moveCarousel(-1);
+        });
+
+        nextButton?.addEventListener('click', function () {
+            pauseAutoScroll(1800);
+            moveCarousel(1);
+        });
+
+        var autoScrollTimer = window.setInterval(function () {
+            if (!carousel.isConnected) {
+                window.clearInterval(autoScrollTimer);
+                return;
+            }
+
+            if (paused || dragging || document.hidden || carousel.scrollWidth <= carousel.clientWidth) {
+                return;
+            }
+
+            moveCarousel(1);
+        }, 2600);
+    });
+}
+
 document.addEventListener('DOMContentLoaded', initHomeAnimations);
 document.addEventListener('DOMContentLoaded', initScrollTopButton);
 document.addEventListener('DOMContentLoaded', initMarketingHeader);
@@ -3770,6 +4062,8 @@ document.addEventListener('DOMContentLoaded', initDirectorTabs);
 document.addEventListener('DOMContentLoaded', initAdminUsers);
 document.addEventListener('DOMContentLoaded', initSortableAdminPages);
 document.addEventListener('DOMContentLoaded', initAdminChrome);
+document.addEventListener('DOMContentLoaded', initAdminClients);
+document.addEventListener('DOMContentLoaded', initClientCarousel);
 window.addEventListener('scroll', syncScrollTopButton, { passive: true });
 window.addEventListener('scroll', syncMarketingHeader, { passive: true });
 
@@ -3796,4 +4090,10 @@ document.addEventListener('livewire:navigated', initDirectorTabs);
 document.addEventListener('livewire:navigated', initAdminUsers);
 document.addEventListener('livewire:navigated', initSortableAdminPages);
 document.addEventListener('livewire:navigated', initAdminChrome);
+document.addEventListener('livewire:navigated', initAdminClients);
+document.addEventListener('livewire:navigated', initClientCarousel);
 document.addEventListener('livewire:navigated', finishNavigation);
+window.addEventListener('pageshow', function () {
+    mobileMenuShell = document.querySelector('[data-mobile-menu-shell]');
+    setMobileMenuOpen(false);
+});

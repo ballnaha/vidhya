@@ -42,8 +42,8 @@ class extends Component
     <section class="px-6 py-20 sm:px-10 lg:px-20">
         <div class="mx-auto max-w-[1800px] space-y-[3px]">
             @foreach ($services as $service)
-                <article class="home-animated-card group hover-border-accent flex flex-row items-stretch overflow-hidden border-l-[3px] bg-[#0c0c12] hover:bg-[#0f0f18]" data-reveal style="--card-accent: {{ $service->accent }}; --reveal-delay: {{ $loop->index * 50 }}ms;">
-                    <div class="relative shrink-0 w-28 sm:w-40 lg:w-[200px] xl:w-[240px] bg-black aspect-[3/4]" style="aspect-ratio: 3/4;">
+                <article class="home-animated-card group hover-border-accent flex flex-col items-stretch overflow-hidden border-l-[3px] bg-[#0c0c12] hover:bg-[#0f0f18] md:flex-row" data-reveal style="--card-accent: {{ $service->accent }}; --reveal-delay: {{ $loop->index * 50 }}ms;">
+                    <div class="relative aspect-video w-full shrink-0 bg-black md:aspect-[3/4] md:w-40 lg:w-[200px] xl:w-[240px]">
                         @if ($service->image)
                             <img src="{{ $service->image }}" alt="{{ $service->title }}" class="h-full w-full object-cover object-center transition duration-500 hover:scale-105" loading="lazy">
                         @else
@@ -54,7 +54,8 @@ class extends Component
                             </div>
                         @endif
                         <!-- Fade overlay to blend image into the card background -->
-                        <div class="absolute inset-y-0 right-0 w-3/5 transition-colors duration-250" style="background: linear-gradient(90deg, transparent 0%, rgba(12, 12, 18, 1) 100%);"></div>
+                        <div class="absolute inset-x-0 bottom-0 h-2/5 transition-colors duration-250 md:hidden" style="background: linear-gradient(180deg, transparent 0%, rgba(12, 12, 18, 1) 100%);"></div>
+                        <div class="absolute inset-y-0 right-0 hidden w-3/5 transition-colors duration-250 md:block" style="background: linear-gradient(90deg, transparent 0%, rgba(12, 12, 18, 1) 100%);"></div>
                         <!-- Subtle bottom overlay for contrast -->
                         <div class="absolute inset-0 bg-gradient-to-t from-black/15 via-transparent to-transparent"></div>
                         <!-- Number badge -->

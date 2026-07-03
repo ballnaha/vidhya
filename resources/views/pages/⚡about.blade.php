@@ -27,7 +27,7 @@ class extends Component
         <div class="relative z-10 mx-auto max-w-[1800px]" data-reveal>
             <p class="mb-4 text-xs font-semibold uppercase tracking-[0.26em] text-white/35">Our DNA</p>
             <h1 class="max-w-none text-[clamp(3rem,6.4vw,5.35rem)] font-black uppercase leading-none tracking-[-0.03em] lg:whitespace-nowrap">
-                <span class="bg-linear-to-r from-[#366bc3] via-[#6d55a5] to-[#823665] bg-clip-text text-transparent">Filmmaking In </span><span class="bg-linear-to-r from-[#823665] via-[#b4143c] to-[#e60012] bg-clip-text text-transparent">Our DNA.</span>
+                <span class="bg-linear-to-r from-[#366bc3] via-[#6d55a5] to-[#823665] bg-clip-text text-transparent">Filmmaking In </span><span class="bg-linear-to-r from-[#823665] via-[#b4143c] to-[#e60012] bg-clip-text text-transparent">Our DNA</span>
             </h1>
             <p class="mt-6 max-w-2xl text-[17px] font-normal leading-[1.8] text-white/48">Technology without taste is useless, but expertise with standard is timeless. As the new venture from Benetone Films, we apply two decades of cinematic excellence to the next frontier of media.</p>
         </div>
