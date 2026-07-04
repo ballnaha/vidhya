@@ -5,7 +5,7 @@ use Illuminate\Support\Facades\Http;
 beforeEach(function () {
     config([
         'services.resend.key' => 're_test_key',
-        'services.contact.to' => 'hello@vidhyastudio.com',
+        'services.contact.to' => ['um@vidhyastudio.com', 'admin@vidhyastudio.com'],
         'services.recaptcha.secret_key' => 'recaptcha-secret',
         'services.recaptcha.score_threshold' => 0.5,
         'mail.from.address' => 'website@vidhyastudio.com',
@@ -35,7 +35,7 @@ it('verifies recaptcha and sends contact inquiries through Resend', function () 
 
     Http::assertSent(fn ($request) => $request->url() === 'https://api.resend.com/emails'
         && $request['reply_to'] === 'jane@example.com'
-        && $request['to'] === ['hello@vidhyastudio.com']
+        && $request['to'] === ['um@vidhyastudio.com', 'admin@vidhyastudio.com']
         && str_contains($request['html'], 'Example Brand'));
 });
 

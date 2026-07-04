@@ -29,7 +29,10 @@ return [
     ],
 
     'contact' => [
-        'to' => env('CONTACT_MAIL_TO', 'hello@vidhyastudio.com'),
+        'to' => array_map(
+            'trim',
+            explode(',', env('CONTACT_MAIL_TO', 'um@vidhyastudio.com,admin@vidhyastudio.com'))
+        ),
     ],
 
     'ses' => [

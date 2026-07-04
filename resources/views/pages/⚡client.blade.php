@@ -60,13 +60,7 @@ class extends Component
                 <div class="flex w-max gap-5 pb-5 will-change-transform" data-client-carousel-track>
                     @forelse ($clients as $client)
                         <article class="flex h-52 w-[260px] min-w-[260px] items-center justify-center px-6 py-8 sm:h-56 sm:w-[320px] sm:min-w-[320px] sm:px-8" data-client-carousel-item>
-                            @if ($client->website_url)
-                                <a href="{{ $client->website_url }}" target="_blank" rel="noopener noreferrer" class="flex h-28 w-52 items-center justify-center sm:h-32 sm:w-60" aria-label="Visit {{ $client->name }} website">
-                            @endif
-                                <img src="{{ $client->logo }}" alt="{{ $client->name }}" class="h-28 w-52 object-contain sm:h-32 sm:w-60" loading="lazy" decoding="async" draggable="false">
-                            @if ($client->website_url)
-                                </a>
-                            @endif
+                            <img src="{{ $client->logo }}" alt="{{ $client->name }}" class="h-28 w-52 object-contain sm:h-32 sm:w-60" loading="lazy" decoding="async" draggable="false">
                         </article>
                     @empty
                         <p class="w-full py-16 text-center text-sm text-white/35">Client logos are coming soon.</p>

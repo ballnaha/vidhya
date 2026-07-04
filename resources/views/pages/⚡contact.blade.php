@@ -44,7 +44,8 @@ class extends Component
                             <h2 class="text-base font-black uppercase tracking-[0.04em]">Direct Email</h2>
                         </div>
                         <p class="text-sm leading-8 text-white/42">Prefer to use your own email and send reference attachments? Reach out to us directly.</p>
-                        <a href="mailto:hello@vidhyastudio.com" class="mt-3 inline-block bg-linear-to-r from-[#366bc3] via-[#823665] to-[#e60012] bg-clip-text text-sm font-semibold text-transparent hover:opacity-80 transition-opacity">hello@vidhyastudio.com</a>
+                        <a href="mailto:um@vidhyastudio.com" class="mt-3 inline-block bg-linear-to-r from-[#366bc3] via-[#823665] to-[#e60012] bg-clip-text text-sm font-semibold text-transparent hover:opacity-80 transition-opacity">um@vidhyastudio.com</a> <br>
+                        <a href="mailto:admin@vidhyastudio.com" class="mt-3 inline-block bg-linear-to-r from-[#366bc3] via-[#823665] to-[#e60012] bg-clip-text text-sm font-semibold text-transparent hover:opacity-80 transition-opacity">admin@vidhyastudio.com</a>
                     </div>
 
                     <div class="mb-10 h-[3px] w-full bg-linear-to-r from-[#366bc3] via-[#823665] to-[#e60012]" data-reveal="left" style="--reveal-delay: 240ms;"></div>

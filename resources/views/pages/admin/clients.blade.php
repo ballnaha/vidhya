@@ -3,7 +3,6 @@
         'id' => $client->id,
         'name' => $client->name,
         'logo' => $client->logo,
-        'website_url' => $client->website_url ?? '',
         'is_active' => (bool) $client->is_active,
         'sort_order' => $client->sort_order,
         'created_at' => $client->created_at?->format('M j, Y'),
@@ -43,7 +42,6 @@
                 <div class="grid gap-6 lg:grid-cols-[1fr_1fr_220px]">
                     <div class="space-y-5">
                         <div><label class="mb-2 block text-xs font-semibold uppercase tracking-wider text-white/45">{{ __('Client Name') }}</label><input name="name" placeholder="Suntory Boss Coffee" class="w-full rounded border border-white/10 bg-white/[0.04] px-4 py-3.5 text-sm outline-none focus:border-[#366bc3]" data-admin-clients-field="name"><p class="mt-2 hidden text-xs text-red-400" data-admin-clients-error="name"></p></div>
-                        <div><label class="mb-2 block text-xs font-semibold uppercase tracking-wider text-white/45">{{ __('Website URL') }}</label><input name="website_url" type="url" placeholder="https://example.com" class="w-full rounded border border-white/10 bg-white/[0.04] px-4 py-3.5 text-sm outline-none focus:border-[#366bc3]" data-admin-clients-field="website_url"><p class="mt-2 hidden text-xs text-red-400" data-admin-clients-error="website_url"></p></div>
                         <div class="flex items-end gap-5"><div><label class="mb-2 block text-xs font-semibold uppercase tracking-wider text-white/45">{{ __('Priority (Auto)') }}</label><input name="sort_order" type="number" min="0" readonly aria-readonly="true" tabindex="-1" class="w-28 cursor-not-allowed rounded border border-white/8 bg-black/25 px-4 py-3.5 text-sm text-white/45 outline-none" data-admin-clients-field="sort_order"><p class="mt-2 text-[11px] text-white/30">{{ __('Managed automatically by Drag & Drop.') }}</p><p class="mt-2 hidden text-xs text-red-400" data-admin-clients-error="sort_order"></p></div><label class="flex items-center gap-2 pb-8 text-xs font-semibold uppercase tracking-wider text-white/55"><input name="is_active" type="checkbox" value="1" checked> {{ __('Active') }}</label></div>
                     </div>
                     <div>
@@ -64,14 +62,13 @@
 
         <section class="border border-white/8 bg-[#0d0d13]">
             <div class="flex flex-col gap-4 border-b border-white/8 p-5 sm:flex-row sm:items-center sm:justify-between"><h2 class="text-sm font-black uppercase tracking-[0.05em]">{{ __('Client List') }}</h2><input placeholder="{{ __('Search clients') }}" class="w-full rounded border border-white/10 bg-white/[0.04] px-4 py-3 text-sm outline-none placeholder:text-white/28 focus:border-[#366bc3] sm:max-w-xs" data-admin-clients-search></div>
-            <div class="overflow-x-auto"><table class="w-full min-w-[900px] text-left text-sm"><thead class="border-b border-white/8 text-[11px] uppercase tracking-[0.16em] text-white/35"><tr><th class="w-10 px-5 py-4"></th><th class="px-5 py-4 font-semibold">{{ __('Logo') }}</th><th class="px-5 py-4 font-semibold">{{ __('Client') }}</th><th class="px-5 py-4 font-semibold">{{ __('Website') }}</th><th class="px-5 py-4 font-semibold">{{ __('Status') }}</th><th class="px-5 py-4 font-semibold">{{ __('Created') }}</th><th class="px-5 py-4 font-semibold">{{ __('Order') }}</th><th class="px-5 py-4 text-right font-semibold">{{ __('Actions') }}</th></tr></thead><tbody class="divide-y divide-white/7" data-admin-clients-table>
+            <div class="overflow-x-auto"><table class="w-full min-w-[760px] text-left text-sm"><thead class="border-b border-white/8 text-[11px] uppercase tracking-[0.16em] text-white/35"><tr><th class="w-10 px-5 py-4"></th><th class="px-5 py-4 font-semibold">{{ __('Logo') }}</th><th class="px-5 py-4 font-semibold">{{ __('Client') }}</th><th class="px-5 py-4 font-semibold">{{ __('Active') }}</th><th class="px-5 py-4 font-semibold">{{ __('Created') }}</th><th class="px-5 py-4 font-semibold">{{ __('Order') }}</th><th class="px-5 py-4 text-right font-semibold">{{ __('Actions') }}</th></tr></thead><tbody class="divide-y divide-white/7" data-admin-clients-table>
                 @foreach ($clients as $client)
                     <tr class="transition hover:bg-white/[0.035]" data-admin-clients-row data-client-id="{{ $client->id }}">
-                        <td class="px-5 py-4"><span class="text-white/25">⋮⋮</span></td>
+                        <td class="w-16 px-3 py-2 text-center"><button type="button" class="inline-flex size-10 touch-none select-none items-center justify-center rounded-md border border-transparent text-white/35 transition hover:border-white/10 hover:bg-white/[0.06] hover:text-white/75 active:cursor-grabbing active:bg-white/10 cursor-grab" data-admin-clients-drag-handle aria-label="Drag to reorder"><span class="pointer-events-none text-base leading-none">⋮⋮</span></button></td>
                         <td class="px-5 py-4"><img src="{{ $client->logo }}" alt="{{ $client->name }}" class="h-14 w-24 object-contain"></td>
                         <td class="px-5 py-4 font-semibold">{{ $client->name }}</td>
-                        <td class="max-w-xs truncate px-5 py-4 text-white/45">{{ $client->website_url ?: '—' }}</td>
-                        <td class="px-5 py-4">{{ $client->is_active ? __('Active') : __('Hidden') }}</td>
+                        <td class="px-5 py-4">{{ $client->is_active ? __('Yes') : __('No') }}</td>
                         <td class="px-5 py-4 text-xs text-white/35">{{ $client->created_at?->format('M j, Y') }}</td>
                         <td class="px-5 py-4 font-mono text-xs text-white/35">{{ $client->sort_order }}</td>
                         <td class="px-5 py-4 text-right" aria-hidden="true"></td>

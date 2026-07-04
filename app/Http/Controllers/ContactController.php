@@ -59,7 +59,7 @@ class ContactController extends Controller
                 ->timeout(15)
                 ->post('https://api.resend.com/emails', [
                     'from' => config('mail.from.name').' <'.config('mail.from.address').'>',
-                    'to' => [config('services.contact.to')],
+                    'to' => config('services.contact.to'),
                     'reply_to' => $validated['email'],
                     'subject' => 'New project inquiry from '.$validated['name'],
                     'html' => $html,

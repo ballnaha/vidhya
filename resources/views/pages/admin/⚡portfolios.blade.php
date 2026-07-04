@@ -179,6 +179,21 @@
                 <input placeholder="{{ __('Search portfolio items') }}" class="w-full rounded border border-white/10 bg-white/[0.04] px-4 py-3 text-sm text-white outline-none transition placeholder:text-white/28 focus:border-[#366bc3] sm:max-w-xs" data-admin-portfolios-search>
             </div>
 
+            <!-- Media Type Filter -->
+            <div class="flex flex-wrap items-center gap-2 border-b border-white/8 bg-black/15 px-5 py-3.5" data-admin-portfolios-media-filters>
+                <span class="mr-2 text-[10px] font-semibold uppercase tracking-[0.16em] text-white/30">{{ __('Media Type') }}</span>
+                <button type="button" data-admin-portfolios-media="" class="rounded border px-4 py-2.5 text-[10px] font-bold uppercase tracking-wider transition-all duration-200">
+                    {{ __('All') }} (<span data-admin-portfolios-media-count="all">{{ $portfolios->count() }}</span>)
+                </button>
+                <button type="button" data-admin-portfolios-media="video" class="rounded border px-4 py-2.5 text-[10px] font-bold uppercase tracking-wider transition-all duration-200">
+                    {{ __('VDO') }} (<span data-admin-portfolios-media-count="video">{{ $portfolios->filter(fn ($portfolio) => filled(data_get($portfolio, 'video_url')))->count() }}</span>)
+                </button>
+                <button type="button" data-admin-portfolios-media="image" class="rounded border px-4 py-2.5 text-[10px] font-bold uppercase tracking-wider transition-all duration-200">
+                    {{ __('Images') }} (<span data-admin-portfolios-media-count="image">{{ $portfolios->filter(fn ($portfolio) => blank(data_get($portfolio, 'video_url')))->count() }}</span>)
+                </button>
+                
+            </div>
+
             <!-- Category Filter Tabs -->
             <div class="border-b border-white/8 bg-white/[0.01] px-5 py-3.5 flex flex-wrap gap-2" data-admin-portfolios-tabs>
                 <button type="button" class="rounded border px-4 py-2.5 text-[10px] font-bold uppercase tracking-wider transition-all duration-200 border-[#366bc3] bg-[#366bc3]/10 text-white" data-admin-portfolios-tab="">

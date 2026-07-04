@@ -3059,6 +3059,7 @@ function initAdminPortfolios() {
         var deletingId = null;
         var searchTimer;
         var selectedServiceId = '';
+        var selectedMediaType = '';
         var portfolioSortable = null;
 
         if (!table || !form) {
@@ -3069,6 +3070,38 @@ function initAdminPortfolios() {
 
         var tabsContainer = shell.querySelector('[data-admin-portfolios-tabs]');
         var serviceSelect = shell.querySelector('[data-admin-portfolios-field="service_id"]');
+
+        function updateMediaFilterStyles() {
+            shell.querySelectorAll('[data-admin-portfolios-media]').forEach(function (button) {
+                var type = button.getAttribute('data-admin-portfolios-media') || '';
+                button.className = type === selectedMediaType
+                    ? 'rounded border border-[#823665] bg-[#823665]/15 px-4 py-2.5 text-[10px] font-bold uppercase tracking-wider text-white transition-all duration-200'
+                    : 'rounded border border-white/10 px-4 py-2.5 text-[10px] font-bold uppercase tracking-wider text-white/42 transition-all duration-200 hover:border-white/25 hover:text-white';
+            });
+        }
+
+        function updateMediaCounts() {
+            var imageCount = portfolios.filter(function (portfolio) {
+                return !(portfolio.video_url || '').trim();
+            }).length;
+            var videoCount = portfolios.length - imageCount;
+            var allCounter = shell.querySelector('[data-admin-portfolios-media-count="all"]');
+            var imageCounter = shell.querySelector('[data-admin-portfolios-media-count="image"]');
+            var videoCounter = shell.querySelector('[data-admin-portfolios-media-count="video"]');
+
+            if (allCounter) allCounter.textContent = portfolios.length;
+            if (imageCounter) imageCounter.textContent = imageCount;
+            if (videoCounter) videoCounter.textContent = videoCount;
+        }
+
+        shell.querySelectorAll('[data-admin-portfolios-media]').forEach(function (button) {
+            button.addEventListener('click', function () {
+                selectedMediaType = button.getAttribute('data-admin-portfolios-media') || '';
+                updateMediaFilterStyles();
+                render();
+            });
+        });
+        updateMediaFilterStyles();
 
         function updateTabStyles() {
             shell.querySelectorAll('[data-admin-portfolios-tab]').forEach(function (btn) {
@@ -3334,6 +3367,13 @@ function initAdminPortfolios() {
                 });
             }
 
+            if (selectedMediaType !== '') {
+                rows = rows.filter(function (p) {
+                    var isVideo = Boolean((p.video_url || '').trim());
+                    return selectedMediaType === 'video' ? isVideo : !isVideo;
+                });
+            }
+
             if (!rows.length) {
                 var emptyRow = document.createElement('tr');
                 var emptyCell = document.createElement('td');
@@ -3454,6 +3494,7 @@ function initAdminPortfolios() {
 
             return request(url.toString(), { cache: 'no-store' }).then(function (payload) {
                 portfolios = payload.portfolios || [];
+                updateMediaCounts();
                 if (payload.services) {
                     services = payload.services;
                     renderServices();
@@ -3749,7 +3790,6 @@ function initAdminClients() {
             if (client) {
                 form.querySelector('[data-admin-clients-id]').value = client.id;
                 form.elements.name.value = client.name || '';
-                form.elements.website_url.value = client.website_url || '';
                 form.elements.logo.value = client.logo || '';
                 form.elements.sort_order.value = client.sort_order || 0;
                 form.elements.is_active.checked = Boolean(client.is_active);
@@ -3759,24 +3799,23 @@ function initAdminClients() {
         }
         function render() {
             var term = (search?.value || '').trim().toLowerCase();
-            var filtered = clients.filter(function (client) { return (client.name || '').toLowerCase().includes(term) || (client.website_url || '').toLowerCase().includes(term); });
+            var filtered = clients.filter(function (client) { return (client.name || '').toLowerCase().includes(term); });
             var fragment = document.createDocumentFragment();
-            if (!filtered.length) { var empty = document.createElement('tr'); empty.innerHTML = '<td colspan="8" class="px-5 py-12 text-center text-sm text-white/35">No clients found.</td>'; fragment.appendChild(empty); table.replaceChildren(fragment); return; }
+            if (!filtered.length) { var empty = document.createElement('tr'); empty.innerHTML = '<td colspan="7" class="px-5 py-12 text-center text-sm text-white/35">No clients found.</td>'; fragment.appendChild(empty); table.replaceChildren(fragment); return; }
             if (sortable) sortable.option('disabled', Boolean(term));
             filtered.forEach(function (client) {
                 var row = document.createElement('tr'); row.className = 'transition hover:bg-white/[0.035]'; row.dataset.adminClientsRow = ''; row.dataset.clientId = client.id;
-                var dragCell = document.createElement('td'); dragCell.className = 'px-5 py-4'; dragCell.innerHTML = '<button type="button" class="cursor-grab p-2 text-white/25 hover:text-white/60 active:cursor-grabbing" data-admin-clients-drag-handle aria-label="Drag to reorder"><span class="text-base leading-none">⋮⋮</span></button>';
+                var dragCell = document.createElement('td'); dragCell.className = 'px-3 py-2 w-16 text-center'; dragCell.innerHTML = '<button type="button" class="inline-flex size-10 touch-none select-none items-center justify-center rounded-md border border-transparent text-white/35 transition hover:border-white/10 hover:bg-white/[0.06] hover:text-white/75 active:cursor-grabbing active:bg-white/10 cursor-grab" data-admin-clients-drag-handle aria-label="Drag to reorder"><span class="text-base leading-none pointer-events-none">⋮⋮</span></button>';
                 var logoCell = document.createElement('td'); logoCell.className = 'px-5 py-4';
                 var image = document.createElement('img'); image.src = client.logo; image.alt = client.name; image.className = 'h-14 w-24 object-contain'; image.draggable = false; logoCell.appendChild(image);
                 var nameCell = document.createElement('td'); nameCell.className = 'px-5 py-4 font-semibold'; nameCell.textContent = client.name;
-                var websiteCell = document.createElement('td'); websiteCell.className = 'max-w-xs truncate px-5 py-4 text-white/45'; websiteCell.textContent = client.website_url || '—';
-                var statusCell = document.createElement('td'); statusCell.className = 'px-5 py-4'; statusCell.innerHTML = '<span class="rounded-full px-2.5 py-1 text-[10px] font-semibold uppercase ' + (client.is_active ? 'bg-emerald-500/10 text-emerald-300' : 'bg-white/5 text-white/35') + '">' + (client.is_active ? 'Active' : 'Hidden') + '</span>';
+                var statusCell = document.createElement('td'); statusCell.className = 'px-5 py-4'; statusCell.innerHTML = '<span class="rounded-full px-2.5 py-1 text-[10px] font-semibold uppercase ' + (client.is_active ? 'bg-emerald-500/10 text-emerald-300' : 'bg-white/5 text-white/35') + '">' + (client.is_active ? 'Yes' : 'No') + '</span>';
                 var createdCell = document.createElement('td'); createdCell.className = 'px-5 py-4 text-xs text-white/35'; createdCell.textContent = client.created_at || '—';
                 var orderCell = document.createElement('td'); orderCell.className = 'px-5 py-4 font-mono text-xs text-white/35'; orderCell.textContent = client.sort_order;
                 var actionCell = document.createElement('td'); actionCell.className = 'px-5 py-4'; var actions = document.createElement('div'); actions.className = 'flex justify-end gap-2';
                 var edit = document.createElement('button'); edit.type = 'button'; edit.className = 'rounded border border-white/10 px-3 py-2 text-xs text-white/58 hover:border-white/25 hover:text-white'; edit.textContent = 'Edit'; edit.onclick = function () { openForm(client); };
                 var remove = document.createElement('button'); remove.type = 'button'; remove.className = 'rounded border border-[#e60012]/25 px-3 py-2 text-xs text-white/58 hover:border-[#e60012]/55 hover:text-white'; remove.textContent = 'Delete'; remove.onclick = function () { deletingId = client.id; modal?.classList.remove('hidden'); modal?.classList.add('grid'); };
-                actions.append(edit, remove); actionCell.appendChild(actions); row.append(dragCell, logoCell, nameCell, websiteCell, statusCell, createdCell, orderCell, actionCell); fragment.appendChild(row);
+                actions.append(edit, remove); actionCell.appendChild(actions); row.append(dragCell, logoCell, nameCell, statusCell, createdCell, orderCell, actionCell); fragment.appendChild(row);
             });
             table.replaceChildren(fragment);
         }

@@ -283,9 +283,22 @@ class extends Component
         </div>
     </section>
 
+    <style>
+        @media (max-width: 640px) {
+            .home-showreel-lightbox-box {
+                width: 100% !important;
+                height: calc(100dvh - 132px) !important;
+                max-height: calc(100dvh - 132px) !important;
+                aspect-ratio: auto !important;
+                border-radius: 0 !important;
+                border: none !important;
+            }
+        }
+    </style>
+
     <!-- Premium Unified Lightbox Modal -->
     <div 
-        class="fixed inset-0 z-[110] flex flex-col justify-center items-center bg-black/95 px-4 py-6 backdrop-blur-md sm:px-8" 
+        class="fixed inset-0 z-[110] flex flex-col justify-center items-center bg-black/95 p-0 backdrop-blur-md sm:px-8 sm:py-6" 
         x-show="showModal"
         x-transition:enter="transition ease-out duration-300"
         x-transition:enter-start="opacity-0 scale-95"
@@ -296,18 +309,19 @@ class extends Component
         @click="showModal = false"
         x-cloak
     >
-        <!-- Close Button -->
-        <button 
-            type="button" 
-            class="absolute top-4 right-4 sm:top-6 sm:right-6 z-50 grid size-10 place-items-center rounded-full border border-white/20 bg-black/72 text-2xl font-light text-white/70 transition hover:border-white/40 hover:bg-black/90 hover:text-white cursor-pointer" 
-            @click="showModal = false" 
-            aria-label="Close lightbox"
-        >×</button>
-        
-        <div class="relative w-full max-w-[1200px] flex flex-col items-center gap-4" @click.stop>
+        <div class="relative w-full h-full sm:h-auto max-w-[1200px] flex flex-col items-center justify-center gap-3" @click.stop>
+            <div class="flex w-full justify-end px-1 sm:px-0">
+                <button
+                    type="button"
+                    class="grid size-10 place-items-center rounded-full border border-white/20 bg-black/72 text-2xl font-light text-white/70 transition hover:border-white/40 hover:bg-black/90 hover:text-white"
+                    @click="showModal = false"
+                    aria-label="Close lightbox"
+                >×</button>
+            </div>
+
             <!-- Content Wrapper -->
             <div
-                class="relative overflow-hidden bg-black shadow-2xl border border-white/10 rounded-lg max-h-[80vh] flex items-center justify-center w-full"
+                class="home-showreel-lightbox-box relative overflow-hidden bg-black shadow-2xl border border-white/10 rounded-lg sm:max-h-[80vh] flex items-center justify-center w-full"
                 style="aspect-ratio: 16 / 9;"
             >
                 <!-- Video Lightbox (YouTube Iframe) -->
