@@ -1217,6 +1217,7 @@ function initAdminDirectors() {
         var searchTimer;
         var isSlugManuallyEdited = false;
         var worksSortable = null;
+        var directorSortable = null;
 
         if (!table || !form) {
             return;
@@ -1256,6 +1257,58 @@ function initAdminDirectors() {
         }
 
         initDragAndDrop();
+
+        function initDirectorsDragAndDrop() {
+            if (!table) return;
+            if (directorSortable) {
+                directorSortable.destroy();
+            }
+
+            directorSortable = Sortable.create(table, {
+                handle: '[data-admin-directors-drag-handle]',
+                draggable: '[data-admin-directors-row]',
+                animation: 180,
+                ghostClass: 'opacity-25',
+                chosenClass: 'bg-white/[0.055]',
+                dragClass: 'shadow-2xl',
+                delay: 120,
+                delayOnTouchOnly: true,
+                touchStartThreshold: 4,
+                fallbackTolerance: 3,
+                fallbackOnBody: true,
+                onStart: function () {
+                    shell.setAttribute('data-admin-directors-sorting', '');
+                },
+                onEnd: function (event) {
+                    shell.removeAttribute('data-admin-directors-sorting');
+                    if (event.oldIndex !== event.newIndex) {
+                        saveNewOrder();
+                    }
+                },
+            });
+        }
+
+        function saveNewOrder() {
+            var ids = [];
+            table.querySelectorAll('[data-director-id]').forEach(function (row) {
+                var id = parseInt(row.getAttribute('data-director-id'), 10);
+                if (id) {
+                    ids.push(id);
+                }
+            });
+
+            if (!ids.length) return;
+
+            request(shell.dataset.reorderUrl, {
+                method: 'PATCH',
+                body: JSON.stringify({ ids: ids })
+            }).then(function (response) {
+                toast('success', 'Success', response.message || 'New order saved.');
+                loadDirectors();
+            }).catch(function (error) {
+                toast('danger', 'Unable to reorder', error.message || 'Please try again.');
+            });
+        }
 
         function renumberWorks() {
             if (!worksContainer) return;
@@ -1717,6 +1770,11 @@ function initAdminDirectors() {
 
         function render() {
             var rows = filteredDirectors();
+            var searchVal = (search?.value || '').toLowerCase().trim();
+
+            if (directorSortable) {
+                directorSortable.option('disabled', Boolean(searchVal));
+            }
 
             table.replaceChildren();
 
@@ -1724,7 +1782,7 @@ function initAdminDirectors() {
                 var emptyRow = document.createElement('tr');
                 var emptyCell = document.createElement('td');
 
-                emptyCell.colSpan = 5;
+                emptyCell.colSpan = 7;
                 emptyCell.className = 'px-5 py-12 text-center text-sm text-white/35';
                 emptyCell.textContent = 'No directors found.';
                 emptyRow.appendChild(emptyCell);
@@ -1734,6 +1792,17 @@ function initAdminDirectors() {
 
             rows.forEach(function (director) {
                 var row = document.createElement('tr');
+                row.setAttribute('data-director-id', director.id);
+                row.setAttribute('data-admin-directors-row', '');
+
+                var dragCell = document.createElement('td');
+                dragCell.className = 'px-3 py-2 w-16 text-center';
+                dragCell.innerHTML = '<button type="button" class="inline-flex size-10 touch-none select-none items-center justify-center rounded-md border border-transparent text-white/35 transition hover:border-white/10 hover:bg-white/[0.06] hover:text-white/75 active:cursor-grabbing active:bg-white/10 cursor-grab" title="Drag to reorder" aria-label="Drag director to reorder" data-admin-directors-drag-handle>' +
+                    '<svg class="size-5 pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.25" aria-hidden="true">' +
+                    '<path stroke-linecap="round" stroke-linejoin="round" d="M9 6h.01M15 6h.01M9 12h.01M15 12h.01M9 18h.01M15 18h.01" />' +
+                    '</svg>' +
+                    '</button>';
+
                 var nameCell = document.createElement('td');
                 var nameWrap = document.createElement('div');
                 var initials = document.createElement('div');
@@ -1763,6 +1832,10 @@ function initAdminDirectors() {
                 created.className = 'px-5 py-4 text-white/35';
                 created.textContent = director.created_at || '';
                 
+                var orderCell = document.createElement('td');
+                orderCell.className = 'px-5 py-4 text-white/35 font-mono text-xs';
+                orderCell.textContent = director.sort_order ?? 0;
+
                 actions.className = 'px-5 py-4';
                 actionsWrap.className = 'flex justify-end gap-2';
                 
@@ -1794,7 +1867,7 @@ function initAdminDirectors() {
                 nameCell.appendChild(nameWrap);
                 actionsWrap.append(edit, duplicate, remove);
                 actions.appendChild(actionsWrap);
-                row.append(nameCell, slugCell, roleCell, created, actions);
+                row.append(dragCell, nameCell, slugCell, roleCell, created, orderCell, actions);
                 table.appendChild(row);
             });
         }
@@ -2083,6 +2156,7 @@ function initAdminDirectors() {
 
         render();
         loadDirectors();
+        initDirectorsDragAndDrop();
     });
 }
 

@@ -83,7 +83,14 @@ class AdminDirectorController extends Controller
             }
         }
 
-        $director = Director::create($data);
+        $director = \Illuminate\Support\Facades\DB::transaction(function () use ($data) {
+            $maxSortOrder = Director::max('sort_order') ?? 0;
+            $data['sort_order'] = $maxSortOrder + 10;
+            $director = Director::create($data);
+            $this->normalizeDirectorOrder();
+
+            return $director->refresh();
+        });
 
         return response()->json([
             'message' => __('Director created.'),
@@ -248,11 +255,61 @@ class AdminDirectorController extends Controller
             }
         }
 
-        $director->delete();
+        \Illuminate\Support\Facades\DB::transaction(function () use ($director) {
+            $director->delete();
+            $this->normalizeDirectorOrder();
+        });
 
         return response()->json([
             'message' => __('Director deleted.'),
         ]);
+    }
+
+    public function reorder(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'ids' => ['required', 'array'],
+            'ids.*' => ['required', 'integer', 'distinct', 'exists:directors,id'],
+        ]);
+
+        \Illuminate\Support\Facades\DB::transaction(function () use ($validated) {
+            $sortSlots = Director::query()
+                ->whereIn('id', $validated['ids'])
+                ->orderBy('sort_order')
+                ->orderBy('id')
+                ->lockForUpdate()
+                ->pluck('sort_order')
+                ->all();
+
+            foreach ($validated['ids'] as $id) {
+                Director::whereKey($id)->update([
+                    'sort_order' => -$id,
+                ]);
+            }
+
+            foreach ($validated['ids'] as $index => $id) {
+                Director::whereKey($id)->update([
+                    'sort_order' => $sortSlots[$index],
+                ]);
+            }
+        });
+
+        return response()->json([
+            'message' => __('Directors reordered successfully.'),
+        ]);
+    }
+
+    private function normalizeDirectorOrder(): void
+    {
+        $ids = Director::query()->orderBy('sort_order')->orderBy('id')->pluck('id')->all();
+
+        foreach ($ids as $id) {
+            Director::whereKey($id)->update(['sort_order' => -$id]);
+        }
+
+        foreach ($ids as $index => $id) {
+            Director::whereKey($id)->update(['sort_order' => ($index + 1) * 10]);
+        }
     }
 
     private function mapInputs(Request $request, array $validated): array
@@ -432,8 +489,8 @@ class AdminDirectorController extends Controller
                         ->orWhere('role', 'like', "%{$search}%");
                 });
             })
-            ->latest()
-            ->limit(50)
+            ->orderBy('sort_order')
+            ->orderBy('id')
             ->get()
             ->map(fn (Director $director) => $this->serializeDirector($director))
             ->all();
@@ -469,6 +526,7 @@ class AdminDirectorController extends Controller
             'stat_3_value' => $director->stats[2]['value'] ?? '',
             'stat_3_suffix' => $director->stats[2]['suffix'] ?? '',
             'stat_3_label' => $director->stats[2]['label'] ?? '',
+            'sort_order' => $director->sort_order,
             'created_at' => $director->created_at?->format('M j, Y'),
         ];
     }

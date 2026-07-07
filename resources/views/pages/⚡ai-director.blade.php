@@ -12,7 +12,7 @@ class extends Component
     public function render()
     {
         return view('pages.⚡ai-director', [
-            'directors' => Director::where('slug', '!=', 'general')->get(),
+            'directors' => Director::where('slug', '!=', 'general')->orderBy('sort_order')->orderBy('id')->get(),
         ]);
     }
 };

@@ -27,6 +27,7 @@ class Director extends Model
         'works_title_white',
         'works_title_muted',
         'works',
+        'sort_order',
     ];
 
     /**
@@ -40,6 +41,19 @@ class Director extends Model
             'stats' => 'array',
             'bio' => 'array',
             'works' => 'array',
+            'sort_order' => 'integer',
         ];
+    }
+
+    /**
+     * The "booted" method of the model.
+     */
+    protected static function booted(): void
+    {
+        static::creating(function (Director $director) {
+            if (is_null($director->sort_order) || $director->sort_order === 0) {
+                $director->sort_order = (static::max('sort_order') ?? 0) + 10;
+            }
+        });
     }
 }

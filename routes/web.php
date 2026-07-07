@@ -40,6 +40,7 @@ Route::middleware(['auth', 'verified', 'admin'])->group(function () {
     Route::get('admin/directors/data', [AdminDirectorController::class, 'index'])->name('admin.directors.index');
     Route::get('admin/directors/check-slug', [AdminDirectorController::class, 'checkSlug'])->name('admin.directors.check-slug');
     Route::post('admin/directors', [AdminDirectorController::class, 'store'])->name('admin.directors.store');
+    Route::patch('admin/directors/reorder', [AdminDirectorController::class, 'reorder'])->name('admin.directors.reorder');
     Route::patch('admin/directors/{director}', [AdminDirectorController::class, 'update'])->name('admin.directors.update');
     Route::delete('admin/directors/{director}', [AdminDirectorController::class, 'destroy'])->name('admin.directors.destroy');
     Route::view('admin/directors', 'pages.admin.⚡directors')->name('admin.directors');

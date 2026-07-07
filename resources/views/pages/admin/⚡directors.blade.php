@@ -2,8 +2,8 @@
     use App\Models\Director;
 
     $directors = Director::query()
-        ->latest()
-        ->limit(50)
+        ->orderBy('sort_order')
+        ->orderBy('id')
         ->get()
         ->map(fn (Director $director) => [
             'id' => $director->id,
@@ -30,6 +30,7 @@
             'stat_3_value' => $director->stats[2]['value'] ?? '',
             'stat_3_suffix' => $director->stats[2]['suffix'] ?? '',
             'stat_3_label' => $director->stats[2]['label'] ?? '',
+            'sort_order' => $director->sort_order,
             'created_at' => $director->created_at?->format('M j, Y'),
         ])
         ->values();
@@ -42,6 +43,7 @@
     data-index-url="{{ route('admin.directors.index') }}"
     data-check-slug-url="{{ route('admin.directors.check-slug') }}"
     data-store-url="{{ route('admin.directors.store') }}"
+    data-reorder-url="{{ route('admin.directors.reorder') }}"
     data-update-url-template="{{ url('admin/directors/__DIRECTOR__') }}"
     data-delete-url-template="{{ url('admin/directors/__DIRECTOR__') }}"
 >
@@ -364,10 +366,12 @@
                 <table class="w-full min-w-[820px] text-left text-sm">
                     <thead class="border-b border-white/8 text-[11px] uppercase tracking-[0.16em] text-white/35">
                         <tr>
+                            <th class="px-3 py-4 w-16 text-center"></th>
                             <th class="px-5 py-4 font-semibold">{{ __('Name') }}</th>
                             <th class="px-5 py-4 font-semibold">{{ __('Slug') }}</th>
                             <th class="px-5 py-4 font-semibold">{{ __('Role') }}</th>
                             <th class="px-5 py-4 font-semibold">{{ __('Created') }}</th>
+                            <th class="px-5 py-4 font-semibold">{{ __('Order') }}</th>
                             <th class="px-5 py-4 text-right font-semibold">{{ __('Actions') }}</th>
                         </tr>
                     </thead>

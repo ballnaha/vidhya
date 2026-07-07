@@ -369,6 +369,66 @@ it('deletes old bio image files when updated or deleted', function () {
     expect(file_exists($newPath))->toBeFalse();
 });
 
+it('reorders directors successfully', function () {
+    $director1 = Director::create([
+        'slug' => 'director-1',
+        'first_name' => 'First',
+        'last_name' => 'One',
+        'eyebrow' => 'AI Director',
+        'role' => 'Director',
+        'bio_title_white' => 'White',
+        'bio_title_gradient' => 'Gradient',
+        'bio_image' => '',
+        'bio_alt' => 'photo',
+        'bio' => ['Paragraph 1'],
+        'stats' => [
+            ['value' => '1', 'suffix' => '', 'label' => 'Films'],
+            ['value' => '1', 'suffix' => '', 'label' => 'Exp'],
+            ['value' => '1', 'suffix' => '', 'label' => 'Awards'],
+        ],
+        'works_eyebrow' => 'Core',
+        'works_title_white' => 'White Title',
+        'works_title_muted' => 'Muted Title',
+        'works' => [],
+        'sort_order' => 10,
+    ]);
+
+    $director2 = Director::create([
+        'slug' => 'director-2',
+        'first_name' => 'Second',
+        'last_name' => 'Two',
+        'eyebrow' => 'AI Director',
+        'role' => 'Director',
+        'bio_title_white' => 'White',
+        'bio_title_gradient' => 'Gradient',
+        'bio_image' => '',
+        'bio_alt' => 'photo',
+        'bio' => ['Paragraph 1'],
+        'stats' => [
+            ['value' => '1', 'suffix' => '', 'label' => 'Films'],
+            ['value' => '1', 'suffix' => '', 'label' => 'Exp'],
+            ['value' => '1', 'suffix' => '', 'label' => 'Awards'],
+        ],
+        'works_eyebrow' => 'Core',
+        'works_title_white' => 'White Title',
+        'works_title_muted' => 'Muted Title',
+        'works' => [],
+        'sort_order' => 20,
+    ]);
+
+    // Send reorder request with reversed IDs
+    $response = $this->actingAs($this->adminUser)->patchJson(route('admin.directors.reorder'), [
+        'ids' => [$director2->id, $director1->id],
+    ]);
+
+    $response->assertStatus(200);
+
+    // Verify order in database is updated (slots should remain 10 and 20 but mapped to swapped IDs)
+    expect($director2->refresh()->sort_order)->toBe(10);
+    expect($director1->refresh()->sort_order)->toBe(20);
+});
+
+
 
 
 
