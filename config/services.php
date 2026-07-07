@@ -31,7 +31,7 @@ return [
     'contact' => [
         'to' => array_map(
             'trim',
-            explode(',', env('CONTACT_MAIL_TO', 'um@vidhyastudio.com,admin@vidhyastudio.com'))
+            explode(',', env('CONTACT_MAIL_TO', 'hello@vidhyastudio.com'))
         ),
     ],
 

@@ -3,11 +3,18 @@
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Livewire\Component;
+use App\Models\Service;
 
 new #[Title('Contact')]
 #[Layout('layouts.marketing')]
 class extends Component
 {
+    public function with(): array
+    {
+        return [
+            'services' => Service::query()->orderBy('sort_order')->get(),
+        ];
+    }
 }; ?>
 
 <main class="bg-[#0a0a0c] text-white">
@@ -44,8 +51,7 @@ class extends Component
                             <h2 class="text-base font-black uppercase tracking-[0.04em]">Direct Email</h2>
                         </div>
                         <p class="text-sm leading-8 text-white/42">Prefer to use your own email and send reference attachments? Reach out to us directly.</p>
-                        <a href="mailto:um@vidhyastudio.com" class="mt-3 inline-block bg-linear-to-r from-[#366bc3] via-[#823665] to-[#e60012] bg-clip-text text-sm font-semibold text-transparent hover:opacity-80 transition-opacity">um@vidhyastudio.com</a> <br>
-                        <a href="mailto:admin@vidhyastudio.com" class="mt-3 inline-block bg-linear-to-r from-[#366bc3] via-[#823665] to-[#e60012] bg-clip-text text-sm font-semibold text-transparent hover:opacity-80 transition-opacity">admin@vidhyastudio.com</a>
+                        <a href="mailto:hello@vidhyastudio.com" class="mt-3 inline-block bg-linear-to-r from-[#366bc3] via-[#823665] to-[#e60012] bg-clip-text text-sm font-semibold text-transparent hover:opacity-80 transition-opacity">hello@vidhyastudio.com</a>
                     </div>
 
                     <div class="mb-10 h-[3px] w-full bg-linear-to-r from-[#366bc3] via-[#823665] to-[#e60012]" data-reveal="left" style="--reveal-delay: 240ms;"></div>
@@ -89,9 +95,10 @@ class extends Component
 
                         <div class="vidhya-contact-service-menu absolute left-0 z-50 mt-1 w-full max-h-[380px] overflow-y-auto rounded border border-white/10 bg-[#0c0c12] py-1 text-sm text-white shadow-2xl" data-contact-service-menu role="listbox">
                             <button type="button" class="block w-full px-4 py-2.5 text-left text-white/35 transition-colors hover:bg-white/8" data-contact-service-option value="" role="option" aria-selected="true" data-selected>Service Needed</button>
-                            @foreach (['AI POCs & Previs', 'AI Advertising', 'AI Post Production', 'AI Models & Influencers', 'AI Marketing Content', 'Micro Drama', 'Training & Workshop', 'Strategic Consulting', 'Not Sure Yet'] as $option)
-                                <button type="button" class="block w-full px-4 py-2.5 text-left transition-colors hover:bg-white/8" data-contact-service-option value="{{ $option }}" role="option" aria-selected="false">{{ $option }}</button>
+                            @foreach ($services as $service)
+                                <button type="button" class="block w-full px-4 py-2.5 text-left transition-colors hover:bg-white/8" data-contact-service-option value="{{ $service->title }}" role="option" aria-selected="false">{{ $service->title }}</button>
                             @endforeach
+                            <button type="button" class="block w-full px-4 py-2.5 text-left transition-colors hover:bg-white/8" data-contact-service-option value="Other" role="option" aria-selected="false">Other</button>
                         </div>
                     </div>
 

@@ -61,7 +61,7 @@ class ContactController extends Controller
                     'from' => config('mail.from.name').' <'.config('mail.from.address').'>',
                     'to' => config('services.contact.to'),
                     'reply_to' => $validated['email'],
-                    'subject' => 'New project inquiry from '.$validated['name'],
+                    'subject' => '[Vidhya Studio] New project inquiry from '.$validated['name'],
                     'html' => $html,
                 ]);
         } catch (ConnectionException $exception) {
@@ -114,9 +114,29 @@ class ContactController extends Controller
 
         $result = $response->json();
 
-        return $response->successful()
-            && ($result['success'] ?? false) === true
-            && ($result['action'] ?? '') === 'contact'
-            && (float) ($result['score'] ?? 0) >= (float) config('services.recaptcha.score_threshold', 0.5);
+        $isVerified = $response->successful() && ($result['success'] ?? false) === true;
+        $hasScoreData = array_key_exists('action', $result) || array_key_exists('score', $result);
+
+        $isValid = $isVerified && (
+            ! $hasScoreData
+            || (
+                ($result['action'] ?? '') === 'contact'
+                && (float) ($result['score'] ?? 0) >= (float) config('services.recaptcha.score_threshold', 0.5)
+            )
+        );
+
+        if (! $isValid) {
+            Log::warning('Contact form reCAPTCHA verification was rejected.', [
+                'http_status' => $response->status(),
+                'success' => $result['success'] ?? false,
+                'error_codes' => $result['error-codes'] ?? [],
+                'hostname' => $result['hostname'] ?? null,
+                'action' => $result['action'] ?? null,
+                'score' => $result['score'] ?? null,
+                'score_threshold' => (float) config('services.recaptcha.score_threshold', 0.5),
+            ]);
+        }
+
+        return $isValid;
     }
 }

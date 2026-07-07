@@ -387,13 +387,49 @@ function getContactRecaptchaToken(siteKey) {
                 return;
             }
 
-            var script = document.createElement('script');
-            script.src = 'https://www.google.com/recaptcha/api.js?render=' + encodeURIComponent(siteKey);
-            script.async = true;
-            script.defer = true;
-            script.onload = function () { resolve(window.grecaptcha); };
-            script.onerror = function () { reject(new Error('Unable to load reCAPTCHA.')); };
-            document.head.appendChild(script);
+            var sources = [
+                'https://www.google.com/recaptcha/api.js?render=',
+                'https://www.recaptcha.net/recaptcha/api.js?render=',
+            ];
+
+            function loadScript(index) {
+                var script = document.createElement('script');
+                script.src = sources[index] + encodeURIComponent(siteKey);
+                script.async = true;
+                script.defer = true;
+                script.onload = function () {
+                    if (window.grecaptcha) {
+                        resolve(window.grecaptcha);
+                        return;
+                    }
+
+                    script.remove();
+
+                    if (index + 1 < sources.length) {
+                        loadScript(index + 1);
+                        return;
+                    }
+
+                    reject(new Error('Unable to initialize reCAPTCHA.'));
+                };
+                script.onerror = function () {
+                    script.remove();
+
+                    if (index + 1 < sources.length) {
+                        loadScript(index + 1);
+                        return;
+                    }
+
+                    reject(new Error('Unable to load reCAPTCHA. Please disable content blockers and try again.'));
+                };
+                document.head.appendChild(script);
+            }
+
+            loadScript(0);
+        });
+
+        recaptchaScriptPromise.catch(function () {
+            recaptchaScriptPromise = null;
         });
     }
 

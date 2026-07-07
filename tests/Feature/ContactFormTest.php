@@ -5,7 +5,7 @@ use Illuminate\Support\Facades\Http;
 beforeEach(function () {
     config([
         'services.resend.key' => 're_test_key',
-        'services.contact.to' => ['um@vidhyastudio.com', 'admin@vidhyastudio.com'],
+        'services.contact.to' => ['hello@vidhyastudio.com'],
         'services.recaptcha.secret_key' => 'recaptcha-secret',
         'services.recaptcha.score_threshold' => 0.5,
         'mail.from.address' => 'website@vidhyastudio.com',
@@ -35,8 +35,26 @@ it('verifies recaptcha and sends contact inquiries through Resend', function () 
 
     Http::assertSent(fn ($request) => $request->url() === 'https://api.resend.com/emails'
         && $request['reply_to'] === 'jane@example.com'
-        && $request['to'] === ['um@vidhyastudio.com', 'admin@vidhyastudio.com']
+        && $request['to'] === ['hello@vidhyastudio.com']
+        && $request['subject'] === '[Vidhya Studio] New project inquiry from Jane Client'
         && str_contains($request['html'], 'Example Brand'));
+});
+
+it('accepts a successfully verified recaptcha token without v3 score metadata', function () {
+    Http::fake([
+        'https://www.google.com/recaptcha/api/siteverify' => Http::response([
+            'success' => true,
+            'hostname' => 'vidhyastudio.com',
+        ]),
+        'https://api.resend.com/emails' => Http::response(['id' => 'email-id']),
+    ]);
+
+    $this->postJson(route('contact.store'), [
+        'name' => 'Vidhya Client',
+        'email' => 'client@example.com',
+        'message' => 'A project inquiry with enough detail.',
+        'recaptcha_token' => 'verified-token-without-score',
+    ])->assertOk();
 });
 
 it('rejects contact inquiries with a low recaptcha score', function () {
