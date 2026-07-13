@@ -109,6 +109,286 @@ function initAdminHomeForm() {
     });
 }
 
+function initAdminHomePoster() {
+    var fileInput = document.getElementById('hero_video_file');
+    var posterDataInput = document.getElementById('hero_poster_data');
+    var posterPreviewWrap = document.getElementById('poster-preview-wrap');
+    var posterPreviewImg = document.getElementById('poster-preview-img');
+    var posterStatus = document.getElementById('poster-status');
+
+    if (fileInput && !fileInput.hasAttribute('data-admin-home-file-ready')) {
+        fileInput.setAttribute('data-admin-home-file-ready', '');
+        fileInput.addEventListener('change', function () {
+            var file = this.files[0];
+
+            if (!file || !file.type.startsWith('video/')) {
+                return;
+            }
+
+            if (posterPreviewWrap) {
+                posterPreviewWrap.classList.remove('hidden');
+            }
+
+            if (posterStatus) {
+                posterStatus.textContent = 'Extracting first frame...';
+                posterStatus.className = 'mt-1.5 text-[11px] text-amber-400/70';
+            }
+
+            if (posterDataInput) {
+                posterDataInput.value = '';
+            }
+
+            var objectUrl = URL.createObjectURL(file);
+
+            captureAdminHomeFirstFrame(objectUrl, function (dataUrl, width, height) {
+                URL.revokeObjectURL(objectUrl);
+
+                if (posterPreviewImg) {
+                    posterPreviewImg.src = dataUrl;
+                }
+
+                if (posterDataInput) {
+                    posterDataInput.value = dataUrl;
+                }
+
+                if (posterStatus) {
+                    posterStatus.textContent = 'Poster captured (' + width + 'x' + height + ')';
+                    posterStatus.className = 'mt-1.5 text-[11px] text-emerald-400/70';
+                }
+            }, function () {
+                URL.revokeObjectURL(objectUrl);
+
+                if (posterStatus) {
+                    posterStatus.textContent = 'Could not capture frame.';
+                    posterStatus.className = 'mt-1.5 text-[11px] text-red-400/70';
+                }
+            });
+        });
+    }
+
+    document.querySelectorAll('[data-admin-home-poster-generate]:not([data-admin-home-poster-ready])').forEach(function (generateBtn) {
+        var generateSpinner = document.getElementById('generate-poster-spinner');
+        var generateLabel = document.getElementById('generate-poster-label');
+        var generateStatus = document.getElementById('generate-poster-status');
+        var currentPosterImg = document.getElementById('current-poster-img');
+        var currentPosterPath = document.getElementById('current-poster-path');
+        var currentVideo = document.getElementById('current-hero-video');
+        var posterUrl = generateBtn.dataset.posterUrl || '';
+
+        if (!currentVideo || !posterUrl) {
+            return;
+        }
+
+        generateBtn.setAttribute('data-admin-home-poster-ready', '');
+        generateBtn.addEventListener('click', function () {
+            var videoSrc = currentVideo.currentSrc || currentVideo.querySelector('source')?.getAttribute('src') || '';
+
+            if (!videoSrc) {
+                if (generateStatus) {
+                    generateStatus.textContent = 'Could not find current video.';
+                    generateStatus.className = 'mt-2 text-[11px] text-red-400/70';
+                }
+
+                return;
+            }
+
+            generateBtn.disabled = true;
+
+            if (generateSpinner) {
+                generateSpinner.classList.remove('hidden');
+            }
+
+            if (generateLabel) {
+                generateLabel.textContent = 'Generating...';
+            }
+
+            if (generateStatus) {
+                generateStatus.textContent = 'Extracting first frame from current video...';
+                generateStatus.className = 'mt-2 text-[11px] text-amber-400/70';
+            }
+
+            captureAdminHomeFirstFrame(addAdminHomeCacheBust(videoSrc), function (dataUrl, width, height) {
+                if (generateStatus) {
+                    generateStatus.textContent = 'Saving poster...';
+                }
+
+                fetch(posterUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
+                        'Accept': 'application/json',
+                    },
+                    body: JSON.stringify({ poster_data: dataUrl }),
+                })
+                    .then(function (response) {
+                        return response.json();
+                    })
+                    .then(function (data) {
+                        if (data.success) {
+                            if (currentPosterImg) {
+                                currentPosterImg.src = data.poster_path + '?t=' + Date.now();
+                            }
+
+                            if (currentPosterPath) {
+                                currentPosterPath.textContent = data.poster_path.split('/').pop();
+                            }
+
+                            if (generateStatus) {
+                                generateStatus.textContent = 'Poster saved (' + width + 'x' + height + ')';
+                                generateStatus.className = 'mt-2 text-[11px] text-emerald-400/70';
+                            }
+                        } else if (generateStatus) {
+                            generateStatus.textContent = data.error || 'Failed to save.';
+                            generateStatus.className = 'mt-2 text-[11px] text-red-400/70';
+                        }
+                    })
+                    .catch(function () {
+                        if (generateStatus) {
+                            generateStatus.textContent = 'Network error.';
+                            generateStatus.className = 'mt-2 text-[11px] text-red-400/70';
+                        }
+                    })
+                    .finally(function () {
+                        generateBtn.disabled = false;
+
+                        if (generateSpinner) {
+                            generateSpinner.classList.add('hidden');
+                        }
+
+                        if (generateLabel) {
+                            generateLabel.textContent = 'Generate Poster';
+                        }
+                    });
+            }, function () {
+                if (generateStatus) {
+                    generateStatus.textContent = 'Could not capture frame from video.';
+                    generateStatus.className = 'mt-2 text-[11px] text-red-400/70';
+                }
+
+                generateBtn.disabled = false;
+
+                if (generateSpinner) {
+                    generateSpinner.classList.add('hidden');
+                }
+
+                if (generateLabel) {
+                    generateLabel.textContent = 'Generate Poster';
+                }
+            });
+        });
+    });
+}
+
+function addAdminHomeCacheBust(videoSrc) {
+    var url = new URL(videoSrc, window.location.href);
+    url.searchParams.set('poster_capture', Date.now().toString());
+
+    return url.toString();
+}
+
+function captureAdminHomeFirstFrame(videoUrl, onSuccess, onError) {
+    var video = document.createElement('video');
+    var completed = false;
+    var seekStarted = false;
+    var fallbackTimer;
+    var timeoutTimer;
+
+    video.preload = 'auto';
+    video.muted = true;
+    video.playsInline = true;
+    video.crossOrigin = 'anonymous';
+
+    function cleanup() {
+        window.clearTimeout(fallbackTimer);
+        window.clearTimeout(timeoutTimer);
+        video.pause();
+        video.removeAttribute('src');
+        video.load();
+        video.remove();
+    }
+
+    function fail(error) {
+        if (completed) {
+            return;
+        }
+
+        completed = true;
+        cleanup();
+
+        if (onError) {
+            onError(error);
+        }
+    }
+
+    function drawFrame() {
+        if (completed) {
+            return;
+        }
+
+        try {
+            if (!video.videoWidth || !video.videoHeight) {
+                fail();
+                return;
+            }
+
+            var canvas = document.createElement('canvas');
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+
+            var ctx = canvas.getContext('2d');
+            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+            var dataUrl = canvas.toDataURL('image/webp', 0.85);
+            completed = true;
+            cleanup();
+            onSuccess(dataUrl, canvas.width, canvas.height);
+        } catch (error) {
+            fail(error);
+        }
+    }
+
+    function seekToFirstFrame() {
+        if (seekStarted || completed || !video.videoWidth || !video.videoHeight) {
+            return;
+        }
+
+        seekStarted = true;
+
+        try {
+            var targetTime = Number.isFinite(video.duration) && video.duration > 0.2 ? 0.1 : 0;
+
+            if (Math.abs(video.currentTime - targetTime) < 0.001) {
+                window.requestAnimationFrame(drawFrame);
+                return;
+            }
+
+            video.currentTime = targetTime;
+            fallbackTimer = window.setTimeout(function () {
+                if (video.readyState >= 2) {
+                    drawFrame();
+                }
+            }, 700);
+        } catch (error) {
+            if (video.readyState >= 2) {
+                drawFrame();
+            } else {
+                fail(error);
+            }
+        }
+    }
+
+    video.addEventListener('loadedmetadata', seekToFirstFrame);
+    video.addEventListener('loadeddata', seekToFirstFrame);
+    video.addEventListener('canplay', seekToFirstFrame);
+    video.addEventListener('seeked', drawFrame);
+    video.addEventListener('error', fail);
+
+    timeoutTimer = window.setTimeout(fail, 12000);
+    video.src = videoUrl;
+    video.load();
+}
+
 function initScrollTopButton() {
     if (scrollTopButton && document.body.contains(scrollTopButton)) {
         syncScrollTopButton();
@@ -4267,6 +4547,7 @@ document.addEventListener('DOMContentLoaded', initScrollTopButton);
 document.addEventListener('DOMContentLoaded', initMarketingHeader);
 document.addEventListener('DOMContentLoaded', initMobileMenu);
 document.addEventListener('DOMContentLoaded', initAdminHomeForm);
+document.addEventListener('DOMContentLoaded', initAdminHomePoster);
 document.addEventListener('DOMContentLoaded', initToastEvents);
 document.addEventListener('DOMContentLoaded', initContactForm);
 document.addEventListener('DOMContentLoaded', initDirectorTabs);
@@ -4295,6 +4576,7 @@ document.addEventListener('livewire:navigated', initScrollTopButton);
 document.addEventListener('livewire:navigated', initMarketingHeader);
 document.addEventListener('livewire:navigated', initMobileMenu);
 document.addEventListener('livewire:navigated', initAdminHomeForm);
+document.addEventListener('livewire:navigated', initAdminHomePoster);
 document.addEventListener('livewire:navigated', initToastEvents);
 document.addEventListener('livewire:navigated', initContactForm);
 document.addEventListener('livewire:navigated', initDirectorTabs);
