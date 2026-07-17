@@ -44,13 +44,6 @@ class extends Component
 
     <section class="px-6 py-20 sm:px-10 sm:py-24 lg:px-20">
         <div class="mx-auto max-w-[1800px]" data-client-carousel-shell>
-            <div class="flex items-end justify-between gap-6" data-reveal>
-                <div>
-                    <p class="text-xs font-bold uppercase tracking-[0.24em] text-[#366bc3]">Featured Clients</p>
-                    <h2 class="mt-4 text-[clamp(2rem,4vw,3.5rem)] font-black uppercase leading-[1.05] tracking-[-0.025em]">Brands we create with</h2>
-                </div>
-            </div>
-
             <div
                 class="mt-12 touch-pan-y cursor-grab overflow-hidden select-none active:cursor-grabbing"
                 data-client-carousel

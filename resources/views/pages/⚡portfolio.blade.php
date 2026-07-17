@@ -27,6 +27,9 @@ class extends Component
     public function render()
     {
         $services = Service::query()->orderBy('sort_order')->get();
+        $selectedService = $this->selectedServiceId !== ''
+            ? $services->firstWhere('id', (int) $this->selectedServiceId)
+            : null;
 
         $works = Portfolio::query()
             ->with('service')
@@ -39,6 +42,7 @@ class extends Component
 
         return view('pages.⚡portfolio', [
             'services' => $services,
+            'selectedService' => $selectedService,
             'works' => $works,
         ]);
     }
@@ -191,7 +195,7 @@ class extends Component
                         [
                             'key' => 'video',
                             'eyebrow' => 'Motion',
-                            'title' => 'Films & Video',
+                            'title' => $selectedService?->title ?? 'Films & Video',
                             'description' => 'Director-led films, commercials, and moving-image stories.',
                             'accent' => '#e60012',
                             'works' => $works->filter(fn ($work) => filled($work->video_url))->values(),
@@ -199,7 +203,7 @@ class extends Component
                         [
                             'key' => 'still',
                             'eyebrow' => 'Visuals',
-                            'title' => 'Images & Stills',
+                            'title' => $selectedService?->title ?? 'Images & Stills',
                             'description' => 'Crafted key visuals, campaign imagery, and cinematic stills.',
                             'accent' => '#366bc3',
                             'works' => $works->filter(fn ($work) => blank($work->video_url))->values(),

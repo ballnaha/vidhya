@@ -119,6 +119,49 @@ test('portfolio page groups videos above still images', function () {
         ], false);
 });
 
+test('portfolio group titles use the selected service title', function () {
+    $service = \App\Models\Service::create([
+        'num' => '01',
+        'title' => 'AI Advertising',
+        'description' => 'Desc',
+        'bullets' => [],
+        'accent' => '#fff',
+        'sort_order' => 10,
+    ]);
+
+    Portfolio::create([
+        'title' => 'Selected Service Video',
+        'service_id' => $service->id,
+        'span' => 'md:col-span-2',
+        'video_url' => 'https://example.com/video.mp4',
+        'image' => '/images/video.png',
+        'show_in_portfolio' => true,
+        'sort_order' => 10,
+    ]);
+
+    Portfolio::create([
+        'title' => 'Selected Service Still',
+        'service_id' => $service->id,
+        'span' => 'md:col-span-2',
+        'image' => '/images/still.png',
+        'show_in_portfolio' => true,
+        'sort_order' => 20,
+    ]);
+
+    Livewire::test('pages::portfolio')
+        ->assertSee('Films &amp; Video', false)
+        ->assertSee('Images &amp; Stills', false)
+        ->set('selectedServiceId', $service->id)
+        ->assertSeeHtmlInOrder([
+            '<h2 class="text-[clamp(1.75rem,4vw,3rem)] font-black uppercase leading-none tracking-[-0.025em] text-white">AI Advertising</h2>',
+            'Selected Service Video',
+            '<h2 class="text-[clamp(1.75rem,4vw,3rem)] font-black uppercase leading-none tracking-[-0.025em] text-white">AI Advertising</h2>',
+            'Selected Service Still',
+        ])
+        ->assertDontSee('Films &amp; Video', false)
+        ->assertDontSee('Images &amp; Stills', false);
+});
+
 test('portfolio page applies each work display size to the grid', function () {
     Portfolio::create([
         'title' => 'Wide Portfolio Work',
