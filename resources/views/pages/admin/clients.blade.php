@@ -3,6 +3,7 @@
         'id' => $client->id,
         'name' => $client->name,
         'logo' => $client->logo,
+        'website_url' => $client->website_url ?? '',
         'is_active' => (bool) $client->is_active,
         'sort_order' => $client->sort_order,
         'created_at' => $client->created_at?->format('M j, Y'),
@@ -15,6 +16,7 @@
     data-index-url="{{ route('admin.clients.data') }}"
     data-store-url="{{ route('admin.clients.store') }}"
     data-reorder-url="{{ route('admin.clients.reorder') }}"
+    data-carousel-speed-url="{{ route('admin.clients.carousel-speed') }}"
     data-update-url-template="{{ url('admin/clients/__CLIENT__') }}"
     data-delete-url-template="{{ url('admin/clients/__CLIENT__') }}">
     <script type="application/json" data-admin-clients-initial>@json($clientData)</script>
@@ -28,6 +30,34 @@
                     <p class="mt-3 max-w-2xl text-sm leading-7 text-white/45">{{ __('Manage client logos displayed in the carousel on the public Client page.') }}</p>
                 </div>
                 <button type="button" class="inline-flex rounded px-7 py-3 text-xs font-semibold uppercase tracking-[0.1em] text-white transition hover:brightness-110" style="background:linear-gradient(90deg,#366bc3,#823665,#e60012)" data-admin-clients-create>{{ __('New Client') }}</button>
+            </div>
+        </section>
+
+        <section class="border border-white/8 bg-[#0d0d13] p-5 lg:p-6" data-admin-clients-speed-shell>
+            <div class="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
+                <div>
+                    <h2 class="text-sm font-black uppercase tracking-[0.05em]">{{ __('Logo Carousel Speed') }}</h2>
+                    <p class="mt-2 text-xs leading-6 text-white/38">{{ __('Adjust the automatic scrolling speed on the public Client page.') }}</p>
+                </div>
+                <div class="flex w-full flex-col gap-4 sm:flex-row sm:items-center lg:max-w-2xl">
+                    <span class="shrink-0 text-[11px] font-semibold uppercase tracking-wider text-white/35">{{ __('Slow') }}</span>
+                    <input
+                        type="range"
+                        min="10"
+                        max="300"
+                        step="5"
+                        value="{{ $carouselSpeed }}"
+                        class="vidhya-client-speed-slider w-full cursor-pointer"
+                        aria-label="{{ __('Logo carousel speed') }}"
+                        data-admin-clients-speed
+                    >
+                    <span class="shrink-0 text-[11px] font-semibold uppercase tracking-wider text-white/35">{{ __('Fast') }}</span>
+                    <output class="min-w-20 text-center font-mono text-sm font-semibold text-white" data-admin-clients-speed-value>{{ $carouselSpeed }} px/s</output>
+                    <button type="button" class="inline-flex shrink-0 items-center justify-center gap-2 rounded border border-[#366bc3]/35 bg-[#366bc3]/10 px-5 py-3 text-xs font-semibold uppercase tracking-[0.08em] text-white transition hover:border-[#366bc3]/65 hover:bg-[#366bc3]/20 disabled:cursor-wait disabled:opacity-50" data-admin-clients-speed-save>
+                        <svg class="hidden size-4 animate-spin" viewBox="0 0 24 24" fill="none" aria-hidden="true" data-admin-clients-speed-spinner><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-90" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"/></svg>
+                        <span data-admin-clients-speed-save-label>{{ __('Save Speed') }}</span>
+                    </button>
+                </div>
             </div>
         </section>
 

@@ -4121,11 +4121,17 @@ function initAdminClients() {
         var table = shell.querySelector('[data-admin-clients-table]');
         var form = shell.querySelector('[data-admin-clients-form]');
         var formShell = shell.querySelector('[data-admin-clients-form-shell]');
+        var speedShell = shell.querySelector('[data-admin-clients-speed-shell]');
         var search = shell.querySelector('[data-admin-clients-search]');
         var fileInput = shell.querySelector('[data-admin-clients-file-input]');
         var preview = shell.querySelector('[data-admin-clients-preview]');
         var placeholder = shell.querySelector('[data-admin-clients-upload-placeholder]');
         var modal = shell.querySelector('[data-admin-clients-delete-modal]');
+        var speedInput = shell.querySelector('[data-admin-clients-speed]');
+        var speedValue = shell.querySelector('[data-admin-clients-speed-value]');
+        var speedSave = shell.querySelector('[data-admin-clients-speed-save]');
+        var speedSpinner = shell.querySelector('[data-admin-clients-speed-spinner]');
+        var speedSaveLabel = shell.querySelector('[data-admin-clients-speed-save-label]');
         var clients = [];
         var deletingId = null;
         var sortable = null;
@@ -4159,6 +4165,33 @@ function initAdminClients() {
             var label = shell.querySelector('[data-admin-clients-save-label]');
             if (label) label.textContent = busy ? 'Saving...' : 'Save Client';
         }
+        function mixColor(from, to, amount) {
+            return '#' + from.map(function (channel, index) {
+                return Math.round(channel + (to[index] - channel) * amount).toString(16).padStart(2, '0');
+            }).join('');
+        }
+        function updateSpeedAppearance() {
+            if (!speedInput) return;
+            var min = Number(speedInput.min) || 10;
+            var max = Number(speedInput.max) || 300;
+            var value = Math.max(min, Math.min(max, Number(speedInput.value) || min));
+            var progress = (value - min) / (max - min);
+            var color = progress <= 0.5
+                ? mixColor([54, 107, 195], [130, 54, 101], progress * 2)
+                : mixColor([130, 54, 101], [230, 0, 18], (progress - 0.5) * 2);
+
+            speedInput.style.setProperty('--speed-progress', (progress * 100) + '%');
+            speedInput.style.setProperty('--speed-color', color);
+            if (speedValue) {
+                speedValue.textContent = value + ' px/s';
+                speedValue.style.color = color;
+            }
+        }
+        function setSpeedSaving(saving) {
+            if (speedSave) speedSave.disabled = saving;
+            speedSpinner?.classList.toggle('hidden', !saving);
+            if (speedSaveLabel) speedSaveLabel.textContent = saving ? 'Saving...' : 'Save Speed';
+        }
         function setPreview(src) {
             if (!preview || !placeholder) return;
             preview.src = src || '';
@@ -4173,9 +4206,11 @@ function initAdminClients() {
             form.elements.sort_order.value = clients.length ? Math.max.apply(Math, clients.map(function (item) { return item.sort_order; })) + 10 : 10;
             if (fileInput) fileInput.value = '';
             setPreview(''); clearErrors(); formShell.classList.add('hidden');
+            speedShell?.classList.remove('hidden');
         }
         function openForm(client) {
             resetForm(); formShell.classList.remove('hidden');
+            speedShell?.classList.add('hidden');
             shell.querySelector('[data-admin-clients-form-title]').textContent = client ? 'Edit Client' : 'Create Client';
             if (client) {
                 form.querySelector('[data-admin-clients-id]').value = client.id;
@@ -4222,6 +4257,10 @@ function initAdminClients() {
             return request(shell.dataset.indexUrl, { cache: 'no-store' }).then(function (data) {
                 if (!Array.isArray(data.clients)) throw new Error('Invalid client data response.');
                 clients = data.clients;
+                if (speedInput && Number.isFinite(Number(data.carousel_speed))) {
+                    speedInput.value = data.carousel_speed;
+                    updateSpeedAppearance();
+                }
                 render();
             }).catch(function (error) { showToast('danger', 'Unable to load clients', error.message || 'Please refresh and try again.'); });
         }
@@ -4231,6 +4270,21 @@ function initAdminClients() {
         shell.querySelector('[data-admin-clients-upload-card]')?.addEventListener('click', function () { fileInput?.click(); });
         fileInput?.addEventListener('change', function () { if (fileInput.files[0]) setPreview(URL.createObjectURL(fileInput.files[0])); });
         search?.addEventListener('input', render);
+        speedInput?.addEventListener('input', updateSpeedAppearance);
+        speedSave?.addEventListener('click', function () {
+            setSpeedSaving(true);
+            request(shell.dataset.carouselSpeedUrl, {
+                method: 'PATCH',
+                body: JSON.stringify({ carousel_speed: Number(speedInput.value) }),
+            }).then(function (response) {
+                showToast('success', 'Speed updated', response.message);
+            }).catch(function (error) {
+                showToast('danger', 'Unable to save speed', error.message || 'Please try again.');
+            }).finally(function () {
+                setSpeedSaving(false);
+            });
+        });
+        updateSpeedAppearance();
         form.addEventListener('submit', function (event) {
             event.preventDefault(); clearErrors(); var id = form.querySelector('[data-admin-clients-id]').value;
             if (!form.elements.name.value.trim() || (!id && !fileInput?.files.length)) { showToast('danger', 'Please check the form', 'Client name and logo are required.'); return; }
@@ -4503,7 +4557,10 @@ function initClientCarousel() {
         carousel.addEventListener('lostpointercapture', stopDragging);
 
         var lastFrameTime = performance.now();
-        var autoScrollSpeed = 30;
+        var configuredSpeed = Number(carousel.dataset.clientCarouselSpeed);
+        var autoScrollSpeed = Number.isFinite(configuredSpeed)
+            ? Math.max(10, Math.min(300, configuredSpeed))
+            : 30;
 
         function animateCarousel(frameTime) {
             if (!carousel.isConnected) {

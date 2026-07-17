@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Client;
+use App\Models\SiteSetting;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -18,6 +19,7 @@ class AdminClientController extends Controller
 
         return view('pages.admin.clients', [
             'clients' => $clients,
+            'carouselSpeed' => SiteSetting::clientCarouselSpeed(),
         ]);
     }
 
@@ -30,8 +32,25 @@ class AdminClientController extends Controller
             ->map(fn (Client $client) => $this->serializeClient($client))
             ->values();
 
-        return response()->json(['clients' => $clients])
+        return response()->json([
+            'clients' => $clients,
+            'carousel_speed' => SiteSetting::clientCarouselSpeed(),
+        ])
             ->header('Cache-Control', 'no-store, no-cache, must-revalidate');
+    }
+
+    public function updateCarouselSpeed(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'carousel_speed' => ['required', 'integer', 'min:10', 'max:300'],
+        ]);
+
+        SiteSetting::setValue(SiteSetting::CLIENT_CAROUSEL_SPEED, (string) $validated['carousel_speed']);
+
+        return response()->json([
+            'message' => __('Client logo speed updated successfully.'),
+            'carousel_speed' => SiteSetting::clientCarouselSpeed(),
+        ]);
     }
 
     public function store(Request $request): RedirectResponse|JsonResponse

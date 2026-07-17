@@ -68,6 +68,7 @@ Route::middleware(['auth', 'verified', 'admin'])->group(function () {
 
     Route::get('admin/clients', [AdminClientController::class, 'index'])->name('admin.clients');
     Route::get('admin/clients/data', [AdminClientController::class, 'data'])->name('admin.clients.data');
+    Route::patch('admin/clients/carousel-speed', [AdminClientController::class, 'updateCarouselSpeed'])->name('admin.clients.carousel-speed');
     Route::post('admin/clients', [AdminClientController::class, 'store'])->name('admin.clients.store');
     Route::patch('admin/clients/reorder', [AdminClientController::class, 'reorder'])->name('admin.clients.reorder');
     Route::patch('admin/clients/{client}', [AdminClientController::class, 'update'])->name('admin.clients.update');

@@ -54,7 +54,7 @@
                 <div class="col-span-2 md:col-span-1">
                     <img src="/images/vidhya-studio-logo-ui.png" alt="Vidhya Studio" class="h-7 w-auto sm:h-9" width="720" height="181" loading="lazy">
                     <p class="mt-3 max-w-80 text-xs leading-5 text-white/60 sm:mt-5 sm:max-w-60 sm:text-sm sm:leading-7">Cinematic perspective. AI speed. Measurable impact.</p>
-                    <p class="mt-1 max-w-60 text-[11px] leading-5 text-white/55 sm:mt-2 sm:text-xs sm:leading-6">A new venture from Benetone Films.</p>
+                    <p class="mt-1 max-w-60 text-[11px] leading-5 text-white/55 sm:mt-2 sm:text-xs sm:leading-6">Benetone Film group company.</p>
                     <div class="mt-4 h-[3px] w-15 bg-linear-to-r from-[#366bc3] via-[#823665] to-[#e60012] sm:mt-6"></div>
                 </div>
 

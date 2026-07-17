@@ -4,6 +4,7 @@ use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Livewire\Component;
 use App\Models\Client as ClientModel;
+use App\Models\SiteSetting;
 
 new #[Title('Client')]
 #[Layout('layouts.marketing')]
@@ -13,6 +14,7 @@ class extends Component
     {
         return view('pages.⚡client', [
             'clients' => ClientModel::query()->where('is_active', true)->orderBy('sort_order')->orderBy('id')->get(),
+            'carouselSpeed' => SiteSetting::clientCarouselSpeed(),
         ]);
     }
 };
@@ -47,6 +49,7 @@ class extends Component
             <div
                 class="mt-12 touch-pan-y cursor-grab overflow-hidden select-none active:cursor-grabbing"
                 data-client-carousel
+                data-client-carousel-speed="{{ $carouselSpeed }}"
                 data-reveal
                 aria-label="Client logos"
             >

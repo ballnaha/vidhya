@@ -863,6 +863,58 @@ select:focus[data-flux-control] {
     @apply outline-hidden ring-2 ring-accent ring-offset-2 ring-offset-accent-foreground;
 }
 
+.vidhya-client-speed-slider {
+    --speed-color: #366bc3;
+    --speed-progress: 0%;
+    appearance: none;
+    height: 0.5rem;
+    border-radius: 9999px;
+    background: linear-gradient(
+        to right,
+        var(--speed-color) 0%,
+        var(--speed-color) var(--speed-progress),
+        rgba(255, 255, 255, 0.1) var(--speed-progress),
+        rgba(255, 255, 255, 0.1) 100%
+    );
+}
+
+.vidhya-client-speed-slider::-webkit-slider-runnable-track {
+    height: 0.5rem;
+    border-radius: 9999px;
+    background: transparent;
+}
+
+.vidhya-client-speed-slider::-webkit-slider-thumb {
+    appearance: none;
+    width: 1.15rem;
+    height: 1.15rem;
+    margin-top: -0.325rem;
+    border: 3px solid #0d0d13;
+    border-radius: 9999px;
+    background: var(--speed-color);
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--speed-color) 55%, transparent), 0 0 18px color-mix(in srgb, var(--speed-color) 45%, transparent);
+}
+
+.vidhya-client-speed-slider::-moz-range-track {
+    height: 0.5rem;
+    border-radius: 9999px;
+    background: transparent;
+}
+
+.vidhya-client-speed-slider::-moz-range-thumb {
+    width: 0.85rem;
+    height: 0.85rem;
+    border: 3px solid #0d0d13;
+    border-radius: 9999px;
+    background: var(--speed-color);
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--speed-color) 55%, transparent), 0 0 18px color-mix(in srgb, var(--speed-color) 45%, transparent);
+}
+
+.vidhya-client-speed-slider:focus-visible {
+    outline: 2px solid var(--speed-color);
+    outline-offset: 5px;
+}
+
 /* \[:where(&)\]:size-4 {
     @apply size-4;
 } */

@@ -3,6 +3,7 @@
 use App\Models\User;
 use Illuminate\Http\UploadedFile;
 use App\Models\Client;
+use App\Models\SiteSetting;
 
 uses(\Illuminate\Foundation\Testing\RefreshDatabase::class);
 
@@ -53,4 +54,14 @@ test('admin client data endpoint returns client details', function () {
         ->assertOk()
         ->assertJsonPath('clients.0.name', 'Suntory Boss Coffee')
         ->assertJsonStructure(['clients' => [['id', 'name', 'logo', 'website_url', 'is_active', 'sort_order']]]);
+});
+
+test('admin can update the client logo carousel speed', function () {
+    $admin = User::factory()->create(['role' => User::ROLE_ADMIN, 'email_verified_at' => now()]);
+
+    $this->actingAs($admin)->patchJson(route('admin.clients.carousel-speed'), [
+        'carousel_speed' => 300,
+    ])->assertOk()->assertJsonPath('carousel_speed', 300);
+
+    expect(SiteSetting::clientCarouselSpeed())->toBe(300);
 });

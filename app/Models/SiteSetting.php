@@ -17,6 +17,9 @@ class SiteSetting extends Model
 
     public const SOCIAL_LINKS = 'social_links';
 
+    public const CLIENT_CAROUSEL_SPEED = 'client_carousel_speed';
+    public const DEFAULT_CLIENT_CAROUSEL_SPEED = 30;
+
     protected $fillable = [
         'key',
         'value',
@@ -75,5 +78,13 @@ class SiteSetting extends Model
     {
         $value = static::valueFor(static::SOCIAL_LINKS);
         return $value ? json_decode($value, true) : [];
+    }
+
+    public static function clientCarouselSpeed(): int
+    {
+        return max(10, min(300, (int) static::valueFor(
+            static::CLIENT_CAROUSEL_SPEED,
+            (string) static::DEFAULT_CLIENT_CAROUSEL_SPEED
+        )));
     }
 }
